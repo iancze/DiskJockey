@@ -4,15 +4,20 @@
 
 # CO J = 2-1 transition at 230.538 GHz
 
-#Compute the various wavelengths at which we want to synthesize images (23 images spaced -4.40 -0- 4.40 km/s).
+using constants
 
-iline = 2
-incl = 33. # deg. 0 deg = face on, 90 = edge on.
+# iline = 2
+incl = 33. #33. # deg. 0 deg = face on, 90 = edge on.
 vel = 0.0 # km/s
-phi = 0.0 # deg. Position angle.
+PA = 90 - 73. # 73 deg. Position angle, runs counter clockwise, due to looking at sky.
+npix = 96 # number of pixels, can alternatively specify x and y separately
+
+lam0 = cc/230.538e9 * 1e6 # [microns]
+
 
 #loads the camera_wavelength_micron.inp file
-run(`radmc3d image incl $incl phi $phi loadlambda doppcatch`)
+#run(`radmc3d image incl $incl posang $PA vkms $vel npix $npix loadlambda`)
+run(`radmc3d image incl $incl posang $PA vkms $vel npix $npix lambda $lam0`)
 
 #optionally add `doppcatch` to enable Doppler Catching. Seems to give weird results, though.
 
