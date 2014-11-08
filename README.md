@@ -1,12 +1,10 @@
 JudithExcalibur
 ===============
 
+Copyright Ian Czekala 2014
+
+email: iancze@gmail.com
+
 Julia, RADMC-3D, and some FFTs
 
-RADMC3DPY is a useful module, but it's only `python2`.
-
-I need a few key routines to work.
-
-Necessary functionality.
-
-Create grid according to Isella/Rosenfeld parameterization.
+This package derives dynamical masses for T Tauri stars using the Keplerian motion of their circumstellar disks. Applied to SMA and ALMA CO line data.

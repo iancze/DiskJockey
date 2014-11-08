@@ -50,8 +50,7 @@ const Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spac
 if eqmirror
 ped = 0.1
 #Thetas = linspace(0, pi/2., ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
-#Thetas = pi - logspace(0, pi/2., ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
-const Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+const Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1] #Spaced closer near the z=0
 else
 const Thetas = linspace(0, pi, ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
 end
@@ -141,11 +140,12 @@ function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
 end
 Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star, pars.T_10, pars.q)
 
-function n_CO{T}(r::T, z::T, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
+# No parametric type for this, because it is a 2D function.
+function n_CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
     H = Hp(r, M_star, T_10, q)
-    (2. - gamma) * M_CO/((2. * pi)^(1.5) * r_c^2 * H) * (r./r_c).^(-gamma) * exp(-0.5 * (z./H)^2 - (r./r_c).^(2. - gamma))
+    (2. - gamma) * M_CO/((2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
 end
-n_CO{T}(r::T, z::T, pars::Parameters) = n_CO(r, z, pars.r_c, pars.M_CO, pars.M_star, pars.T_10, pars.q, pars.gamma)
+n_CO(r::Float64, z::Float64, pars::Parameters) = n_CO(r, z, pars.r_c, pars.M_CO, pars.M_star, pars.T_10, pars.q, pars.gamma)
 
 
 function write_model(pars::Parameters)
