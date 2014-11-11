@@ -36,7 +36,7 @@ const eqmirror = true # mirror the grid about the z=0 midplane ?
 # Number of cells in each dimension
 # if we decide to mirror, then ncells = 1/2 of the true value
 const nr = 64
-const ntheta = 16 # if mirror about the equator
+const ntheta = 64 # if mirror about the equator
 const nphi = 1
 
 const ncells = nr * ntheta * nphi
@@ -109,12 +109,12 @@ type Parameters
 end
 
 #From Rosenfeld et al. 2012, Table 1
-M_CO = 2.8e-6 * M_sun # disk mass of CO
-r_c =  45. * AU # characteristic radius
+M_CO = 2.8e-6 * M_sun # [g] disk mass of CO
+r_c =  45. * AU # [cm] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
-q = 0.63 # temperature gradient
-gamma = 1.0 # surface temperature gradient
-ksi = 0.14 # [km s^{-1}]microturbulence
+q = 0.63 # temperature gradient exponent
+gamma = 1.0 # surface temperature gradient exponent
+ksi = 0.14e5 # [cm s^{-1}] microturbulence
 i_d = 33.5 # [degrees] inclination
 M_star = 1.75 * M_sun # [g] stellar mass
 #PA = 73.
@@ -140,10 +140,10 @@ function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
 end
 Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star, pars.T_10, pars.q)
 
-# No parametric type for this, because it is a 2D function.
+# No parametric type for number density, because it is a 2D function.
 function n_CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
     H = Hp(r, M_star, T_10, q)
-    (2. - gamma) * M_CO/((2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
+    (2. - gamma) * M_CO/(m_CO * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
 end
 n_CO(r::Float64, z::Float64, pars::Parameters) = n_CO(r, z, pars.r_c, pars.M_CO, pars.M_star, pars.T_10, pars.q, pars.gamma)
 

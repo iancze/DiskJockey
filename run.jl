@@ -17,7 +17,8 @@ lam0 = cc/230.538e9 * 1e6 # [microns]
 
 #loads the camera_wavelength_micron.inp file
 #run(`radmc3d image incl $incl posang $PA vkms $vel npix $npix loadlambda`)
-run(`radmc3d image incl $incl posang $PA vkms $vel npix $npix lambda $lam0`)
+#run(`radmc3d image incl $incl posang $PA vkms $vel npix $npix lambda $lam0`)
+run(`radmc3d spectrum incl $incl posang $PA vkms $vel npix $npix loadlambda`)
 
 #optionally add `doppcatch` to enable Doppler Catching. Seems to give weird results, though.
 
