@@ -14,7 +14,7 @@
 
 module image
 
-export imread, imToSky, imToSpec
+export imread, imToSky, imToSpec, SkyImage
 
 using constants
 
