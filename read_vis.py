@@ -34,8 +34,12 @@ weight = vis[:, :, 2].T
 
 import matplotlib.pyplot as plt
 
-fig = plt.figure()
+fig = plt.figure(figsize=(6,6))
 ax = fig.add_subplot(111)
 ax.plot(uu[10], vv[10], ".")
-plt.show()
+ax.set_xlabel(r"UU [k$\lambda$]")
+ax.set_ylabel(r"YY [k$\lambda$]")
+fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
+
+plt.savefig("plots/uv_spacings.png")
 

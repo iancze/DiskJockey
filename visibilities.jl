@@ -39,6 +39,8 @@ function transform(img::SkyImage, index::Int=1)
     uu = Array(Float64, (1,))
     vv = Array(Float64, (1,))
 
+    # properly pack the data for input 
+    #TODO: Check that the outer fftshift is right
     out = rfft(fftshift(data))
     return RawModelVis(lam, uu, vv, out)
 end
