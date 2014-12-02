@@ -11,7 +11,7 @@ using constants #Import all of my constants defined in constants.jl
 # Line frequency center, CO J = 2-1
 # Compute the various wavelengths at which we want to synthesize images 
 # 23 images spaced -4.40 -0- 4.40 km/s
-lam0 = cc/230.538e9 * 1e6 # [microns]
+lam0 = cc/230.538e9 * 1e4 # [microns]
 nvels = 23
 vels = linspace(-4.4, 4.4, nvels) # [km/s]
 const lambdas = vels/c_kms * lam0 + lam0

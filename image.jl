@@ -31,11 +31,14 @@ end
 
 type SkyImage <: Image
     data::Array{Float64, 3} # [Jy/pixel]
-    ra::Vector{Float64}
-    dec::Vector{Float64}
-    lams::Vector{Float64}
+    ra::Vector{Float64} # [arcsec]
+    dec::Vector{Float64} # [arcsec]
+    lams::Vector{Float64} # [μm]
 end
 
+# SkyImage constructor for just a single frame
+SkyImage(data::Matrix{Float64}, ra::Vector{Float64}, dec::Vector{Float64}, lam::Float64) = 
+SkyImage(reshape(data, tuple(size(data)..., 1)), ra, dec, [lam])
 
 # Read the image file (default=image.out) and return it as an Image object, which contains the fluxes in Jy/pixel,
 # the sizes and locations of the pixels in arcseconds, and the wavelengths corresponding to the images
@@ -60,14 +63,16 @@ function imread(file="image.out")
     # Create an array with the proper size, and then read the file into it
     data = Array(Float64, (im_nx, im_ny, nlam))
 
-    # Although this order is contrary to the RADMC manual, which states x should be in the inner loop, 
-    # it is what is necessary to orient the image properly. Also, radmc3dPy has the same ordering in
-    # image.py:line 675
+    # Because of the way an image is stored as a matrix, we actually pack the array indices as
+    # data[y, x, lam]
+    # Therefore we keep the loop order suggested in the RADMC manual, which states x should be in the inner loop,
+    # but  swap indices. 
+    # radmc3dPy achieves something similar by keeping indices the same but swaping loop order (image.py:line 675)
     for k=1:nlam
         readline(fim) # Junk space
-        for i=1:im_nx 
-            for j=1:im_ny
-                data[i,j,k] = float64(readline(fim))
+        for j=1:im_ny
+            for i=1:im_nx 
+                data[j,i,k] = float64(readline(fim))
             end
         end
     end

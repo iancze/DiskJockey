@@ -2,9 +2,14 @@
 
 module gridding
 
+using visibilities
+
 import Base.Math.@horner
 
-export spheroid
+export spheroid, corrfun, gcffun
+
+# TODO: This whole thing may be faster if we break it up into spheroid_0, spheroid_05, 
+# spheroid_1, spheroid_1_5 and spheroid_2. But it also may not be necessary.
 
 # Assumes we are using m = 6. 
 function spheroid(eta::Float64, alpha::Float64)
@@ -83,6 +88,86 @@ end
 
 # Make this function available to call with a vector of etas as well
 spheroid(etas::Vector{Float64}, alpha::Float64) = Float64[spheroid(eta, alpha) for eta in etas] 
+
+#TODO: available with a Matrix{Float64} as well, for corrfun.
+
+# These type parameterizations for `corrfun` and `gcffun` mean that we can pass them either individual 
+# floating point numbers or vectors of Float64.
+
+# The gridding *correction* function, used to pre-multiply the image to correct for the effect 
+# of the `gcffun`. This function is also the Fourier transform of `gcffun`.
+function corrfun{T}(eta::T, alpha::Float64)
+    return spheroid(eta, alpha)
+end
+
+# The gridding *convolution* function, used to do the convolution and interpolation of the visibilities in 
+# the Fourier domain. This is also the Fourier transform of `corrfun`.
+function gcffun{T}(eta::T, alpha::Float64)
+    return abs(1 - eta.^2).^alpha .* spheroid(eta, alpha)
+end
+
+
+# called ModGrid in gridding.c (KR code) and in Model.for (MIRIAD)
+# Uses spheroidal wave functions to interpolate a model to a (u,v) coordinate.
+function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
+
+    # 1. Find the nearest gridpoint in the FFT'd image.
+    iu0 = indmin(abs(u - vis.uu))
+    iv0 = indmin(abs(v - vis.vv))
+
+    # now find the relative distance to this nearest grid point (not absolute)
+    u0 = u - vis.uu[iu0]
+    v0 = v - vis.vv[iv0]
+
+    # also determine the uu and vv distance for 6 grid points (could be later taken out)
+    du = abs(vis.uu[7] - vis.uu[1])
+    dv = abs(vis.vv[7] - vis.vv[1])
+
+    # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels (3 on either side)
+
+    # Are u0 and v0 to the left or the right of the index?
+    # we want to index three to the left, three to the right
+
+    #TODO: check that we are still in bounds of the array
+    if u0 >= 0.0 
+        # To the right of the index
+        uind = iu0-2:iu0+3
+    else
+        # To the left of the index 
+        uind = iu0-3:iu0+2
+    end
+
+    if v0 >= 0.0
+        # To the right of the index
+        vind = iv0-2:iv0+3
+    else
+        # To the left of the index 
+        vind = iv0-3:iv0+2
+    end
+
+    uu = (vis.uu[uind] .- u)/du
+    vv = (vis.vv[vind] .- v)/dv
+    VV = vis.VV[uind, vind]
+
+    # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
+    uw = gcffun(uu)
+    vw = gcffun(vv)
+
+    # 4. Normalization such that it has an area of 1. Divide by w later.
+    w = sum(uw) * sum(vw)
+
+    # 5. Loop over all 36 grid indices and sum to find the interpolation.
+    cum::Float64 = 0.0
+    for i=1:6
+        for j=1:6
+            cum += uv[i] * vw[j] * VV[i,j]
+        end
+    end
+
+    cum = cum/w
+
+    return cum
+end
 
 
 end #Module
