@@ -8,8 +8,8 @@ using image
 # Test to see if we get the convolutional interpolation correct by using a 2D Elliptical Gaussian.
 
 # Realistic Gaussian will have scale dimensions (fatter in x direction)
-const s_x = 3. * arcsec # [radians]
-const s_y = 1.5 * arcsec # [radians]
+const s_x = 1.2 * arcsec # [radians]
+const s_y = 1.0 * arcsec # [radians]
 
 const Sigma = Float64[s_x^2 0 ;
                     0  s_y^2]
@@ -22,9 +22,8 @@ function imageGauss(ll::Vector{Float64}, mm::Vector{Float64})
     img = Array(Float64, ny, nx)
     for i=1:nx
         for j=1:ny
-            R = Float64[ll[i], mm[j]]
-            img[j, i] = pre * exp(-pi * (R' * (Sigma\R))[1])
-            #img[j, i] = pre * exp(-pi * ((ll[i]/s_x)^2 + (mm[j]/s_y)^2))
+            R = Float64[ll[i], mm[j]] 
+            img[j, i] = pre * exp(-0.5 * (R' * (Sigma\R))[1])
         end
     end
     return img
@@ -40,8 +39,7 @@ function FTGauss(uu::Vector{Float64}, vv::Vector{Float64})
     for i=1:nu
         for j=1:nv
             R = Float64[uu[i], vv[j]]
-            img[j, i] = pre * abs(s_x * s_y) * exp(-pi * (R' * Sigma * R)[1]) #in this case, Sigma is the inverse
-            #img[j, i] = pre * abs(s_x * s_y) * exp(-pi * ((s_x * uu[i])^2 + (s_y * vv[j])^2))
+            img[j, i] = exp(-2 * (pi^2) * (R' * Sigma * R)[1]) #in this case, Sigma is the inverse
         end
     end
     return img
