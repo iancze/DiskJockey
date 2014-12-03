@@ -3,10 +3,11 @@
 module gridding
 
 using visibilities
+using image
 
 import Base.Math.@horner
 
-export spheroid, corrfun, gcffun
+export spheroid, corrfun, corrfun!, gcffun, interpolate_uv
 
 # TODO: This whole thing may be faster if we break it up into spheroid_0, spheroid_05, 
 # spheroid_1, spheroid_1_5 and spheroid_2. But it also may not be necessary.
@@ -94,10 +95,27 @@ spheroid(etas::Vector{Float64}, alpha::Float64) = Float64[spheroid(eta, alpha) f
 # These type parameterizations for `corrfun` and `gcffun` mean that we can pass them either individual 
 # floating point numbers or vectors of Float64.
 
-# The gridding *correction* function, used to pre-multiply the image to correct for the effect 
+# The gridding *correction* function, used to pre-divide the image to correct for the effect 
 # of the `gcffun`. This function is also the Fourier transform of `gcffun`.
 function corrfun{T}(eta::T, alpha::Float64)
     return spheroid(eta, alpha)
+end
+
+# Apply the correction function to the image.
+function corrfun!(img::SkyImage, alpha::Float64)
+    nx, ny, nlam = size(img.data)
+    maxra = maximum(abs(img.ra))
+    maxdec = maximum(abs(img.dec))
+    # In this case, I think we want to synchronize the pre-multiplication with the image center (first pixel is 0,0).
+    for k=1:nlam
+        for i=1:nx
+            for j=1:ny
+                etax = img.ra[i]/maxra
+                etay = img.dec[j]/maxdec
+                img.data[j, i, k] = img.data[j, i, k] / (corrfun(etax, alpha) * corrfun(etay, alpha))
+            end
+        end
+    end
 end
 
 # The gridding *convolution* function, used to do the convolution and interpolation of the visibilities in 
@@ -109,6 +127,7 @@ end
 
 # called ModGrid in gridding.c (KR code) and in Model.for (MIRIAD)
 # Uses spheroidal wave functions to interpolate a model to a (u,v) coordinate.
+# u,v are in [kλ]
 function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
 
     # 1. Find the nearest gridpoint in the FFT'd image.
@@ -119,16 +138,16 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     u0 = u - vis.uu[iu0]
     v0 = v - vis.vv[iv0]
 
-    # also determine the uu and vv distance for 6 grid points (could be later taken out)
-    du = abs(vis.uu[7] - vis.uu[1])
-    dv = abs(vis.vv[7] - vis.vv[1])
+    # determine the uu and vv distance for 3 grid points (could be later taken out)
+    du = abs(vis.uu[4] - vis.uu[1])
+    dv = abs(vis.vv[4] - vis.vv[1])
 
     # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels (3 on either side)
 
     # Are u0 and v0 to the left or the right of the index?
     # we want to index three to the left, three to the right
 
-    #TODO: check that we are still in bounds of the array
+    # TODO: check that we are still in bounds of the array
     if u0 >= 0.0 
         # To the right of the index
         uind = iu0-2:iu0+3
@@ -145,22 +164,23 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
         vind = iv0-3:iv0+2
     end
 
-    uu = (vis.uu[uind] .- u)/du
-    vv = (vis.vv[vind] .- v)/dv
-    VV = vis.VV[uind, vind]
+    etau = (vis.uu[uind] .- u)/du
+    etav = (vis.vv[vind] .- v)/dv
+    VV = vis.VV[vind, uind] # Array is packed like the image
 
     # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
-    uw = gcffun(uu)
-    vw = gcffun(vv)
+    # TODO: Explore using something other than alpha=1.0
+    uw = gcffun(etau, 1.0)
+    vw = gcffun(etav, 1.0)
 
     # 4. Normalization such that it has an area of 1. Divide by w later.
     w = sum(uw) * sum(vw)
 
     # 5. Loop over all 36 grid indices and sum to find the interpolation.
-    cum::Float64 = 0.0
+    cum::Complex128 = 0.0 + 0.0im
     for i=1:6
         for j=1:6
-            cum += uv[i] * vw[j] * VV[i,j]
+            cum += uw[i] * vw[j] * VV[j,i] # Array is packed like the image
         end
     end
 
@@ -168,6 +188,7 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
 
     return cum
 end
+
 
 
 end #Module

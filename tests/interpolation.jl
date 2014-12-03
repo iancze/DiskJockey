@@ -29,17 +29,22 @@ function imageGauss(ll::Vector{Float64}, mm::Vector{Float64})
     return img
 end
 
-# Given two arrays of u and v coordinates in [kλ], fill an array with the analytic FT of aforementioned Gaussian.
-function FTGauss(uu::Vector{Float64}, vv::Vector{Float64})
+# Given u and v coordinates in [kλ], evaluate the analytic FT of the aforementioned Gaussian
+function FTGauss(uu::Float64, vv::Float64)
     uu = uu .* 1e3 #[λ]
     vv = vv .* 1e3 #[λ]
+    R = Float64[uu, vv]
+    return exp(-2 * (pi^2) * (R' * Sigma * R)[1]) #in this case, Sigma is the inverse
+end
+
+# Given two arrays of u and v coordinates in [kλ], fill an array with the analytic FT of aforementioned Gaussian.
+function FTGauss(uu::Vector{Float64}, vv::Vector{Float64})
     nu = length(uu)
     nv = length(vv)
     img = Array(Float64, nv, nu)
     for i=1:nu
         for j=1:nv
-            R = Float64[uu[i], vv[j]]
-            img[j, i] = exp(-2 * (pi^2) * (R' * Sigma * R)[1]) #in this case, Sigma is the inverse
+            img[j, i] = FTGauss(uu[i], vv[j]) 
         end
     end
     return img
@@ -66,8 +71,8 @@ function hanning!(img::SkyImage)
 end
 
 # If the synthesized beam is 0.3", to oversample this by a factor of 10 would require something like 512x512 pixels
-nx = 128
-ny = 128
+nx = 512
+ny = 512
 
 ra = fftspace(6, nx) # [arcsec]
 dec = fftspace(6, ny) # [arcsec]
@@ -81,7 +86,10 @@ img = imageGauss(ll, mm)
 lam0 = cc/230.538e9 * 1e4 # [microns]
 skim = SkyImage(img, ra, dec, lam0)
 
-# FFT the original image and see how well it matches the visibility space
+# Apply the gridding correction function before doing the FFT
+corrfun!(skim, 1.0)
+
+# FFT the image and see how well it matches the visibility space
 vis_fft = transform(skim)
 
 println("Imaginary FFT: Minimum ", minimum(imag(vis_fft.VV)), " Maximum: ", maximum(imag(vis_fft.VV)))
@@ -95,6 +103,8 @@ vis_analytic = FTGauss(uu, vv)
 
 println("Real FFT discrepancy: Minimum ", minimum(real(vis_fft.VV) - vis_analytic), 
 " Maximum: ", maximum(real(vis_fft.VV) - vis_analytic))
+
+#=
 
 import PyPlot
 import PyPlot.plt
@@ -162,5 +172,101 @@ ax[:set_title]("FT Difference")
 fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
 plt.savefig("../plots/gaussian_difference.png")
 
+=#
+
 
 # Next, choose randomly distributed (u,v) points within some bounds and see how the interpolated values compare to what the FourierGauss would return.
+
+n = 100
+randu = linspace(-100, 100, n) # [kλ]
+#randv = 50 * rand(n) # [kλ]
+approx = Array(Complex128, n)
+analytic = Array(Float64, n)
+
+for i=1:n
+    u = randu[i]
+    v = 0.0
+    approx[i] = interpolate_uv(u, v, vis_fft)
+    analytic[i] = FTGauss(u, v)
+end
+
+#@printf("(%.2f, %.2f): ", u, v)
+#print("Approximate ", approx)
+#println(" Analytic ", analytic)
+
+
+import PyPlot
+import PyPlot.plt
+using LaTeXStrings
+
+fig = plt.figure()
+ax = fig[:add_subplot](111)
+
+nu = length(vis_fft.uu)
+
+zer = zeros(length(vis_fft.uu))
+
+analytic_u = Array(Float64, nu)
+for i=1:nu
+    analytic_u[i] = FTGauss(vis_fft.uu[i], 0.0)
+end
+
+ax[:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
+#ax[:plot](vis_fft.uu, fftshift(vis_fft.VV, 1)[1, :], ".k")
+ax[:plot](randu, real(approx), "ob", label="Approx")
+ax[:plot](randu, analytic, ".r", label="Analytic")
+ax[:plot](vis_fft.uu, analytic_u, "or", label="Analytic")
+ax[:set_xlim](-100, 100)
+ax[:set_xlabel](L"u [k $\lambda$]")
+
+ax[:legend]()
+
+plt.savefig("../plots/interpolation.png")
+
+# Let's try this over a full grid of images.
+
+# Create analytic function on a smaller grid
+n = 100
+uu = linspace(-150, 150, n)
+vv = linspace(-150, 150, n)
+
+vis_analytic_small = FTGauss(uu, vv)
+
+vis_intp = Array(Complex128, n, n)
+for i=1:n
+    for j=1:n
+        vis_intp[j, i] = interpolate_uv(uu[i], vv[j], vis_fft)
+    end
+end
+
+fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
+
+ext = (minimum(uu), maximum(uu), minimum(vv), maximum(vv))
+
+axan = ax[1][:imshow](vis_analytic_small, interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[1][:set_title]("Analytic FT")
+ax[1][:set_xlabel](L"uu [k$\lambda$]")
+ax[1][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
+cb = fig[:colorbar](axan, cax=cax)
+
+axfft = ax[2][:imshow](real(vis_intp), interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[2][:set_title]("Interpolated Visibilites from FFT")
+ax[2][:set_xlabel](L"uu [k$\lambda$]")
+ax[2][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
+cb = fig[:colorbar](axfft, cax=cax)
+
+axdif = ax[3][:imshow](vis_analytic_small - real(vis_intp), interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[3][:set_title]("Difference")
+ax[3][:set_xlabel](L"uu [k$\lambda$]")
+ax[3][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
+cb = fig[:colorbar](axdif, cax=cax)
+
+fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
+
+plt.savefig("../plots/interpolation_difference.png")
