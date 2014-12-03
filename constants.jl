@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec
+export M_sun, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, fftspace
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -28,5 +28,21 @@ m0 = mu_gas * amu #mean molecular weight of gas
 
 # convert from arcseconds to radians
 arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
+
+# Oftentimes it is necessary to get a symmetric coordinate array that spans N elements from -width to +width, 
+# but makes sure that the middle point lands on 0. The indices go from 0 to N -1.
+# `linspace` returns  the end points inclusive, wheras we want to leave out the right endpoint, 
+# because we are sampling the function in a cyclic manner.
+function fftspace(width::Real, N::Int)
+    @assert(N % 2 == 0, "N must be even.")
+
+    dx = width * 2. / N
+    xx = Array(Float64, N)
+    for i=1:N
+        xx[i] = -width + (i - 1) * dx
+    end
+    return xx
+end
+
 
 end
