@@ -4,10 +4,11 @@ module LittleMC
 # a simple Metropolis-Hastings sampler to just get things done.
 # inspired by github.com/dfm/emcee/mh.py
 
-export MC, sample, run, write, runstats
+export MC, sample, start, write, runstats
 
 using Distributions
 using PDMats
+using HDF5
 
 # The main object that contains all of the necessary MCMC information
 type MC{T <: AbstractMvNormal} #Could try making this immutable later
@@ -98,28 +99,16 @@ function runstats(mc::MC)
     # more to come
 end
 
-const mat = PDiagMat([2.0^2, 3.0^2])
-const dist = DiagNormal([0., 0.], mat)
-function Gauss(x::Vector{Float64})
-    return logpdf(dist, x)
-end
-
-mc = MC(Gauss, 100000, [1.0, 1.0], PDiagMat([1.5^2, 1.5^2]))
-start(mc)
-
-
-println(mean(mc.samples, 2))
-println(std(mc.samples, 2))
-
-println(acceptance(mc))
-
-# Plot the samples
-import PyPlot.plt
-fig, ax = plt.subplots(nrows=2, sharex=true)
-ax[1][:plot](mc.samples'[:, 1])
-ax[2][:plot](mc.samples'[:, 2])
-plt.savefig("plots/littlemc.png")
 
 # Optionally write the samples to an HDF5 file
+function write(mc::MC, fname::ASCIIString)
+    fid = h5open(fname, "w")
+    fid["samples"] = mc.samples
+
+    # Add the acceptance fraction as an attribute on the "samples" dataset
+    attrs(fid["samples"])["acceptance"] = acceptance(mc)
+
+    close(fid)
+end
 
 end #module
