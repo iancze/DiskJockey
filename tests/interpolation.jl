@@ -4,51 +4,9 @@ using gridding
 using visibilities
 using constants
 using image
+using gauss_model
 
 # Test to see if we get the convolutional interpolation correct by using a 2D Elliptical Gaussian.
-
-# Realistic Gaussian will have scale dimensions (fatter in x direction)
-const s_x = 1.2 * arcsec # [radians]
-const s_y = 1.0 * arcsec # [radians]
-
-const Sigma = Float64[s_x^2 0 ;
-                    0  s_y^2]
-const pre = 1. / (2pi * sqrt(det(Sigma))) 
-
-# Given two arrays of l and m coordinates, fill an array of the Gaussian image following the MATLAB convention.
-function imageGauss(ll::Vector{Float64}, mm::Vector{Float64})
-    nx = length(ll)
-    ny = length(mm)
-    img = Array(Float64, ny, nx)
-    for i=1:nx
-        for j=1:ny
-            R = Float64[ll[i], mm[j]] 
-            img[j, i] = pre * exp(-0.5 * (R' * (Sigma\R))[1])
-        end
-    end
-    return img
-end
-
-# Given u and v coordinates in [kλ], evaluate the analytic FT of the aforementioned Gaussian
-function FTGauss(uu::Float64, vv::Float64)
-    uu = uu .* 1e3 #[λ]
-    vv = vv .* 1e3 #[λ]
-    R = Float64[uu, vv]
-    return exp(-2 * (pi^2) * (R' * Sigma * R)[1]) #in this case, Sigma is the inverse
-end
-
-# Given two arrays of u and v coordinates in [kλ], fill an array with the analytic FT of aforementioned Gaussian.
-function FTGauss(uu::Vector{Float64}, vv::Vector{Float64})
-    nu = length(uu)
-    nv = length(vv)
-    img = Array(Float64, nv, nu)
-    for i=1:nu
-        for j=1:nv
-            img[j, i] = FTGauss(uu[i], vv[j]) 
-        end
-    end
-    return img
-end
 
 # Apply Hanning tapering to the image.
 function hanning!(img::SkyImage)
@@ -62,7 +20,7 @@ function hanning!(img::SkyImage)
     for l=1:nlam
         for i=1:nr
             for j=1:rd
-                img.data[j, i, l] = img.data[j, i, l] * 
+                img.data[j, i, l] = img.data[j, i, l] *
                 (0.5 + 0.5 * cos(pi * img.ra[i]/r0)) * (0.5 + 0.5 * cos(pi * img.dec[j]/d0))
             end
         end
@@ -104,7 +62,7 @@ vv = vis_fft.vv # [kλ]
 # Analytic visibilites
 vis_analytic = FTGauss(uu, vv)
 
-println("Real FFT discrepancy: Minimum ", minimum(real(plain_fft.VV) - vis_analytic), 
+println("Real FFT discrepancy: Minimum ", minimum(real(plain_fft.VV) - vis_analytic),
 " Maximum: ", maximum(real(plain_fft.VV) - vis_analytic))
 
 import PyPlot
@@ -121,7 +79,7 @@ ax[1][:set_title]("image")
 ax[1][:set_xlabel](L"$\alpha$ [arcsec]")
 ax[1][:set_ylabel](L"$\delta$ [arcsec]")
 
-#[left, bottom, width, height] 
+#[left, bottom, width, height]
 cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
 cb = fig[:colorbar](aximg, cax=cax)
 

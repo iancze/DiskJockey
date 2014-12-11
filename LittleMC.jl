@@ -90,7 +90,7 @@ function acceptance(mc::MC)
 end
 
 # Calculate the covariance of the samples
-#function covariance(mc::MC)
+# function covariance(mc::MC)
 #end
 
 # Wrapper function for all the analysis tools
