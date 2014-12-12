@@ -71,7 +71,7 @@ using LittleMC
 using Distributions
 using PDMats
 
-mc = MC(fp, 200, [1.2, 1.0], PDiagMat([0.06^2, 0.05^2]))
+mc = MC(fp, 2000, [1.2, 1.0], PDiagMat([0.06^2, 0.05^2]))
 
 start(mc)
 
