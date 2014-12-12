@@ -4,9 +4,12 @@ module visibilities
 
 using HDF5
 using image
+using gridding
 using constants
 
-export transform, DataVis, RawModelVis, FullModelVis, fillModelVis, rfftfreq, fftfreq
+export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, write
+export transform, rfftfreq, fftfreq
+export lnprob
 
 # Stores the data visibilities for a single channel
 type DataVis
@@ -20,13 +23,13 @@ end
 # Read all the visibilities from an HDF5 string and return them as an array of DataVis objects
 function DataVis(fname::ASCIIString)
     fid = h5open(fname, "r")
-    lams = cc ./ read(fid["freqs"]) * 1e4 # Convert from Hz to μm
+    lams = read(fid["lams"]) # [μm]
     uu = read(fid["uu"])
     vv = read(fid["vv"])
     real = read(fid["real"])
     imag = read(fid["imag"])
     VV = real + imag .* im # Complex visibility
-    invsig = sqrt(read(fid["weight"]))
+    invsig = read(fid["invsig"])
     close(fid)
 
     nlam = length(lams)
@@ -44,13 +47,13 @@ function DataVis(fname::ASCIIString, index::Int)
     fid = h5open(fname, "r")
     # the indexing and `vec` are necessary here because HDF5 doesn't naturally
     # squeeze trailing dimensions of length-1
-    lam = cc / fid["freqs"][index][1] * 1e4 # Convert from Hz to μm
+    lam = fid["lams"][index][1] # [μm]
     uu = vec(fid["uu"][:, index])
     vv = vec(fid["vv"][:, index])
     real = vec(fid["real"][:, index])
     imag = vec(fid["imag"][:, index])
     VV = real + imag .* im # Complex visibility
-    invsig = sqrt(vec(fid["weight"][:, index]))
+    invsig = vec(fid["invsig"][:, index])
     close(fid)
 
     #Return a DataVis object
@@ -58,14 +61,19 @@ function DataVis(fname::ASCIIString, index::Int)
 end
 
 # Take in a visibility data set and then write it to the HDF5 file
-function write(dv:DataVis, fname::ASCIIString)
+# The HDF5 file actually expects multi-channel data, so instead we will need to
+# store all of this information with arrays of shape (..., 1) [an extra trailing]
+# dimension of 1
+function write(dv::DataVis, fname::ASCIIString)
+    nvis = length(dv.uu)
+    VV = reshape(dv.VV, (nvis, 1))
     fid = h5open(fname, "w")
-    fid["freqs"] = reshape(dv.lam * 1e-4, tuple(size(data)..., 1))# expects 1D array
-    fid["uu"] = # expects 2D array
-    fid["vv"] = # expects 2D array
-    fid["real"] = # expects 2D array
-    fid["imag"] = # expects 2D array
-    fid["weight"] = # expects 2D array
+    fid["lams"] = [dv.lam] # expects 1D array
+    fid["uu"] = reshape(dv.uu, (nvis, 1)) # expects 2D array
+    fid["vv"] = reshape(dv.vv, (nvis, 1)) # expects 2D array
+    fid["real"] = real(VV)
+    fid["imag"] = imag(VV)
+    fid["invsig"] = reshape(dv.invsig, (nvis, 1)) # expects 2D array
 
     close(fid)
 end
@@ -89,14 +97,27 @@ end
 
 # Produced by gridding a RawModelVis to match the data
 type ModelVis
-    dvis::DataVis #A reference to the matching dataset
+    dvis::DataVis # A reference to the matching dataset
+    VV::Vector{Complex128} # vector of complex visibilities directly
+    # corresponding to the u, v locations in DataVis
+end
 
+# Given a DataSet and a FullModelVis, go through and interpolate at the
+# u,v locations of the DataVis
+function ModelVis(dvis::DataVis, fmvis::FullModelVis)
+    nvis = length(dvis.VV)
+    VV = Array(Complex128, nvis)
+    for i=1:nvis
+        VV[i] = interpolate_uv(dvis.uu[i], dvis.vv[i], fmvis)
+    end
+
+    return ModelVis(dvis, VV)
 end
 
 function lnprob(dvis::DataVis, mvis::ModelVis)
-    @assert dvis == mvis.dvis, "Using the wrong ModelVis!"
+    @assert dvis == mvis.dvis # Using the wrong ModelVis, otherwise!
 
-    return -0.5 * sumabs2(invsig *(dvis.VV - mvis.VV)) # Basic chi2
+    return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
 # Transform the SkyImage produced by RADMC into a RawModelVis object using rfft
@@ -201,6 +222,70 @@ function fillModelVis(vis::RawModelVis)
     vv = vcat(vv_top, vv_bottom)
 
     return FullModelVis(vis.lam, uu, vv, vcat(top, bottom))
+end
+
+# called ModGrid in gridding.c (KR code) and in Model.for (MIRIAD)
+# Uses spheroidal wave functions to interpolate a model to a (u,v) coordinate.
+# u,v are in [kλ]
+function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
+
+    # 1. Find the nearest gridpoint in the FFT'd image.
+    iu0 = indmin(abs(u - vis.uu))
+    iv0 = indmin(abs(v - vis.vv))
+
+    # now find the relative distance to this nearest grid point (not absolute)
+    u0 = u - vis.uu[iu0]
+    v0 = v - vis.vv[iv0]
+
+    # determine the uu and vv distance for 3 grid points (could be later taken out)
+    du = abs(vis.uu[4] - vis.uu[1])
+    dv = abs(vis.vv[4] - vis.vv[1])
+
+    # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels (3 on either side)
+
+    # Are u0 and v0 to the left or the right of the index?
+    # we want to index three to the left, three to the right
+
+    # TODO: check that we are still in bounds of the array
+    if u0 >= 0.0
+        # To the right of the index
+        uind = iu0-2:iu0+3
+    else
+        # To the left of the index
+        uind = iu0-3:iu0+2
+    end
+
+    if v0 >= 0.0
+        # To the right of the index
+        vind = iv0-2:iv0+3
+    else
+        # To the left of the index
+        vind = iv0-3:iv0+2
+    end
+
+    etau = (vis.uu[uind] .- u)/du
+    etav = (vis.vv[vind] .- v)/dv
+    VV = vis.VV[vind, uind] # Array is packed like the image
+
+    # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
+    # TODO: Explore using something other than alpha=1.0
+    uw = gcffun(etau, 1.0)
+    vw = gcffun(etav, 1.0)
+
+    # 4. Normalization such that it has an area of 1. Divide by w later.
+    w = sum(uw) * sum(vw)
+
+    # 5. Loop over all 36 grid indices and sum to find the interpolation.
+    cum::Complex128 = 0.0 + 0.0im
+    for i=1:6
+        for j=1:6
+            cum += uw[i] * vw[j] * VV[j,i] # Array is packed like the image
+        end
+    end
+
+    cum = cum/w
+
+    return cum
 end
 
 # Return the frequencies corresponding to the output of the real FFT. After numpy.fft.rfftfreq
