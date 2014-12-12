@@ -9,16 +9,17 @@ export imageGauss, FTGauss
 # Given two arrays of l and m coordinates, fill an array of the Gaussian image following the MATLAB convention.
 # Modified to take sigma as a parameter. Later, this should be modified to take
 # amplitude and mean vector, which will translate to a phase shift
-# p0 is a vector of sigma in units of arcseconds
+# p0 is a vector of [mu_x, m_y, sigma_x, sigma_y] in units of arcseconds
 function imageGauss(ll::Vector{Float64}, mm::Vector{Float64}, p::Vector{Float64})
     nx = length(ll)
     ny = length(mm)
     img = Array(Float64, ny, nx)
-    Sigma = Diagonal((p * arcsec).^2) #Convert from arcsec to radians
+    mu = p[1:2] * arcsec
+    Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
     pre = 1. / (2pi * sqrt(det(Sigma)))
     for i=1:nx
         for j=1:ny
-            R = Float64[ll[i], mm[j]]
+            R = Float64[ll[i] , mm[j]] - mu
             img[j, i] = pre * exp(-0.5 * (R' * (Sigma\R))[1])
         end
     end
@@ -32,9 +33,11 @@ end
 function FTGauss(uu::Float64, vv::Float64, p::Vector{Float64})
     uu = uu .* 1e3 #[λ]
     vv = vv .* 1e3 #[λ]
+    mu = p[1:2] * arcsec
     R = Float64[uu, vv]
-    Sigma = Diagonal((p * arcsec).^2) #Convert from arcsec to radians
-    return exp(-2 * (pi^2) * (R' * Sigma * R)[1]) + 0.im
+    Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
+    phase_shift = exp(-2pi * 1.0im * (R' * mu)[1]) # Not actually in polar phase form
+    return exp(-2 * (pi^2) * (R' * Sigma * R)[1]) * phase_shift
     # in this case, Sigma serves as the inverse
 end
 

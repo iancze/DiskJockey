@@ -8,9 +8,11 @@ using gauss_model
 
 # Test to see if we get the convolutional interpolation correct by using a 2D Elliptical Gaussian.
 # Realistic Gaussian will have scale dimensions (fatter in x direction)
+const mu_x = 1.0 # [arcsec]
+const mu_y = 1.0 # [arcsec]
 const s_x = 1.2 # [arcsec]
 const s_y = 1.0 # [arcsec]
-const p0 = [s_x, s_y] # [arcsec]
+const p0 = [mu_x, mu_y, s_x, s_y] # [arcsec]
 
 # Apply Hanning tapering to the image.
 function hanning!(img::SkyImage)
@@ -67,7 +69,7 @@ vv = vis_fft.vv # [kλ]
 vis_analytic = FTGauss(uu, vv, p0)
 
 # Complex subtraction
-println("Maxmim FFT discrepancy:  ", maximum(abs(plain_fft.VV - vis_analytic)))
+println("Maximum FFT discrepancy:  ", maximum(abs(plain_fft.VV - vis_analytic)))
 
 import PyPlot
 import PyPlot.plt
@@ -87,7 +89,7 @@ fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 
 ext = (minimum(ra), maximum(ra), minimum(dec), maximum(dec))
 # Real, analytic Gaussian
-aximg = ax[:imshow](img, interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
+aximg = ax[:imshow](img, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
 ax[:set_title]("image")
 ax[:set_xlabel](L"$\alpha$ [arcsec]")
 ax[:set_ylabel](L"$\delta$ [arcsec]")
@@ -105,7 +107,7 @@ ext = (minimum(vis_fft.uu), maximum(vis_fft.uu), minimum(vis_fft.vv), maximum(vi
 # Real and imaginary components of analytic Gaussian
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
-re = ax[1][:imshow](real(vis_analytic), interpolation="none", origin="upper", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(vis_analytic)))
+re = ax[1][:imshow](real(vis_analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(vis_analytic)))
 ax[1][:set_title]("Real Analytic")
 ax[1][:set_xlabel](L"uu [k$\lambda$]")
 ax[1][:set_ylabel](L"vv [k$\lambda$]")
@@ -113,7 +115,7 @@ ax[1][:set_ylabel](L"vv [k$\lambda$]")
 cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
 cb = fig[:colorbar](re, cax=cax)
 
-im = ax[2][:imshow](imag(vis_analytic), interpolation="none", origin="upper", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(vis_analytic)))
+im = ax[2][:imshow](imag(vis_analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(vis_analytic)))
 
 ax[2][:set_title]("Imag Analytic")
 ax[2][:set_xlabel](L"uu [k$\lambda$]")
@@ -129,7 +131,7 @@ plt.savefig("../plots/gaussian_analytic.png")
 # Real and imaginary components of the FFT Gaussian
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
-re = ax[1][:imshow](real(plain_fft.VV), interpolation="none", origin="upper", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
+re = ax[1][:imshow](real(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
 ax[1][:set_title]("Real FFT")
 ax[1][:set_xlabel](L"uu [k$\lambda$]")
 ax[1][:set_ylabel](L"vv [k$\lambda$]")
@@ -137,7 +139,7 @@ ax[1][:set_ylabel](L"vv [k$\lambda$]")
 cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
 cb = fig[:colorbar](re, cax=cax)
 
-im = ax[2][:imshow](imag(plain_fft.VV), interpolation="none", origin="upper", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(plain_fft.VV)))
+im = ax[2][:imshow](imag(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(plain_fft.VV)))
 
 ax[2][:set_title]("Imag FFT")
 ax[2][:set_xlabel](L"uu [k$\lambda$]")
@@ -155,7 +157,7 @@ fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
 diff = vis_analytic - plain_fft.VV
 
-re = ax[1][:imshow](real(diff), interpolation="none", origin="upper", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(real(diff)))
+re = ax[1][:imshow](real(diff), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(real(diff)))
 ax[1][:set_title]("Real difference")
 ax[1][:set_xlabel](L"uu [k$\lambda$]")
 ax[1][:set_ylabel](L"vv [k$\lambda$]")
@@ -163,7 +165,7 @@ ax[1][:set_ylabel](L"vv [k$\lambda$]")
 cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
 cb = fig[:colorbar](re, cax=cax)
 
-im = ax[2][:imshow](imag(diff), interpolation="none", origin="upper", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(imag(diff)))
+im = ax[2][:imshow](imag(diff), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(imag(diff)))
 
 ax[2][:set_title]("Imag difference")
 ax[2][:set_xlabel](L"uu [k$\lambda$]")
@@ -182,7 +184,7 @@ plt.savefig("../plots/gaussian_difference.png")
 n = 100
 uu = linspace(-100, 100, n) # [kλ]
 approx = Array(Complex128, n)
-analytic = Array(Float64, n)
+analytic = Array(Complex128, n)
 
 for i=1:n
     u = uu[i]
@@ -199,15 +201,15 @@ nu = length(vis_fft.uu)
 
 zer = zeros(length(vis_fft.uu))
 
-analytic_u = Array(Float64, nu)
+analytic_u = Array(Complex128, nu)
 for i=1:nu
     analytic_u[i] = FTGauss(vis_fft.uu[i], 0.0, p0)
 end
 
 ax[:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
 ax[:plot](uu, real(approx), "ob", label="Approx")
-ax[:plot](uu, analytic, ".r", label="Analytic")
-ax[:plot](vis_fft.uu, analytic_u, "or", label="Analytic")
+ax[:plot](uu, real(analytic), ".r", label="Analytic")
+ax[:plot](vis_fft.uu, real(analytic_u), "or", label="Analytic")
 ax[:set_xlim](-100, 100)
 ax[:set_xlabel](L"u [k $\lambda$]")
 
@@ -235,7 +237,7 @@ fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
 
 ext = (minimum(uu), maximum(uu), minimum(vv), maximum(vv))
 
-axan = ax[1][:imshow](real(vis_analytic_small), interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"), extent=ext)
+axan = ax[1][:imshow](real(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
 ax[1][:set_title]("Analytic FT")
 ax[1][:set_xlabel](L"uu [k$\lambda$]")
 ax[1][:set_ylabel](L"vv [k$\lambda$]")
@@ -243,7 +245,7 @@ ax[1][:set_ylabel](L"vv [k$\lambda$]")
 cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
 cb = fig[:colorbar](axan, cax=cax)
 
-axfft = ax[2][:imshow](real(vis_intp), interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"), extent=ext)
+axfft = ax[2][:imshow](real(vis_intp), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
 ax[2][:set_title]("Interpolated Visibilites from FFT")
 ax[2][:set_xlabel](L"uu [k$\lambda$]")
 ax[2][:set_ylabel](L"vv [k$\lambda$]")
@@ -251,9 +253,9 @@ ax[2][:set_ylabel](L"vv [k$\lambda$]")
 cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
 cb = fig[:colorbar](axfft, cax=cax)
 
-diff = abs(vis_analytic_small - vis_intp)
+diff = real(vis_analytic_small - vis_intp)
 
-axdif = ax[3][:imshow](diff, interpolation="none", origin="upper", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
+axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
 ax[3][:set_title]("Difference")
 ax[3][:set_xlabel](L"uu [k$\lambda$]")
 ax[3][:set_ylabel](L"vv [k$\lambda$]")
@@ -263,4 +265,38 @@ cb = fig[:colorbar](axdif, cax=cax)
 
 fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
 
-plt.savefig("../plots/interpolation_difference.png")
+plt.savefig("../plots/interpolation_difference_real.png")
+
+
+
+fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
+
+axan = ax[1][:imshow](imag(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[1][:set_title]("Analytic FT")
+ax[1][:set_xlabel](L"uu [k$\lambda$]")
+ax[1][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
+cb = fig[:colorbar](axan, cax=cax)
+
+axfft = ax[2][:imshow](imag(vis_intp), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[2][:set_title]("Interpolated Visibilites from FFT")
+ax[2][:set_xlabel](L"uu [k$\lambda$]")
+ax[2][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
+cb = fig[:colorbar](axfft, cax=cax)
+
+diff = imag(vis_analytic_small - vis_intp)
+
+axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
+ax[3][:set_title]("Difference")
+ax[3][:set_xlabel](L"uu [k$\lambda$]")
+ax[3][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
+cb = fig[:colorbar](axdif, cax=cax)
+
+fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
+
+plt.savefig("../plots/interpolation_difference_imag.png")
