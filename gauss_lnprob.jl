@@ -53,7 +53,7 @@ function fp(p::Vector)
     return val
 end
 
-# Now try optimizing the function using NLopt
+# # Now try optimizing the function using NLopt
 # using NLopt
 #
 # nparam = 2
@@ -62,7 +62,7 @@ end
 # max_objective!(opt, fgrad)
 # xtol_rel!(opt,1e-4)
 #
-# (optf,optx,ret) = optimize(opt, [1.3, 1.0])
+# (optf,optx,ret) = optimize(opt, [1.3, 1.2])
 # println(optf, " ", optx, " ", ret)
 
 
@@ -71,7 +71,7 @@ using LittleMC
 using Distributions
 using PDMats
 
-mc = MC(fp, 2000, [1.2, 1.0], PDiagMat([0.06^2, 0.05^2]))
+mc = MC(fp, 500, [1.2, 1.0], PDiagMat([0.06^2, 0.05^2]))
 
 start(mc)
 

@@ -61,13 +61,15 @@ import matplotlib.pyplot as plt
 #plt.show()
 #
 
-plt.hist(np.abs(imag[12] * np.sqrt(weight[12])))
-plt.show()
-# fig = plt.figure(figsize=(6,6))
-# ax = fig.add_subplot(111)
-# ax.plot(uu[10], vv[10], ".")
-# ax.set_xlabel(r"UU [k$\lambda$]")
-# ax.set_ylabel(r"YY [k$\lambda$]")
-# fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
-#
-# plt.savefig("plots/uv_spacings.png")
+#plt.hist(np.abs(imag[12] * np.sqrt(weight[12])))
+#plt.show()
+fig = plt.figure(figsize=(6,6))
+ax = fig.add_subplot(111)
+ax.plot(uu[10], vv[10], ".")
+ax.set_xlabel(r"UU [k$\lambda$]")
+ax.set_ylabel(r"YY [k$\lambda$]")
+ax.set_xlim(-75, 75)
+ax.set_ylim(-75, 75)
+fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
+
+plt.savefig("plots/uv_spacings_short.png")

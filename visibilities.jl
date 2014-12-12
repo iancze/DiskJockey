@@ -8,6 +8,7 @@ using gridding
 using constants
 
 export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, write
+export interpolate_uv
 export transform, rfftfreq, fftfreq
 export lnprob
 
@@ -246,7 +247,15 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     # Are u0 and v0 to the left or the right of the index?
     # we want to index three to the left, three to the right
 
-    # TODO: check that we are still in bounds of the array
+    # First check that we are still in bounds of the array
+    # Check to make sure that at least three grid points exist in all directions
+    lenu = length(vis.uu)
+    lenv = length(vis.vv)
+    @assert iu0 >= 4
+    @assert iv0 >= 4
+    @assert lenu - iu0 >= 4
+    @assert lenv - iv0 >= 4
+
     if u0 >= 0.0
         # To the right of the index
         uind = iu0-2:iu0+3
@@ -263,9 +272,15 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
         vind = iv0-3:iv0+2
     end
 
+    # println("Sampling at uu: ", vis.uu[uind])
+    # println("Sampling at vv: ", vis.uu[vind])
+
     etau = (vis.uu[uind] .- u)/du
     etav = (vis.vv[vind] .- v)/dv
     VV = vis.VV[vind, uind] # Array is packed like the image
+
+    # println("etau: ", etau)
+    # println("etav: ", etav)
 
     # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
     # TODO: Explore using something other than alpha=1.0

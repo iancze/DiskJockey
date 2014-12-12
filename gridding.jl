@@ -12,6 +12,7 @@ export spheroid, corrfun, corrfun!, gcffun, interpolate_uv
 # spheroid_1, spheroid_1_5 and spheroid_2. But it also may not be necessary.
 
 # Assumes we are using m = 6.
+# Allows arguments for eta < 1.0 + 1e-7, but returns 0.0 (ie, spheroid window truncated)
 function spheroid(eta::Float64, alpha::Float64)
 
     etalim::Float64 = 0.75 # Specifically for m = 6
@@ -79,10 +80,14 @@ function spheroid(eta::Float64, alpha::Float64)
             throw(DomainError())
         end
 
-    else
-        println("The spheroid is only defined on the domain -1.0 <= eta <= 1.0.")
-        throw(DomainError())
+    elseif eta <= 1.0 + 1e-7
+        # case to allow some floating point error
+        return 0.0
 
+    else
+        # Now you're really outside of the bounds
+        println("The spheroid is only defined on the domain -1.0 <= eta <= 1.0. (modulo machine precision.)")
+        throw(DomainError())
     end
 end
 

@@ -6,13 +6,6 @@ using constants
 
 export imageGauss, FTGauss
 
-# Realistic Gaussian will have scale dimensions (fatter in x direction)
-const s_x = 1.2 * arcsec # [radians]
-const s_y = 1.0 * arcsec # [radians]
-
-const pre = 1. / (2pi * sqrt(det(Float64[s_x^2 0 ;
-0  s_y^2])))
-
 # Given two arrays of l and m coordinates, fill an array of the Gaussian image following the MATLAB convention.
 # Modified to take sigma as a parameter. Later, this should be modified to take
 # amplitude and mean vector, which will translate to a phase shift
@@ -47,13 +40,13 @@ end
 
 # Given two arrays of u and v coordinates in [kλ], fill an array with the
 # analytic FT of aforementioned Gaussian evaluated at every pairwise (u,v) pair
-function FTGauss(uu::Vector{Float64}, vv::Vector{Float64})
+function FTGauss(uu::Vector{Float64}, vv::Vector{Float64}, p::Vector{Float64})
     nu = length(uu)
     nv = length(vv)
     img = Array(Complex128, nv, nu)
     for i=1:nu
         for j=1:nv
-            img[j, i] = FTGauss(uu[i], vv[j])
+            img[j, i] = FTGauss(uu[i], vv[j], p)
         end
     end
     return img
