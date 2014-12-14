@@ -1,4 +1,5 @@
 push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
 
 # Using the analytic form of the FT of the Gaussian, and the u,v sampling and noise
 # from a real SMA dataset, make a fake dataset.
