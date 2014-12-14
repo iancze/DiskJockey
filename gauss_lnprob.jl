@@ -6,7 +6,8 @@ using gauss_model
 using gridding
 using constants
 
-const dvis = DataVis("data/V4046Sgr_fake.hdf5", 1) #Read in the fake dataset
+const dvarr = DataVis("data/V4046Sgr_fake.hdf5") #Read in the whole fake dataset
+nlam = length(dvarr)
 
 # Dimensions of the problem
 const nx = 128
@@ -22,22 +23,33 @@ mm = sin(dec * arcsec)
 
 function f(p::Vector{Float64})
     # p is naturally in arcsec
-    img = imageGauss(ll, mm, p)
-    lam0 = cc/230.538e9 * 1e4 # [microns]
-    skim = SkyImage(img, ra, dec, lam0)
+
+    # Compute the array of images
+    data = Array(Float64, (ny, nx, nlam))
+    lams = Array(Float64, nlam)
+    for k=1:nlam
+        data[:, :, k] = imageGauss(ll, mm, p, k)
+        lams[k] = dvarr[k].lam # [microns]
+    end
+
+    skim = SkyImage(data, ra, dec, lams)
 
     # Apply the gridding correction function before doing the FFT
     corrfun!(skim, 1.0) #alpha = 1.0
 
-    # FFT the image
-    vis_fft = transform(skim)
+    # Now calculate the sum of lnprobs in a loop
+    lnp = Array(Float64, nlam)
+    for i=1:nlam
+        # FFT the appropriate image chanel
+        vis_fft = transform(skim, i)
 
-    # Interpolate the `vis_fft` at the same locations as the DataSet
-    mvis = ModelVis(dvis, vis_fft)
+        # Interpolate the `vis_fft` at the same locations as the DataSet
+        mvis = ModelVis(dvarr[i], vis_fft)
 
-    # Calculate chi^2 between these two
-    return lnprob(dvis, mvis)
-
+        # Calculate chi^2 between these two
+        lnp[i] = lnprob(dvarr[i], mvis)
+    end
+    return sum(lnp)
 end
 
 # Necessary wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -54,16 +66,19 @@ function fp(p::Vector)
 end
 
 # # Now try optimizing the function using NLopt
-# using NLopt
-#
-# nparam = 2
-# opt = Opt(:LN_COBYLA, nparam)
-#
-# max_objective!(opt, fgrad)
-# xtol_rel!(opt,1e-4)
-#
-# (optf,optx,ret) = optimize(opt, [1.3, 1.2])
-# println(optf, " ", optx, " ", ret)
+using NLopt
+
+starting_param = [1.3, 1.2, 0.7, 0.7]
+
+nparam = length(starting_param)
+opt = Opt(:LN_COBYLA, nparam)
+
+max_objective!(opt, fgrad)
+xtol_rel!(opt,1e-4)
+
+(optf,optx,ret) = optimize(opt, starting_param)
+println(optf, " ", optx, " ", ret)
+
 
 
 using LittleMC
@@ -71,7 +86,7 @@ using LittleMC
 using Distributions
 using PDMats
 
-mc = MC(fp, 500, [1.2, 1.0], PDiagMat([0.06^2, 0.05^2]))
+mc = MC(fp, 500, [1.2, 1.0, 1.0, 1.0], PDiagMat([0.03^2, 0.03^2, 0.01^2, 0.01^2]))
 
 start(mc)
 

@@ -11,29 +11,40 @@ using gauss_model
 using constants
 
 # Read in the dataset
-dv = DataVis("../data/V4046Sgr.hdf5", 12)
-nvis = length(dv.VV)
+#dv = DataVis("../data/V4046Sgr.hdf5", 12)
+dvarr = DataVis("../data/V4046Sgr.hdf5")
+nvis = length(dvarr[1].VV)
+nlam = 3 #length(dvarr)
 
 # Realistic Gaussian will have scale dimensions (fatter in x direction)
+const mu_x = 1.2 # [arcsec]
+const mu_y = 1.0 # [arcsec]
 const s_x = 1.2 # [arcsec]
 const s_y = 1.0 # [arcsec]
-const p0 = [s_x, s_y]
+const p0 = [mu_x, mu_y, s_x, s_y] # [arcsec]
 
 
 # Using the analytic formula for the FT of the Gaussian, compute the true
 # visibilities sampled at the u,v points in the SMA dataset
-VV_fake = Array(Complex128, nvis)
-invsig = Array(Float64, nvis)
+dvarr_fake = Array(DataVis, nlam)
+
 const scale = 0.5
-for i=1:nvis
-    model = FTGauss(dv.uu[i], dv.vv[i], p0)
-    noise = scale * (randn() + randn()*im) # Just adding in some noise here
-    VV_fake[i] = model + noise
-    invsig[i] = 1./scale
+for k=1:nlam
+    dv = dvarr[k]
+    # Make a new array for each DataVis, otherwise references will be kept and duplicated
+    VV_fake = Array(Complex128, nvis)
+    invsig = Array(Float64, nvis)
+    for i=1:nvis
+        model = FTGauss(dv.uu[i], dv.vv[i], p0, k)
+        noise = scale * (randn() + randn()*im) # Just adding in some noise here
+        VV_fake[i] = model + noise
+        invsig[i] = 1./scale
+    end
+    dvarr_fake[k] = DataVis(dv.lam, dv.uu, dv.vv, VV_fake, invsig)
 end
 
 # Make the fake dataset using these Gaussian visibilities and noise terms
-dv_fake = DataVis(dv.lam, dv.uu, dv.vv, VV_fake, invsig)
+
 
 # # Instead of using the u,v points in the SMA dataset, actually sample somewhat
 # # more uniformly on a grid.
@@ -63,4 +74,4 @@ dv_fake = DataVis(dv.lam, dv.uu, dv.vv, VV_fake, invsig)
 
 
 
-write(dv_fake, "../data/V4046Sgr_fake.hdf5")
+write(dvarr_fake, "../data/V4046Sgr_fake.hdf5")

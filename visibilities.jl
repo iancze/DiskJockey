@@ -79,6 +79,23 @@ function write(dv::DataVis, fname::ASCIIString)
     close(fid)
 end
 
+# Write an array of DataVis to a single HDF5 file
+function write(dvarr::Array{DataVis, 1}, fname::ASCIIString)
+    nvis = length(dvarr[1].VV)
+    nlam = length(dvarr)
+    fid = h5open(fname, "w")
+    # hcat here stacks the individual channel data sets into a big block
+    # of shape (nvis, nlam)
+    fid["lams"] = hcat([dv.lam for dv in dvarr]...)
+    fid["uu"] = hcat([dv.uu for dv in dvarr]...)
+    fid["vv"] = hcat([dv.vv for dv in dvarr]...)
+    fid["real"] = hcat([real(dv.VV) for dv in dvarr]...)
+    fid["imag"] = hcat([imag(dv.VV) for dv in dvarr]...)
+    fid["invsig"] = hcat([dv.invsig for dv in dvarr]...)
+    close(fid)
+
+end
+
 #TODO: These visibilites need to be renamed, since the are confusing with ModelVis
 # Produced by FFT'ing a single channel of a SkyImage
 type RawModelVis
