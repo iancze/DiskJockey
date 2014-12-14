@@ -1,63 +1,36 @@
 push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
 
+nchild = 15
+addprocs(nchild)
+
 @everywhere using parallel
 
-## Master process
-
-# Propose parameters, write down density, velocity, temperature structure.
-
-## Workers
-
-# Run RADMC3D, FFT, sample, evaluate lnprob, send back to master process
-
-## Master process
-
-# Decide parameters, advance chain
-
-@everywhere function f(dset, p, key)
+@everywhere function f(dset, key, p)
     0.0
     #println("Likelihood call to $dset, $p, $key")
 end
 
-pipes, dones = initialize(15, f)
+@everywhere function initfunc(key::Int)
+    println("Loading dset $key")
+    return key
+end
 
-println(procs())
-println(workers())
+pipes = initialize(nchild, initfunc, f)
 
-distribute!(pipes, [0.0, 0.0])
-result = gather!(pipes)
-
-tic()
-distribute!(pipes, [0.0, 0.0])
-
-result = gather!(pipes)
-toc()
-
-println(result)
+for j=1:10
+    distribute!(pipes, [0.0, 0.0])
+    result = gather!(pipes)
+    println(result)
+end
 
 println("completing all results")
-
 quit!(pipes)
-#wait!(dones)
-
 println("all results should be completed")
 
-#wait!(dones)
-
-println(procs())
-#println(workers())
-
-
-
-# # Initialization all children processes this way
-# mypipe = Pipe(2)
-# r2 = remotecall(2, brain, mypipe, 2)
-#
-# send!(mypipe, [1.0, 1.0, 1.2, 1.2])
-# println("Sent message from master to child.")
-#
-# println("Master waiting for message retrieval from child")
-# msg = get!(mypipe)
-# println("Got $msg back!")
-#
-# send!(mypipe, "QUIT")
+# For some reason the workers() command is slow, and if you call it multiple times
+# in quick succession it will give outdated information. Also, if you call it while
+# there are no workers, it will return [1]
+# for j=1:3
+#     println(workers())
+#     sleep(2)
+# end

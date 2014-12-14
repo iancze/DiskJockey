@@ -1,6 +1,6 @@
 module parallel
 
-export Pipe, send!, get!, brain, initialize, distribute!, gather!, wait!, quit!
+export Pipe, send!, get!, brain, initialize, distribute!, gather!, quit!
 
 # Use this code in a separate module by doing
 # @everywhere using parallel
@@ -52,16 +52,14 @@ end
 # Once information appears, the child takes the value, does its work and then
 # puts the answer back on the pipe for the main process to consume. Then it goes
 # back to waiting for more information.
-function brain(pipe::Pipe, key::Int, f::Function)
+# initfunc is designed to return the dataset, or any object that gets passed
+# to f, specific to this process
+function brain(pipe::Pipe, key::Int, initfunc::Function, f::Function)
     id = myid()
     println("Initialized brain $id with $key")
 
     #Load the dataset according to this key
-
-    # Do individual INITIALIZATION HERE
-
-    # The dataset will keep the scope
-    dset = 0.0
+    dset = initfunc(key)
 
     while true
         p = get!(pipe)
@@ -87,11 +85,10 @@ end
 # All of the following functions are run ONLY the master process
 
 # Set up nchild child processes and pipes and return an array of the pipes
-# function takes three arguments: the dataset, vector of parameters, and integer key
-function initialize(nchild::Int, f::Function)
+# function takes three arguments: the dataset, integer key, and vector of parameters
+function initialize(nchild::Int, initfunc::Function, f::Function)
 
     pipes = Array(Pipe, nchild)
-    dones = Array(RemoteRef, nchild) #Vector of done refs. Filled only when brain exits
 
     # The master process is always labelled 1, so nprocessors = nchild + 1
     # yet the pipes array is indexed from 1 to nchild, hence the offset
@@ -99,11 +96,11 @@ function initialize(nchild::Int, f::Function)
         child_id = i + 1
         pipes[i] = Pipe(child_id) # Create a pipe from the master process to this child ID
 
-        # Initialize the process with the key and the function
-        dones[i] = remotecall(child_id, brain, pipes[i], child_id, f)
+        # Initialize the process with the key, init function, and the function
+        remotecall(child_id, brain, pipes[i], child_id, initfunc, f)
     end
 
-    return pipes, dones
+    return pipes
 end
 
 # Distribute parameters to all sub processes for likelihood evaluation
@@ -118,23 +115,13 @@ function gather!(pipes::Vector{Pipe})
     return sum([get!(pipe) for pipe in pipes])
 end
 
-# Block until all child processes have their brains finished
-function wait!(dones::Vector{RemoteRef})
-    for done in dones
-        println("Waiting")
-        ans = fetch(done)
-        println("Done Waiting, got $ans")
-    end
-end
-
 # Call this at the very end of the run to close all the pipes
 function quit!(pipes::Vector{Pipe})
     for pipe in pipes
         send!(pipe, "QUIT")
     end
     #Kill all the processes
-    println("Killing all processes")
-    rmprocs(workers()...)
+    rmprocs(workers())
 end
 
 # might be worthwhile to investigate the driver code mentioned in the manual. Seems like more of an MPI startup approach (everything is loaded everywhere, and we can check to see if we are master or not).

@@ -86,7 +86,7 @@ function write(dvarr::Array{DataVis, 1}, fname::ASCIIString)
     fid = h5open(fname, "w")
     # hcat here stacks the individual channel data sets into a big block
     # of shape (nvis, nlam)
-    fid["lams"] = hcat([dv.lam for dv in dvarr]...)
+    fid["lams"] = [dv.lam for dv in dvarr]
     fid["uu"] = hcat([dv.uu for dv in dvarr]...)
     fid["vv"] = hcat([dv.vv for dv in dvarr]...)
     fid["real"] = hcat([real(dv.VV) for dv in dvarr]...)
