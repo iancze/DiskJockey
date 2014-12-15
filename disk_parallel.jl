@@ -5,10 +5,13 @@ const global keylist = Int[i for i=1:23]
 # go through any previously created directories and remove them before the start
 # of the run
 function cleardirs!(keylist::Vector{Int})
+    println("Removing old directories")
     for key in keylist
         keydir = "jud$key"
         run(`rm -rf $keydir`)
     end
+    println("Removed directories")
+    run(`ls`)
 end
 
 # Clear all directories
@@ -16,6 +19,9 @@ cleardirs!(keylist)
 
 nchild = length(keylist)
 addprocs(nchild)
+
+# Optionally regenerate static files here
+#write_grid()
 
 @everywhere using constants
 @everywhere using parallel
@@ -28,18 +34,19 @@ addprocs(nchild)
 @everywhere function initfunc(key)
 
     # Load the relevant chunk of the dataset
-    dset = DataVis("data/V4046Sgr_fake.hdf5", key)
+    dset = DataVis("data/V4046Sgr.hdf5", key)
 
     # Create a directory where all RADMC files will reside and be driven from
     keydir = "jud$key"
     mkdir(keydir)
 
     # Copy all relevant configuration scripts to this subdirectory
-    # these are mainly setup files which will not change
+    # these are mainly setup files which will not change throughout the run
     run(`cp radmc3d.inp $keydir`)
+    run(`cp amr_grid.inp $keydir`)
     run(`cp lines.inp $keydir`)
-    run(`cp numberdens_co.inp $keydir`)
     run(`cp molecule_co.inp $keydir`)
+    run(`cp wavelength_micron.inp $keydir`)
 
     # change the subprocess to reside in this directory for the remainder of the run
     # where it will drive its own independent RADMC3D process
@@ -85,6 +92,7 @@ end
 
 
 pipes = initialize(nchild, keylist, initfunc, f)
+gather!(pipes)
 
 # this function will run only on the main process
 function fprob(p::Vector{Float64})
@@ -124,7 +132,7 @@ function fprob(p::Vector{Float64})
     end
 
 
-    distribute!(pipes, p)
+    distribute!(pipes, pars)
     return gather!(pipes)
 end
 
@@ -139,7 +147,8 @@ ksi = 0.14e5 # [cm s^{-1}] microturbulence
 incl = 33.5 # [degrees] inclination
 #PA = 73.
 
-println(fprob([M_star, r_c, T_10, q, gamma, M_CO, ksi, 73., incl, 73., 6., 0.0, 0.0]))
+# println("Evaluating fprob")
+# println(fprob([M_star, r_c, T_10, q, gamma, M_CO, ksi, 73., incl, 73., 6., 0.0, 0.0]))
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -155,19 +164,18 @@ end
 # end
 
 # # Now try optimizing the function using NLopt
-# using NLopt
-#
-# starting_param = [1.3, 1.2, 0.7, 0.7]
-#
-# nparam = length(starting_param)
-# opt = Opt(:LN_COBYLA, nparam)
-#
-# max_objective!(opt, fgrad)
-# xtol_rel!(opt,1e-4)
-#
-# (optf,optx,ret) = optimize(opt, starting_param)
-# println(optf, " ", optx, " ", ret)
+using NLopt
 
+starting_param = [M_star, r_c, T_10, q, gamma, M_CO, ksi, 73., incl, 73., 2.87, 0.0, 0.0]
+
+nparam = length(starting_param)
+opt = Opt(:LN_COBYLA, nparam)
+
+max_objective!(opt, fgrad)
+xtol_rel!(opt,1e-3)
+
+(optf,optx,ret) = optimize(opt, starting_param)
+println(optf, " ", optx, " ", ret)
 
 
 # using LittleMC

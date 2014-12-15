@@ -59,8 +59,12 @@ function brain(pipe::Pipe, key::Int, initfunc::Function, f::Function)
     id = myid()
     println("Initialized brain $id with $key")
 
-    #Load the dataset according to this key
+    # Load the dataset according to this key
     dset = initfunc(key)
+
+    # Give the master process something to gather on, so that it can wait until
+    # all child processes are initialized
+    send!(pipe, 0.0)
 
     while true
         p = get!(pipe)
