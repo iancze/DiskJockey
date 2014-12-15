@@ -21,16 +21,15 @@ addprocs(nchild)
 @everywhere mm = sin(dec * arcsec)
 
 @everywhere function initfunc(key)
-    id = key - 1
-    println("Loading dataset $id")
-    return DataVis("data/V4046Sgr_fake.hdf5", id)
+    println("Loading dataset $key")
+    return DataVis("data/V4046Sgr_fake.hdf5", key)
 end
 
 @everywhere function f(dv::DataVis, key::Int, p::Vector{Float64})
     # p is naturally in arcsec
 
     # Compute the image
-    img = imageGauss(ll, mm, p, key - 1)
+    img = imageGauss(ll, mm, p, key)
     skim = SkyImage(img, ra, dec, dv.lam)
 
     # Apply the gridding correction function before doing the FFT
@@ -46,8 +45,8 @@ end
     return lnprob(dv, mvis)
 end
 
-
-pipes = initialize(nchild, initfunc, f)
+keylist = Int[1, 2, 3]
+pipes = initialize(nchild, keylist, initfunc, f)
 
 function fprob(p::Vector{Float64})
     distribute!(pipes, p)

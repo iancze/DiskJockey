@@ -20,7 +20,8 @@ function Pipe(child::Int, master::Int = 1)
 end
 
 # Send a message to the pipe. Automatically figures out which RemoteRef to use
-# based on whether the master or child calls it
+# based on whether the master or child calls it. Message can be any object,
+# but is typically either a Vector{Float64} or a composite type with parameters
 function send!(pipe::Pipe, msg)
     id = myid()
     if id == pipe.m
@@ -86,7 +87,7 @@ end
 
 # Set up nchild child processes and pipes and return an array of the pipes
 # function takes three arguments: the dataset, integer key, and vector of parameters
-function initialize(nchild::Int, initfunc::Function, f::Function)
+function initialize(nchild::Int, keylist::Vector{Int}, initfunc::Function, f::Function)
 
     pipes = Array(Pipe, nchild)
 
@@ -97,14 +98,17 @@ function initialize(nchild::Int, initfunc::Function, f::Function)
         pipes[i] = Pipe(child_id) # Create a pipe from the master process to this child ID
 
         # Initialize the process with the key, init function, and the function
-        remotecall(child_id, brain, pipes[i], child_id, initfunc, f)
+        remotecall(child_id, brain, pipes[i], keylist[i], initfunc, f)
     end
 
     return pipes
 end
 
 # Distribute parameters to all sub processes for likelihood evaluation
-function distribute!(pipes::Vector{Pipe}, p::Vector{Float64})
+# p can be any object, but is traditionally either a Vector{Float64} or a specific
+# composite type (e.g., model.jl/Parameters) that contains as named fields all of the
+# parameters
+function distribute!(pipes::Vector{Pipe}, p)
     for pipe in pipes
         send!(pipe, p)
     end

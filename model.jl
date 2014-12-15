@@ -9,7 +9,7 @@ using constants #Import all of my constants defined in constants.jl
 
 # Write out the camera wavelength file
 # Line frequency center, CO J = 2-1
-# Compute the various wavelengths at which we want to synthesize images 
+# Compute the various wavelengths at which we want to synthesize images
 # 23 images spaced -4.40 -0- 4.40 km/s
 lam0 = cc/230.538e9 * 1e4 # [microns]
 nvels = 23
@@ -67,7 +67,7 @@ function write_grid()
     #amr_grid.inp
     f = open("amr_grid.inp", "w")
 
-    #Write the header 
+    #Write the header
     @printf(f, "%d\n", 1) #iformat
     @printf(f, "%d\n", 0) #regular grid (no AMR or Oct-tree)
     @printf(f, "%d\n", 100) #spherical coordiantes
@@ -98,14 +98,19 @@ end
 #Let's try defining a parameters type, an object of which gets passed around.
 
 type Parameters
-    M_CO::Float64
-    r_c::Float64
-    T_10::Float64
-    q::Float64
-    gamma::Float64
-    ksi::Float64
-    i_d::Float64
-    M_star::Float64
+    M_star::Float64 # [g] stellar mass
+    r_c::Float64 # [cm] characteristic radius
+    T_10::Float64 # [K] temperature at 10 AU
+    q::Float64 # temperature gradient exponent
+    gamma::Float64 # surface temperature gradient exponent
+    M_CO::Float64 # [g] disk mass of CO
+    ksi::Float64 # [cm s^{-1}] microturbulence
+    dpc::Float64 # [pc] distance to system
+    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
+    PA::Float64 # [degrees] position angle (East of North)
+    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
+    mu_x::Float64 # [arcsec] central offset in RA
+    mu_y::Float64 # [arcsec] central offset in DEC
 end
 
 #From Rosenfeld et al. 2012, Table 1
@@ -115,11 +120,12 @@ T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 ksi = 0.14e5 # [cm s^{-1}] microturbulence
-i_d = 33.5 # [degrees] inclination
+incl = 33.5 # [degrees] inclination
 M_star = 1.75 * M_sun # [g] stellar mass
 #PA = 73.
 
-params = Parameters(M_CO, r_c, T_10, q, gamma, ksi, i_d, M_star)
+# global object which is useful for reproducing V4046Sgr
+# params = Parameters(M_CO, r_c, T_10, q, gamma, ksi, i_d, M_star)
 
 #Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.
@@ -152,12 +158,12 @@ function write_model(pars::Parameters)
     # numberdens_co.inp
     fdens = open("numberdens_co.inp", "w")
     @printf(fdens, "%d\n", 1) #iformat
-    @printf(fdens, "%d\n", ncells) 
+    @printf(fdens, "%d\n", ncells)
 
     # gas_velocity.inp
     fvel = open("gas_velocity.inp", "w")
     @printf(fvel, "%d\n", 1) #iformat
-    @printf(fvel, "%d\n", ncells) 
+    @printf(fvel, "%d\n", ncells)
 
     # gas_temperature.inp
     ftemp = open("gas_temperature.inp", "w")
@@ -166,8 +172,8 @@ function write_model(pars::Parameters)
 
     #microturbulence.inp
 
-    # Now, we will need to write the three other files as a function of grid position. 
-    # Therefore we will do *one* loop over these indices, calculate the required value, 
+    # Now, we will need to write the three other files as a function of grid position.
+    # Therefore we will do *one* loop over these indices, calculate the required value,
     # and write it to the appropriate file.
 
     #Looping over the cell centers
@@ -179,7 +185,7 @@ function write_model(pars::Parameters)
                 r_cyl = r * sin(theta)
 
                 @printf(fdens, "%.9e\n", n_CO(r_cyl, z, pars))
-                @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars)) 
+                @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars))
                 @printf(ftemp, "%.9e\n", temperature(r_cyl, pars))
             end
         end
