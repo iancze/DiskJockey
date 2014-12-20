@@ -36,13 +36,13 @@ const eqmirror = true # mirror the grid about the z=0 midplane ?
 # Number of cells in each dimension
 # if we decide to mirror, then ncells = 1/2 of the true value
 const nr = 64
-const ntheta = 64 # if mirror about the equator
+const ntheta = 32 # if mirror about the equator
 const nphi = 1
 
 const ncells = nr * ntheta * nphi
 
 const r_in = 5 * AU # Inner extent of disk
-const r_out = 400 * AU # Outer extent of disk
+const r_out = 500 * AU # Outer extent of disk
 
 #Define the cell *walls*
 const Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
@@ -98,12 +98,12 @@ end
 #Let's try defining a parameters type, an object of which gets passed around.
 
 type Parameters
-    M_star::Float64 # [g] stellar mass
-    r_c::Float64 # [cm] characteristic radius
+    M_star::Float64 # [M_sun] stellar mass
+    r_c::Float64 # [AU] characteristic radius
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface temperature gradient exponent
-    M_CO::Float64 # [g] disk mass of CO
+    M_CO::Float64 # [M_earth] disk mass of CO
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -114,26 +114,26 @@ type Parameters
 end
 
 #From Rosenfeld et al. 2012, Table 1
-M_CO = 2.8e-6 * M_sun # [g] disk mass of CO
-r_c =  45. * AU # [cm] characteristic radius
+M_CO = 0.933 # [M_earth] disk mass of CO
+r_c =  45. # [AU] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 ksi = 0.14e5 # [cm s^{-1}] microturbulence
 incl = 33.5 # [degrees] inclination
-M_star = 1.75 * M_sun # [g] stellar mass
+M_star = 1.75 # [M_sun] stellar mass
 #PA = 73.
 
 # global object which is useful for reproducing V4046Sgr
 # params = Parameters(M_CO, r_c, T_10, q, gamma, ksi, i_d, M_star)
 
-#Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
+# Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.
-#Alternate functions accept pars passed around
+# Alternate functions accept pars passed around, where pars is in M_star, AU, etc...
 function velocity{T}(r::T, M_star::Float64)
     sqrt(G * M_star ./ r)
 end
-velocity{T}(r::T, pars::Parameters) = velocity(r, pars.M_star)
+velocity{T}(r::T, pars::Parameters) = velocity(r, pars.M_star * M_sun)
 
 function temperature{T}(r::T, T_10::Float64, q::Float64)
     T_10 * (r ./ (10. * AU)).^(-q)
@@ -144,14 +144,14 @@ function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
     temp = temperature(r, T_10, q)
     sqrt(kB * temp .* r.^3./(mu_gas * m_H * G * M_star))
 end
-Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star, pars.T_10, pars.q)
+Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 
 # No parametric type for number density, because it is a 2D function.
 function n_CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
     H = Hp(r, M_star, T_10, q)
     (2. - gamma) * M_CO/(m_CO * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
 end
-n_CO(r::Float64, z::Float64, pars::Parameters) = n_CO(r, z, pars.r_c, pars.M_CO, pars.M_star, pars.T_10, pars.q, pars.gamma)
+n_CO(r::Float64, z::Float64, pars::Parameters) = n_CO(r, z, pars.r_c * AU, pars.M_CO * M_earth, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
 
 
 function write_model(pars::Parameters)

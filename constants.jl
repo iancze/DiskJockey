@@ -2,10 +2,11 @@
 
 module constants
 
-export M_sun, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, fftspace
+export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, fftspace
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
+M_earth = 5.97219e27 # [g]
 AU = 1.4959787066e13 # [cm]
 pc = 3.0856776e18 # [cm]
 G = 6.67259e-8 # [cm3 g-1 s-2]

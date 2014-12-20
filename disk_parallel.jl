@@ -11,7 +11,6 @@ function cleardirs!(keylist::Vector{Int})
         run(`rm -rf $keydir`)
     end
     println("Removed directories")
-    run(`ls`)
 end
 
 # Clear all directories
@@ -56,13 +55,13 @@ addprocs(nchild)
     return dset
 end
 
+# This is the likelihood function called by each individual process
 @everywhere function f(dv::DataVis, key::Int, p::Parameters)
 
     # Unpack these variables from p
-    incl = p.incl #33. # deg.
-    vel = p.vel # km/s
-    dpc = p.dpc # [pc] distance
-    PA = 90 - p.PA # Position angle runs counter clockwise, due to looking at sky.
+    incl = p.incl # [deg]
+    vel = p.vel # [km/s]
+    PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
     npix = 96 # number of pixels, can alternatively specify x and y separately
 
     # Take this from the dataset
@@ -75,7 +74,7 @@ end
     im = imread()
 
     # Convert raw image to the appropriate distance
-    skim = imToSky(im, dpc)
+    skim = imToSky(im, p.dpc)
 
     # Apply the gridding correction function before doing the FFT
     corrfun!(skim, 1.0) #alpha = 1.0
@@ -86,15 +85,22 @@ end
     # Interpolate the `vis_fft` to the same locations as the DataSet
     mvis = ModelVis(dv, vis_fft)
 
+    # Apply the phase correction here, since there are fewer data points
+    phase_shift!(mvis, p.mu_x, p.mu_y)
+
     # Calculate chi^2 between these two
     return lnprob(dv, mvis)
 end
 
+# Write the new grid, then copy
+write_grid()
 
 pipes = initialize(nchild, keylist, initfunc, f)
 gather!(pipes)
 
-# this function will run only on the main process
+# this function is called only on the main process, which proposes MCMC jumps
+# to this function, and farms out the likelihood evaluation to all of the child
+# processes
 function fprob(p::Vector{Float64})
 
     # Here is where we make the distinction between a proposed vector of floats
@@ -116,9 +122,25 @@ function fprob(p::Vector{Float64})
     # mu_x::Float64 # [arcsec] central offset in RA
     # mu_y::Float64 # [arcsec] central offset in DEC
 
+    # full argument list is
+    # [M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y]
+
+    # Fix the following arguments: q, gamma, M_CO, ksi, mu_x, mu_y
+    q = 0.63 # temperature gradient exponent
+    gamma = 1.0 # surface temperature gradient exponent
+    M_CO =  0.933 # [M_earth] disk mass of CO
+    ksi = 0.14e5 # [cm s^{-1}] microturbulence
+    mu_x = 0.0
+    mu_y = 0.0
+
+    # so that p coming in is
+    # [M_star, r_c, T_10, dpc, incl, PA, vel]
+    M_star, r_c, T_10, dpc, incl, PA, vel = p
+
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    # the p... command "unrolls" the vector into a series of arguments.
-    pars = Parameters(p...)
+    # the p... command "unrolls" the vector into a series of arguments
+    # The parameters type carries around everything in cgs (except mu_x, mu_y)
+    pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
 
     # Compute parameter file using model.jl, write to disk
     write_model(pars)
@@ -137,18 +159,15 @@ function fprob(p::Vector{Float64})
 end
 
 #From Rosenfeld et al. 2012, Table 1
-M_star = 1.75 * M_sun # [g] stellar mass
-r_c =  45. * AU # [cm] characteristic radius
+M_star = 1.75 # [M_sun] stellar mass
+r_c =  45. # [AU] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
-M_CO = 2.8e-6 * M_sun # [g] disk mass of CO
+M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14e5 # [cm s^{-1}] microturbulence
 incl = 33.5 # [degrees] inclination
 #PA = 73.
-
-# println("Evaluating fprob")
-# println(fprob([M_star, r_c, T_10, q, gamma, M_CO, ksi, 73., incl, 73., 6., 0.0, 0.0]))
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -163,16 +182,21 @@ end
 #     return val
 # end
 
+#starting_param = [M_star, r_c, T_10, 73., incl, 73., 2.87]
+starting_param = [2 * M_star, r_c, T_10, 73., incl, 73., 2.87]
+
+println("Evaluating fprob")
+println(fprob(starting_param))
+quit()
+
 # # Now try optimizing the function using NLopt
 using NLopt
-
-starting_param = [M_star, r_c, T_10, q, gamma, M_CO, ksi, 73., incl, 73., 2.87, 0.0, 0.0]
 
 nparam = length(starting_param)
 opt = Opt(:LN_COBYLA, nparam)
 
 max_objective!(opt, fgrad)
-xtol_rel!(opt,1e-3)
+xtol_rel!(opt,1e-2)
 
 (optf,optx,ret) = optimize(opt, starting_param)
 println(optf, " ", optx, " ", ret)

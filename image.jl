@@ -8,7 +8,7 @@
 # iformat # = 1 (2 is local observer)
 # im_nx   im_ny #number of pixels in x and y directions
 # nlam # number of images at different wavelengths
-# pixsize_x  pixsize_y # size of the pixels in cm 
+# pixsize_x  pixsize_y # size of the pixels in cm
 # lambda[1] ... lambda[nlam + 1] # wavelengths (um) correspending to images
 # pixels, ordered from left to right (increasing x) in the inner loop, and from bottom to top (increasing y) in the outer loop. And wavelength is the outermost loop.
 
@@ -18,7 +18,7 @@ export imread, imToSky, imToSpec, SkyImage
 
 using constants
 
-# Define an image type, which can store the data as well as pixel spacing 
+# Define an image type, which can store the data as well as pixel spacing
 
 abstract Image
 
@@ -37,13 +37,13 @@ type SkyImage <: Image
 end
 
 # SkyImage constructor for just a single frame
-SkyImage(data::Matrix{Float64}, ra::Vector{Float64}, dec::Vector{Float64}, lam::Float64) = 
+SkyImage(data::Matrix{Float64}, ra::Vector{Float64}, dec::Vector{Float64}, lam::Float64) =
 SkyImage(reshape(data, tuple(size(data)..., 1)), ra, dec, [lam])
 
 # Read the image file (default=image.out) and return it as an Image object, which contains the fluxes in Jy/pixel,
 # the sizes and locations of the pixels in arcseconds, and the wavelengths corresponding to the images
 function imread(file="image.out")
-        
+
     fim = open(file, "r")
     iformat = int(readline(fim))
     im_nx, im_ny = split(readline(fim))
@@ -66,12 +66,12 @@ function imread(file="image.out")
     # Because of the way an image is stored as a matrix, we actually pack the array indices as
     # data[y, x, lam]
     # Therefore we keep the loop order suggested in the RADMC manual, which states x should be in the inner loop,
-    # but  swap indices. 
+    # but  swap indices.
     # radmc3dPy achieves something similar by keeping indices the same but swaping loop order (image.py:line 675)
     for k=1:nlam
         readline(fim) # Junk space
         for j=1:im_ny
-            for i=1:im_nx 
+            for i=1:im_nx
                 data[j,i,k] = float64(readline(fim))
             end
         end
@@ -91,10 +91,11 @@ function imToSky(img::RawImage, dpc::Float64)
     #println("Pixel size ", img.pixsize_x)
     #println("Steradians subtended by each pixel ",  img.pixsize_x * img.pixsize_y / (dpc * pc)^2)
 
-    #conv = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2 #convert from ergs/s/cm^2/Hz/ster to to Jy/pixel
+    #convert from ergs/s/cm^2/Hz/ster to to Jy/ster
+    conv = 1e23 # [Jy/ster]
 
-    # Conversion from erg/s/cm/cm/Hz/ster to Jy/pixel at 1 pc distance.
-    conv  = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2  
+    # Conversion from erg/s/cm^2/Hz/ster to Jy/pixel at 1 pc distance.
+    # conv = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2
 
     dataJy = img.data .* conv
 
@@ -114,7 +115,7 @@ end
 
 # Given an array of imgs, concatenate them into a single image, in wavelength order
 function catImages(imgs::Array{Image, 1})
-        
+
     # Assert each image has the same number of pixels, and that they are all either RawImages or SkyImages
 
     # Determine the stacking order based upon each lam

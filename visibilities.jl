@@ -9,7 +9,7 @@ using constants
 
 export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, write
 export interpolate_uv
-export transform, rfftfreq, fftfreq
+export transform, rfftfreq, fftfreq, phase_shift!
 export lnprob
 
 # Stores the data visibilities for a single channel
@@ -136,6 +136,23 @@ function lnprob(dvis::DataVis, mvis::ModelVis)
     @assert dvis == mvis.dvis # Using the wrong ModelVis, otherwise!
 
     return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
+end
+
+# Given offsets in the image plane (in arcseconds), shift the visibilities by a
+# corresponding amount
+function phase_shift!(mvis::ModelVis, mu_x, mu_y)
+
+    mu = Float64[mu_x, mu_y] * arcsec # [radians]
+
+    nvis = length(mvis.VV)
+    # Go through each visibility and apply the phase shift
+    for i=1:nvis
+        # Convert from [kλ] to [λ]
+        R = Float64[mvis.dvis.uu[i], mvis.dvis.vv[i]] * 1e3 #[λ]
+        # Not actually in polar phase form
+        shift = exp(-2pi * 1.0im * (R' * mu)[1])
+        mvis.VV[i] = mvis.VV[i] * shift
+    end
 end
 
 # Transform the SkyImage produced by RADMC into a RawModelVis object using rfft
