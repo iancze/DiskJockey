@@ -68,8 +68,8 @@ end
     beta = vel/c_kms
     lam0 =  dv.lam * sqrt((1. - beta) / (1. + beta)) # [microns]
 
-    # Run RADMC3D
-    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0`)
+    # Run RADMC3D, redirect output to /dev/null
+    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0` |> DevNull)
 
     # Read the RADMC3D image from disk (we should already be in sub-directory)
     im = imread()
@@ -169,7 +169,7 @@ M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14e5 # [cm s^{-1}] microturbulence
 incl = 33.5 # [degrees] inclination
 #vel = 2.87 # [km/s]
-vel = -31. # [km/s]
+vel = -31.2 # [km/s]
 #PA = 73.
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -179,46 +179,47 @@ function fgrad(p::Vector, grad::Vector)
     return val
 end
 #
-# function fp(p::Vector)
-#     val = f(p)
-#     println(p, " : ", val)
-#     return val
-# end
+function fp(p::Vector)
+    val = fprob(p)
+    println(p, " : ", val)
+    return val
+end
+
+using Distributions
+using PDMats
 
 starting_param = [M_star, r_c, T_10, 73., incl, 73., vel]
+jump_param = PDiagMat([0.02, 1., 1., 0.5, 1.0, 1.0, 0.1].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
 # quit()
 
 # # Now try optimizing the function using NLopt
-using NLopt
+# using NLopt
+#
+# nparam = length(starting_param)
+# opt = Opt(:LN_COBYLA, nparam)
+#
+# max_objective!(opt, fgrad)
+# xtol_rel!(opt,1e-2)
+#
+# (optf,optx,ret) = optimize(opt, starting_param)
+# println(optf, " ", optx, " ", ret)
 
-nparam = length(starting_param)
-opt = Opt(:LN_COBYLA, nparam)
 
-max_objective!(opt, fgrad)
-xtol_rel!(opt,1e-2)
+using LittleMC
 
-(optf,optx,ret) = optimize(opt, starting_param)
-println(optf, " ", optx, " ", ret)
+mc = MC(fp, 500, starting_param, jump_param)
+
+start(mc)
 
 
-# using LittleMC
-#
-# using Distributions
-# using PDMats
-#
-# mc = MC(fp, 500, [1.2, 1.0, 1.0, 1.0], PDiagMat([0.03^2, 0.03^2, 0.01^2, 0.01^2]))
-#
-# start(mc)
-#
-#
-# println(mean(mc.samples, 2))
-# println(std(mc.samples, 2))
-#
-# runstats(mc)
-#
-# write(mc, "mc.hdf5")
+println(mean(mc.samples, 2))
+println(std(mc.samples, 2))
+
+runstats(mc)
+
+write(mc, "mc.hdf5")
 
 quit!(pipes)
