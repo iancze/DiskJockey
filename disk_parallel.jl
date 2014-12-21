@@ -186,11 +186,10 @@ end
 # end
 
 starting_param = [M_star, r_c, T_10, 73., incl, 73., vel]
-#starting_param = [2 * M_star, r_c, T_10, 73., incl, 73., 2.87]
 
-println("Evaluating fprob")
-println(fprob(starting_param))
-quit()
+# println("Evaluating fprob")
+# println(fprob(starting_param))
+# quit()
 
 # # Now try optimizing the function using NLopt
 using NLopt
