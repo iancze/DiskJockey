@@ -160,16 +160,16 @@ function fprob(p::Vector{Float64})
 end
 
 #From Rosenfeld et al. 2012, Table 1
-M_star = 1.75 # [M_sun] stellar mass
-r_c =  45. # [AU] characteristic radius
-T_10 =  115. # [K] temperature at 10 AU
+M_star = 1.52 # [M_sun] stellar mass
+r_c =  56. # [AU] characteristic radius
+T_10 =  130. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14e5 # [cm s^{-1}] microturbulence
-incl = 33.5 # [degrees] inclination
+incl = 37.5 # [degrees] inclination
 #vel = 2.87 # [km/s]
-vel = -31.2 # [km/s]
+vel = -31.18 # [km/s]
 #PA = 73.
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -188,8 +188,8 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, 73., incl, 73., vel]
-jump_param = PDiagMat([0.01, 0.5, 0.5, 0.1, 0.5, 0.5, 0.02].^2)
+starting_param = [M_star, r_c, T_10, 75., incl, 74.5, vel]
+jump_param = PDiagMat([0.01, 0.2, 0.2, 0.1, 0.1, 0.1, 0.005].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
@@ -210,7 +210,7 @@ jump_param = PDiagMat([0.01, 0.5, 0.5, 0.1, 0.5, 0.5, 0.02].^2)
 
 using LittleMC
 
-mc = MC(fp, 2000, starting_param, jump_param)
+mc = MC(fp, 1000, starting_param, jump_param)
 
 start(mc)
 
