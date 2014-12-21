@@ -1,3 +1,5 @@
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+
 # Make some diagnostic plots to show what the model looks like in analytic terms
 
 using model
@@ -18,7 +20,7 @@ function plot_vel(pars::Parameters)
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("plots/velocity.png")
+    plt.savefig("../plots/velocity.png")
 end
 
 # temperature structure
@@ -32,10 +34,10 @@ function plot_temp(pars::Parameters)
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("plots/temperature.png")
+    plt.savefig("../plots/temperature.png")
 end
 
-# scale height 
+# scale height
 function plot_height(pars::Parameters)
     heights = model.Hp(rs, pars) ./ AU
 
@@ -46,16 +48,16 @@ function plot_height(pars::Parameters)
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("plots/scale_height.png")
+    plt.savefig("../plots/scale_height.png")
 end
 
-# density structure 
+# density structure
 function plot_dens(pars::Parameters)
     nz = 64
     zs = linspace(0, 300 * AU, nz)
     zz = zs./AU
     nr = length(rs)
-    
+
     xx = Array(Float64, (nz, nr))
     yy = Array(Float64, (nz, nr))
     nn = Array(Float64, (nz, nr))
@@ -120,7 +122,7 @@ function plot_dens(pars::Parameters)
 
     ax[:set_ylim](0, maximum(zz))
 
-    plt.savefig("plots/density.png")
+    plt.savefig("../plots/density.png")
 
 end
 

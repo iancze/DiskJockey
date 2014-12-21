@@ -64,11 +64,12 @@ end
     PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
     npix = 96 # number of pixels, can alternatively specify x and y separately
 
-    # Take this from the dataset
-    lam0 =  dv.lam # [microns]
+    # Doppler shift the dataset wavelength to rest-frame wavelength
+    beta = vel/c_kms
+    lam0 =  dv.lam * sqrt((1. - beta) / (1. + beta)) # [microns]
 
     # Run RADMC3D
-    run(`radmc3d image incl $incl posang $PA vkms $vel npix $npix lambda $lam0`)
+    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0`)
 
     # Read the RADMC3D image from disk (we should already be in sub-directory)
     im = imread()
@@ -167,6 +168,8 @@ gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14e5 # [cm s^{-1}] microturbulence
 incl = 33.5 # [degrees] inclination
+#vel = 2.87 # [km/s]
+vel = -31. # [km/s]
 #PA = 73.
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -182,8 +185,8 @@ end
 #     return val
 # end
 
-#starting_param = [M_star, r_c, T_10, 73., incl, 73., 2.87]
-starting_param = [2 * M_star, r_c, T_10, 73., incl, 73., 2.87]
+starting_param = [M_star, r_c, T_10, 73., incl, 73., vel]
+#starting_param = [2 * M_star, r_c, T_10, 73., incl, 73., 2.87]
 
 println("Evaluating fprob")
 println(fprob(starting_param))
