@@ -189,7 +189,7 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, 73., incl, 73., vel]
-jump_param = PDiagMat([0.02, 1., 1., 0.5, 1.0, 1.0, 0.1].^2)
+jump_param = PDiagMat([0.01, 0.5, 0.5, 0.1, 0.5, 0.5, 0.02].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
@@ -210,7 +210,7 @@ jump_param = PDiagMat([0.02, 1., 1., 0.5, 1.0, 1.0, 0.1].^2)
 
 using LittleMC
 
-mc = MC(fp, 500, starting_param, jump_param)
+mc = MC(fp, 2000, starting_param, jump_param)
 
 start(mc)
 
