@@ -160,9 +160,9 @@ function fprob(p::Vector{Float64})
 end
 
 #From Rosenfeld et al. 2012, Table 1
-M_star = 1.60 # [M_sun] stellar mass
-r_c =  78. # [AU] characteristic radius
-T_10 =  130. # [K] temperature at 10 AU
+M_star = 1.75 # [M_sun] stellar mass
+r_c =  154. # [AU] characteristic radius
+T_10 =  140. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
@@ -188,7 +188,7 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, 82., incl, 74.5, vel]
+starting_param = [M_star, r_c, T_10, 90., incl, 74.5, vel]
 jump_param = PDiagMat([0.01, 0.5, 0.2, 0.4, 0.1, 0.1, 0.005].^2)
 
 # println("Evaluating fprob")
@@ -210,7 +210,7 @@ jump_param = PDiagMat([0.01, 0.5, 0.2, 0.4, 0.1, 0.1, 0.005].^2)
 
 using LittleMC
 
-mc = MC(fp, 4000, starting_param, jump_param)
+mc = MC(fp, 10000, starting_param, jump_param)
 
 start(mc)
 
