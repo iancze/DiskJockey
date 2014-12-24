@@ -168,7 +168,7 @@ gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14e5 # [cm s^{-1}] microturbulence
 incl = 40. # [degrees] inclination
-#vel = 2.87 # [km/s]
+#vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
 #PA = 73.
 
@@ -195,31 +195,31 @@ jump_param = PDiagMat([0.01, 0.5, 0.2, 0.4, 0.1, 0.1, 0.005].^2)
 # println(fprob(starting_param))
 # quit()
 
-# # Now try optimizing the function using NLopt
-# using NLopt
+# Now try optimizing the function using NLopt
+using NLopt
+
+nparam = length(starting_param)
+opt = Opt(:LN_COBYLA, nparam)
+
+max_objective!(opt, fgrad)
+ftol_abs!(opt,1e-2)
+
+(optf,optx,ret) = optimize(opt, starting_param)
+println(optf, " ", optx, " ", ret)
+
+
+# using LittleMC
 #
-# nparam = length(starting_param)
-# opt = Opt(:LN_COBYLA, nparam)
+# mc = MC(fp, 10000, starting_param, jump_param)
 #
-# max_objective!(opt, fgrad)
-# xtol_rel!(opt,1e-2)
+# start(mc)
 #
-# (optf,optx,ret) = optimize(opt, starting_param)
-# println(optf, " ", optx, " ", ret)
-
-
-using LittleMC
-
-mc = MC(fp, 10000, starting_param, jump_param)
-
-start(mc)
-
-
-println(mean(mc.samples, 2))
-println(std(mc.samples, 2))
-
-runstats(mc)
-
-write(mc, "mc.hdf5")
+#
+# println(mean(mc.samples, 2))
+# println(std(mc.samples, 2))
+#
+# runstats(mc)
+#
+# write(mc, "mc.hdf5")
 
 quit!(pipes)
