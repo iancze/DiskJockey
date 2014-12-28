@@ -69,7 +69,7 @@ end
     lam0 =  dv.lam * sqrt((1. - beta) / (1. + beta)) # [microns]
 
     # Run RADMC3D, redirect output to /dev/null
-    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0`) # |> DevNull)
+    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0` |> DevNull)
 
     # Read the RADMC3D image from disk (we should already be in sub-directory)
     im = imread()
