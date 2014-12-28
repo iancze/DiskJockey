@@ -69,7 +69,7 @@ end
     lam0 =  dv.lam * sqrt((1. - beta) / (1. + beta)) # [microns]
 
     # Run RADMC3D, redirect output to /dev/null
-    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0` |> DevNull)
+    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0`) # |> DevNull)
 
     # Read the RADMC3D image from disk (we should already be in sub-directory)
     im = imread()
@@ -130,13 +130,13 @@ function fprob(p::Vector{Float64})
     q = 0.63 # temperature gradient exponent
     gamma = 1.0 # surface temperature gradient exponent
     #M_CO =  0.933 # [M_earth] disk mass of CO
-    ksi = 0.14e5 # [cm s^{-1}] microturbulence
+
     mu_x = 0.0
     mu_y = 0.0
 
     # so that p coming in is
     # [M_star, r_c, T_10, dpc, incl, PA, vel]
-    M_star, r_c, T_10, M_CO, dpc, incl, PA, vel = p
+    M_star, r_c, T_10, M_CO, ksi, dpc, incl, PA, vel = p
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     # the p... command "unrolls" the vector into a series of arguments
@@ -152,6 +152,7 @@ function fprob(p::Vector{Float64})
         run(`cp numberdens_co.inp $keydir`)
         run(`cp gas_velocity.inp $keydir`)
         run(`cp gas_temperature.inp $keydir`)
+        run(`cp microturbulence.inp $keydir`)
     end
 
 
@@ -166,7 +167,7 @@ T_10 =  140. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
-ksi = 0.14e5 # [cm s^{-1}] microturbulence
+ksi = 0.14 # [km/s] microturbulence
 incl = 40. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
@@ -188,11 +189,12 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, M_CO, 73., incl, 74.5, vel]
-jump_param = PDiagMat([0.01, 0.5, 0.2, 0.01, 0.4, 0.1, 0.1, 0.005].^2)
+starting_param = [M_star, r_c, T_10, M_CO, ksi, 73., incl, 74.5, vel]
+jump_param = PDiagMat([0.01, 0.5, 0.2, 0.01, 0.01, 0.4, 0.1, 0.1, 0.005].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
+# quit!(pipes)
 # quit()
 
 # Now try optimizing the function using NLopt
@@ -202,7 +204,7 @@ nparam = length(starting_param)
 opt = Opt(:LN_COBYLA, nparam)
 
 max_objective!(opt, fgrad)
-ftol_abs!(opt,0.1) # the precision we want lnprob to
+ftol_abs!(opt, 0.1) # the precision we want lnprob to
 
 (optf,optx,ret) = optimize(opt, starting_param)
 println(optf, " ", optx, " ", ret)

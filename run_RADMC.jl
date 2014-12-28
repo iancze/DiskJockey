@@ -20,7 +20,7 @@ println("Data lam")
 lam0 = 1300.268284599842 # [microns], corresponding to channel 20
 println(lam0)
 
-println("Relative velocitiy")
+println("Relative velocity")
 rvel = c_kms * (lam0 - lamCO)/lamCO
 println(rvel)
 

@@ -157,6 +157,13 @@ function n_CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float
 end
 n_CO(r::Float64, z::Float64, pars::Parameters) = n_CO(r, z, pars.r_c * AU, pars.M_CO * M_earth, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
 
+# Ksi is microturbulent broadining width in units of km/s. Output of this function
+# is in cm/s for RADMC (RADMC manual, eqn 7.12)
+function microturbulence(ksi::Float64)
+    return ksi * 1.e5 # convert from km/s to cm/s
+end
+
+microturbulence(pars::Parameters) = microturbulence(pars.ksi)
 
 function write_model(pars::Parameters)
     # numberdens_co.inp
@@ -174,7 +181,10 @@ function write_model(pars::Parameters)
     @printf(ftemp, "%d\n", 1) #iformat
     @printf(ftemp, "%d\n", ncells)
 
-    #microturbulence.inp
+    # microturbulence.inp
+    fmicro = open("microturbulence.inp", "w")
+    @printf(fmicro, "%d\n", 1) #iformat
+    @printf(fmicro, "%d\n", ncells)
 
     # Now, we will need to write the three other files as a function of grid position.
     # Therefore we will do *one* loop over these indices, calculate the required value,
@@ -191,6 +201,7 @@ function write_model(pars::Parameters)
                 @printf(fdens, "%.9e\n", n_CO(r_cyl, z, pars))
                 @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars))
                 @printf(ftemp, "%.9e\n", temperature(r_cyl, pars))
+                @printf(fmicro, "%.9e\n", microturbulence(pars))
             end
         end
     end
@@ -198,6 +209,7 @@ function write_model(pars::Parameters)
     close(fdens)
     close(fvel)
     close(ftemp)
+    close(fmicro)
 
 end
 
