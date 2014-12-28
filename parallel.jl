@@ -57,7 +57,7 @@ end
 # to f, specific to this process
 function brain(pipe::Pipe, key::Int, initfunc::Function, f::Function)
     id = myid()
-    println("Initialized brain $id with $key")
+    println("Initialized process (worker): $id with key: $key")
 
     # Load the dataset according to this key
     dset = initfunc(key)
