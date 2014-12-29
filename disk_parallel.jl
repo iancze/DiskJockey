@@ -162,13 +162,13 @@ end
 
 #From Rosenfeld et al. 2012, Table 1
 M_star = 1.75 # [M_sun] stellar mass
-r_c =  154. # [AU] characteristic radius
-T_10 =  140. # [K] temperature at 10 AU
+r_c =  45. # [AU] characteristic radius
+T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
-incl = 40. # [degrees] inclination
+incl = 33. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
 #PA = 73.
