@@ -209,30 +209,29 @@ jump_param = PDiagMat([0.01, 0.5, 0.2, 0.01, 0.01, 0.4, 0.1, 0.1, 0.005].^2)
 # quit()
 
 # Now try optimizing the function using NLopt
-using NLopt
+# using NLopt
+#
+# nparam = length(starting_param)
+# opt = Opt(:LN_COBYLA, nparam)
+#
+# max_objective!(opt, fgrad)
+# ftol_abs!(opt, 0.05) # the precision we want lnprob to
+#
+# (optf,optx,ret) = optimize(opt, starting_param)
+# println(optf, " ", optx, " ", ret)
 
-nparam = length(starting_param)
-opt = Opt(:LN_COBYLA, nparam)
 
-max_objective!(opt, fgrad)
-ftol_abs!(opt, 0.05) # the precision we want lnprob to
+using LittleMC
 
-(optf,optx,ret) = optimize(opt, starting_param)
-println(optf, " ", optx, " ", ret)
+mc = MC(fp, 300, starting_param, jump_param)
 
+start(mc)
 
-# using LittleMC
-#
-# mc = MC(fp, 10000, starting_param, jump_param)
-#
-# start(mc)
-#
-#
-# println(mean(mc.samples, 2))
-# println(std(mc.samples, 2))
-#
-# runstats(mc)
-#
-# write(mc, "mc.hdf5")
+println(mean(mc.samples, 2))
+println(std(mc.samples, 2))
+
+runstats(mc)
+
+write(mc, "mc.hdf5")
 
 quit!(pipes)
