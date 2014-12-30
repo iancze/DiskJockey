@@ -223,7 +223,7 @@ jump_param = PDiagMat([0.01, 0.5, 0.2, 0.01, 0.01, 0.4, 0.1, 0.1, 0.005].^2)
 
 using LittleMC
 
-mc = MC(fp, 300, starting_param, jump_param)
+mc = MC(fp, 2000, starting_param, jump_param)
 
 start(mc)
 
