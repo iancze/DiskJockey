@@ -29,6 +29,17 @@ addprocs(nchild)
 @everywhere using gridding
 @everywhere using model
 
+# Delete the old log file (if it exists)
+const logfile = "log.log"
+if isfile(logfile)
+    rm(logfile)
+end
+
+# enable the logging module
+using Logging
+# change the default logger
+Logging.configure(filename=logfile, level=DEBUG)
+
 
 @everywhere function initfunc(key)
 
@@ -176,13 +187,13 @@ vel = -31.18 # [km/s]
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
     val = fprob(p)
-    println(p, " : ", val)
+    debug(p, " : ", val)
     return val
 end
 #
 function fp(p::Vector)
     val = fprob(p)
-    println(p, " : ", val)
+    debug(p, " : ", val)
     return val
 end
 
@@ -204,7 +215,7 @@ nparam = length(starting_param)
 opt = Opt(:LN_COBYLA, nparam)
 
 max_objective!(opt, fgrad)
-ftol_abs!(opt, 0.1) # the precision we want lnprob to
+ftol_abs!(opt, 0.05) # the precision we want lnprob to
 
 (optf,optx,ret) = optimize(opt, starting_param)
 println(optf, " ", optx, " ", ret)
