@@ -141,13 +141,14 @@ function fprob(p::Vector{Float64})
     q = 0.63 # temperature gradient exponent
     gamma = 1.0 # surface temperature gradient exponent
     #M_CO =  0.933 # [M_earth] disk mass of CO
+    dpc = 73.0
 
     mu_x = 0.0
     mu_y = 0.0
 
     # so that p coming in is
     # [M_star, r_c, T_10, dpc, incl, PA, vel]
-    M_star, r_c, T_10, M_CO, ksi, dpc, incl, PA, vel = p
+    M_star, r_c, T_10, M_CO, ksi, incl, PA, vel = p
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     # the p... command "unrolls" the vector into a series of arguments
@@ -179,6 +180,7 @@ q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
+dpc = 73.0
 incl = 33. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
@@ -200,8 +202,8 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, M_CO, ksi, 73., incl, 74.5, vel]
-jump_param = PDiagMat([0.01, 0.5, 0.2, 0.01, 0.01, 0.4, 0.1, 0.1, 0.005].^2)
+starting_param = [M_star, r_c, T_10, M_CO, ksi, incl, 74.5, vel]
+jump_param = PDiagMat([0.01, 0.3, 0.2, 0.01, 0.01, 0.1, 0.1, 0.005].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
@@ -223,7 +225,7 @@ jump_param = PDiagMat([0.01, 0.5, 0.2, 0.01, 0.01, 0.4, 0.1, 0.1, 0.005].^2)
 
 using LittleMC
 
-mc = MC(fp, 2000, starting_param, jump_param)
+mc = MC(fp, 6000, starting_param, jump_param)
 
 start(mc)
 
