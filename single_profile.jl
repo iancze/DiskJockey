@@ -3,8 +3,31 @@
 # that means the starting point is receiving the pars::Parameters object
 # and the end point is returning a lnprop
 
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    # "--opt1"
+    # help = "an option with an argument"
+    # "--opt2", "-o"
+    # help = "another option with an argument"
+    # arg_type = Int
+    # default = 0
+    # "--flag1"
+    # help = "an option without argument, i.e. a flag"
+    # action = :store_true
+    "config"
+    help = "a YAML configuration file"
+    required = true
+end
+
+parsed_args = parse_args(ARGS, s)
+
+
+import YAML
+config = YAML.load(open(parsed_args["config"]))
+
 using constants
-using parallel
 using visibilities
 using image
 using gridding
@@ -96,6 +119,9 @@ vel = -31.18 # [km/s]
 PA = 73.
 mu_x = 0.0 # [arcsec]
 mu_y = 0.0 # [arcsec]
+
+# Turn the parameters in the YAML file into the parameters object
+# The code will only fit the parameters listed in the file
 
 pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
 

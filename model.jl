@@ -1,7 +1,6 @@
-
 module model
 
-export write_grid, write_model, Parameters, params, lambdas, rs, thetas
+export write_grid, write_model, write_lambda, Parameters
 
 using constants #Import all of my constants defined in constants.jl
 

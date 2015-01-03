@@ -1,13 +1,13 @@
 # lnprob evaluation for V4046Sgr
 
-const global keylist = Int[i for i=1:23]
+const global keylist = Int[i for i=1:23] # which channels of the dset to fit
+const global basedir = "/scratch/"
 
-# go through any previously created directories and remove them before the start
-# of the run
+# go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
     println("Removing old directories")
     for key in keylist
-        keydir = "jud$key"
+        keydir = basedir * "jud$key"
         run(`rm -rf $keydir`)
     end
     println("Removed directories")
@@ -44,7 +44,7 @@ Logging.configure(filename=logfile, level=DEBUG)
     dset = DataVis("data/V4046Sgr.hdf5", key)
 
     # Create a directory where all RADMC files will reside and be driven from
-    keydir = "jud$key"
+    keydir = basedir * "jud$key"
     mkdir(keydir)
 
     # Copy all relevant configuration scripts to this subdirectory
