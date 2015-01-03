@@ -19,9 +19,6 @@ cleardirs!(keylist)
 nchild = length(keylist)
 addprocs(nchild)
 
-# Optionally regenerate static files here
-#write_grid()
-
 @everywhere using constants
 @everywhere using parallel
 @everywhere using visibilities
@@ -73,10 +70,10 @@ end
     incl = p.incl # [deg]
     vel = p.vel # [km/s]
     PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
-    npix = 96 # number of pixels, can alternatively specify x and y separately
+    npix = 128 # number of pixels, can alternatively specify x and y separately
 
     # Doppler shift the dataset wavelength to rest-frame wavelength
-    beta = vel/c_kms
+    beta = vel/c_kms # relativistic Doppler formula
     lam0 =  dv.lam * sqrt((1. - beta) / (1. + beta)) # [microns]
 
     # Run RADMC3D, redirect output to /dev/null
@@ -89,7 +86,7 @@ end
     skim = imToSky(im, p.dpc)
 
     # Apply the gridding correction function before doing the FFT
-    corrfun!(skim, 1.0) #alpha = 1.0
+    corrfun!(skim, 1.0) # alpha = 1.0 (relevant for spherical gridding function)
 
     # FFT the appropriate image channel
     vis_fft = transform(skim)
@@ -104,7 +101,8 @@ end
     return lnprob(dv, mvis)
 end
 
-# Write the new grid, then copy
+# Regenerate all of the static files (e.g., amr_grid.inp)
+# so that they may be later copied
 write_grid()
 
 pipes = initialize(nchild, keylist, initfunc, f)
@@ -134,21 +132,13 @@ function fprob(p::Vector{Float64})
     # mu_x::Float64 # [arcsec] central offset in RA
     # mu_y::Float64 # [arcsec] central offset in DEC
 
-    # full argument list is
-    # [M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y]
-
-    # Fix the following arguments: q, gamma, M_CO, ksi, mu_x, mu_y
-    q = 0.63 # temperature gradient exponent
+    # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    #M_CO =  0.933 # [M_earth] disk mass of CO
-    dpc = 73.0
-
-    mu_x = 0.0
-    mu_y = 0.0
+    dpc = 73.0 # [pc] distance
 
     # so that p coming in is
     # [M_star, r_c, T_10, dpc, incl, PA, vel]
-    M_star, r_c, T_10, M_CO, ksi, incl, PA, vel = p
+    M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_x, mu_y = p
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     # the p... command "unrolls" the vector into a series of arguments
@@ -167,7 +157,6 @@ function fprob(p::Vector{Float64})
         run(`cp microturbulence.inp $keydir`)
     end
 
-
     distribute!(pipes, pars)
     return gather!(pipes)
 end
@@ -184,7 +173,10 @@ dpc = 73.0
 incl = 33. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
-#PA = 73.
+PA = 73.
+mu_x = 0.0 # [arcsec]
+mu_y = 0.0 # [arcsec]
+
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -192,7 +184,7 @@ function fgrad(p::Vector, grad::Vector)
     debug(p, " : ", val)
     return val
 end
-#
+
 function fp(p::Vector)
     val = fprob(p)
     debug(p, " : ", val)
@@ -202,8 +194,8 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, M_CO, ksi, incl, 74.5, vel]
-jump_param = PDiagMat([0.01, 0.3, 0.2, 0.01, 0.01, 0.1, 0.1, 0.005].^2)
+starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_x, mu_y]
+jump_param = PDiagMat([0.01, 0.3, 0.2, 0.005, 0.01, 0.01, 0.1, 0.1, 0.005, 0.02, 0.02].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
@@ -225,7 +217,7 @@ jump_param = PDiagMat([0.01, 0.3, 0.2, 0.01, 0.01, 0.1, 0.1, 0.005].^2)
 
 using LittleMC
 
-mc = MC(fp, 6000, starting_param, jump_param)
+mc = MC(fp, 2000, starting_param, jump_param)
 
 start(mc)
 
