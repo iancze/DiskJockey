@@ -81,7 +81,10 @@ mu_y = 0.0 # [arcsec]
 
 pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
 
+tic()
 write_model(pars)
+println("Model writing time")
+toc()
 
 # don't bother copying all of the files written by write_model into a subdirectory
 
