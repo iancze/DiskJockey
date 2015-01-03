@@ -164,7 +164,7 @@ end
 #From Rosenfeld et al. 2012, Table 1
 M_star = 1.75 # [M_sun] stellar mass
 r_c =  45. # [AU] characteristic radius
-T_10 =  115. # [K] temperature at 10 AU
+T_10 =  113.5 # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
@@ -173,9 +173,9 @@ dpc = 73.0
 incl = 33. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
-PA = 73.
-mu_x = 0.0 # [arcsec]
-mu_y = 0.0 # [arcsec]
+PA = 75.
+mu_x = -0.1 # [arcsec]
+mu_y = 0.7 # [arcsec]
 
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -195,7 +195,7 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_x, mu_y]
-jump_param = PDiagMat([0.01, 0.3, 0.2, 0.005, 0.01, 0.01, 0.1, 0.1, 0.005, 0.02, 0.02].^2)
+jump_param = PDiagMat([0.005, 0.3, 0.2, 0.002, 0.01, 0.01, 0.1, 0.1, 0.005, 0.005, 0.005].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
