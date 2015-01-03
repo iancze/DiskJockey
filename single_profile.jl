@@ -17,7 +17,7 @@ function f(dv::DataVis, key::Int, p::Parameters)
     incl = p.incl # [deg]
     vel = p.vel # [km/s]
     PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
-    npix = 128 # number of pixels, can alternatively specify x and y separately
+    npix = 256 # number of pixels, can alternatively specify x and y separately
 
     # Doppler shift the dataset wavelength to rest-frame wavelength
     beta = vel/c_kms # relativistic Doppler formula
@@ -29,7 +29,7 @@ function f(dv::DataVis, key::Int, p::Parameters)
     println("RADMC3D time")
     toc()
 
-    # Read the RADMC3D image from disk (we should already be in sub-directory)
+    # Read the RADMC3D image from disk
     im = imread()
 
     # Convert raw image to the appropriate distance
@@ -39,6 +39,14 @@ function f(dv::DataVis, key::Int, p::Parameters)
     corrfun!(skim, 1.0) # alpha = 1.0 (relevant for spherical gridding function)
 
     tic()
+    im = imread()
+    skim = imToSky(im, p.dpc)
+    corrfun!(skim, 1.0) # alpha = 1.0 (relevant for spherical gridding function)
+    println("Image reading time")
+    toc()
+
+    vis_fft = transform(skim)
+    tic()
     # FFT the appropriate image channel
     vis_fft = transform(skim)
     println("FFT time")
@@ -46,12 +54,22 @@ function f(dv::DataVis, key::Int, p::Parameters)
 
     # Interpolate the `vis_fft` to the same locations as the DataSet
     mvis = ModelVis(dv, vis_fft)
+    tic()
+    mvis = ModelVis(dv, vis_fft)
+    println("Interpolate time")
+    toc()
 
     # Apply the phase correction here, since there are fewer data points
     phase_shift!(mvis, p.mu_x, p.mu_y)
 
     # Calculate chi^2 between these two
-    return lnprob(dv, mvis)
+    lnprob(dv, mvis)
+    tic()
+    println("lnprob time")
+    lnp = lnprob(dv, mvis)
+    toc()
+
+    return lnp
 end
 
 # Regenerate all of the static files (e.g., amr_grid.inp)
@@ -81,6 +99,7 @@ mu_y = 0.0 # [arcsec]
 
 pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
 
+write_model(pars)
 tic()
 write_model(pars)
 println("Model writing time")

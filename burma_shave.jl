@@ -70,7 +70,7 @@ end
     incl = p.incl # [deg]
     vel = p.vel # [km/s]
     PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
-    npix = 128 # number of pixels, can alternatively specify x and y separately
+    npix = 256 # number of pixels, can alternatively specify x and y separately
 
     # Doppler shift the dataset wavelength to rest-frame wavelength
     beta = vel/c_kms # relativistic Doppler formula
