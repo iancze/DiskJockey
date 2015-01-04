@@ -1,7 +1,7 @@
 # lnprob evaluation for V4046Sgr
 
 const global keylist = Int[i for i=1:23] # which channels of the dset to fit
-const global basedir = "/scratch/"
+@everywhere const global basedir = "/scratch/"
 
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
@@ -130,8 +130,8 @@ function fprob(p::Vector{Float64})
     # incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
     # PA::Float64 # [degrees] position angle (East of North)
     # vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
-    # mu_x::Float64 # [arcsec] central offset in RA
-    # mu_y::Float64 # [arcsec] central offset in DEC
+    # mu_RA::Float64 # [arcsec] central offset in RA
+    # mu_DEC::Float64 # [arcsec] central offset in DEC
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
