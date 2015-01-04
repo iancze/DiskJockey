@@ -12,13 +12,13 @@ function cleardirs!(keylist::Vector{Int})
     println("Removed directories")
 end
 
-# Clear all directories
-cleardirs!(keylist)
-
 nchild = length(keylist)
 addprocs(nchild)
 
 @everywhere const global basedir = "/scratch/"
+
+# Clear all directories
+cleardirs!(keylist)
 
 @everywhere using constants
 @everywhere using parallel
