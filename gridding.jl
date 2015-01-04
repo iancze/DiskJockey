@@ -6,7 +6,7 @@ using image
 
 import Base.Math.@horner
 
-export spheroid, corrfun, corrfun!, gcffun, interpolate_uv
+export spheroid, corrfun, corrfun!, gcffun
 
 # TODO: This whole thing may be faster if we break it up into spheroid_0, spheroid_05,
 # spheroid_1, spheroid_1_5 and spheroid_2. But it also may not be necessary.

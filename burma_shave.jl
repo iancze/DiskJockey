@@ -69,7 +69,8 @@ end
     # Unpack these variables from p
     incl = p.incl # [deg]
     vel = p.vel # [km/s]
-    PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
+    PA = 90. - p.PA # [deg] accounts for disk semi-major axis shift and that
+    # RADMC posang rotates object CLOCKWISE, contrary to manual
     npix = 256 # number of pixels, can alternatively specify x and y separately
 
     # Doppler shift the dataset wavelength to rest-frame wavelength
@@ -95,7 +96,7 @@ end
     mvis = ModelVis(dv, vis_fft)
 
     # Apply the phase correction here, since there are fewer data points
-    phase_shift!(mvis, p.mu_x, p.mu_y)
+    phase_shift!(mvis, p.mu_RA, p.mu_DEC)
 
     # Calculate chi^2 between these two
     return lnprob(dv, mvis)
@@ -138,12 +139,12 @@ function fprob(p::Vector{Float64})
 
     # so that p coming in is
     # [M_star, r_c, T_10, dpc, incl, PA, vel]
-    M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_x, mu_y = p
+    M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     # the p... command "unrolls" the vector into a series of arguments
     # The parameters type carries around everything in cgs (except mu_x, mu_y)
-    pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
+    pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
     write_model(pars)
@@ -174,8 +175,8 @@ incl = 33. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
 PA = 75.
-mu_x = -0.1 # [arcsec]
-mu_y = 0.7 # [arcsec]
+mu_RA = -0.1 # [arcsec]
+mu_DEC = 0.7 # [arcsec]
 
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -194,7 +195,7 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_x, mu_y]
+starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
 jump_param = PDiagMat([0.005, 0.3, 0.2, 0.002, 0.01, 0.01, 0.1, 0.1, 0.005, 0.005, 0.005].^2)
 
 # println("Evaluating fprob")

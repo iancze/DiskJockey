@@ -87,6 +87,9 @@ end
 # Assumes dpc is parsecs
 function imToSky(img::RawImage, dpc::Float64)
 
+    # The image is oriented with North up and East increasing to the left
+    # this means that the delta RA array goes from + to -
+
     #println("Min and max intensity ", minimum(img.data), " ", maximum(img.data))
     #println("Pixel size ", img.pixsize_x)
     #println("Steradians subtended by each pixel ",  img.pixsize_x * img.pixsize_y / (dpc * pc)^2)
@@ -99,14 +102,14 @@ function imToSky(img::RawImage, dpc::Float64)
 
     dataJy = img.data .* conv
 
-    (im_nx, im_ny) = size(img.data)[1:2] #x and y dimensions of the image
+    (im_ny, im_nx) = size(img.data)[1:2] #y and x dimensions of the image
 
     # The locations of pixel centers in cm
     xx = ((Float64[i for i=0:im_nx] + 0.5) - im_nx/2.) * img.pixsize_x
     yy = ((Float64[i for i=0:im_ny] + 0.5) - im_ny/2.) * img.pixsize_y
 
     # The locations of the pixel centers in relative arcseconds
-    ra = xx./(AU * dpc)
+    ra = xx[end:-1:1] ./(AU * dpc) # reverse order, RA increases to East
     dec = yy./(AU * dpc)
 
     return SkyImage(dataJy, ra, dec, img.lams)
@@ -129,9 +132,12 @@ end
 # Take an image and integrate all the frames to create a spatially-integrated spectrum
 function imToSpec(img::SkyImage)
 
-    # SkyImage required, so that pixels are Jy/pixel
+    # pixels in SkyImage are Jy/ster
 
-    flux = squeeze(sum(img.data, (1, 2)), (1,2)) # Add up all the flux in the pixels to create the spectrum
+    dRA = abs(img.ra[2] - img.ra[1])
+    dDEC = abs(img.dec[2] - img.dec[1])
+
+    flux = squeeze(sum(img.data .* dRA .* dDEC, (1, 2)), (1,2)) # Add up all the flux in the pixels to create the spectrum
     spec = hcat(img.lams, flux) #First column is wl, second is flux
 
     return spec

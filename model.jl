@@ -108,8 +108,8 @@ type Parameters
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
     PA::Float64 # [degrees] position angle (East of North)
     vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
-    mu_x::Float64 # [arcsec] central offset in RA
-    mu_y::Float64 # [arcsec] central offset in DEC
+    mu_RA::Float64 # [arcsec] central offset in RA
+    mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
 #From Rosenfeld et al. 2012, Table 1
@@ -124,11 +124,11 @@ dpc = 73.
 incl = 33.5 # [degrees] inclination
 PA = 73.
 vel = 0.0
-mu_x = 0.0
-mu_y = 0.0
+mu_RA = 0.0
+mu_DEC = 0.0
 
 # global object which is useful for reproducing V4046Sgr
-params = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
+params = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
 # Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.

@@ -11,18 +11,22 @@ using LaTeXStrings
 
 function plot_chmaps(img::image.SkyImage)
 
-    (im_nx, im_ny) = size(img.data)[1:2] #x and y dimensions of the image
+    (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
 
     ext = (img.ra[1], img.ra[end], img.dec[1], img.dec[end])
 
-    lam0 = cc/230.538e9 * 1e6 # [microns]
+    # CO 2-1 rest frame
+    lam0 = cc/230.538e9 * 1e4 # [microns]
     nlam = length(img.lams)
-    vels = linspace(-4.4, 4.4, nlam) # [km/s]
+    #vels = linspace(-4.4, 4.4, nlam) # [km/s]
+
+    # convert wavelengths to velocities
+    vels = c_kms * (img.lams .- lam0)/lam0
 
     fig, ax = plt.subplots(nrows=2, ncols=12, figsize=(12, 2.8))
 
     #Plot a blank img in the last frame, moment map will go here eventually
-    ax[2, 12][:imshow](zeros((im_nx, im_ny)), cmap=plt.get_cmap("Greys"), vmin=0, vmax=20)
+    ax[2, 12][:imshow](zeros((im_ny, im_nx)), cmap=plt.get_cmap("Greys"), vmin=0, vmax=20)
     ax[2, 12][:xaxis][:set_ticklabels]([])
     ax[2, 12][:yaxis][:set_ticklabels]([])
 
@@ -50,7 +54,7 @@ function plot_chmaps(img::image.SkyImage)
             frame = img.data[:,:,iframe]
             frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
             max = maximum(log10(frame))
-            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 7, vmax=max, interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"))
+            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"))
         end
     end
 
@@ -95,7 +99,6 @@ M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
 incl = 33. # [degrees] inclination
-#vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
 PA = 73.
 mu_x = 0.0 # [arcsec]
@@ -103,9 +106,9 @@ mu_y = 0.0 # [arcsec]
 
 pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
 
-incl = p.incl # [deg]
-vel = p.vel # [km/s]
-PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
+incl = pars.incl # [deg]
+vel = pars.vel # [km/s]
+PA = 90 - pars.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
 npix = 256 # number of pixels, can alternatively specify x and y separately
 
 # Doppler shift the dataset wavelength to rest-frame wavelength
@@ -116,8 +119,15 @@ write_grid()
 write_model(pars)
 write_lambda(shift_lams)
 
+println(PA)
+
 run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
 
 im = imread()
 
-skim = imToSky(im, p.dpc)
+skim = imToSky(im, pars.dpc)
+
+plot_chmaps(skim)
+
+spec = imToSpec(skim)
+plot_spectrum(spec)

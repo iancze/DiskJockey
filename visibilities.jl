@@ -138,11 +138,12 @@ function lnprob(dvis::DataVis, mvis::ModelVis)
     return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
-# Given offsets in the image plane (in arcseconds), shift the visibilities by a
-# corresponding amount
-function phase_shift!(mvis::ModelVis, mu_x, mu_y)
-
-    mu = Float64[mu_x, mu_y] * arcsec # [radians]
+# Given a new model centroid in the image plane (in arcseconds), shift the
+# visibilities by corresponding amount
+function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
+    # RA is negated, because RA increases to the LEFT (East). Therefore a positive
+    # RA shift is a negative x shift according to the shift theorem
+    mu = Float64[ -mu_RA, mu_DEC] * arcsec # [radians]
 
     nvis = length(mvis.VV)
     # Go through each visibility and apply the phase shift
@@ -211,8 +212,8 @@ function transform(img::SkyImage, index::Int=1)
     nm = length(mm)
 
     # find the spacing between the elements
-    dl = ll[2] - ll[1] # [radians]
-    dm = mm[2] - mm[1] # [radians]
+    dl = abs(ll[2] - ll[1]) # [radians]
+    dm = abs(mm[2] - mm[1]) # [radians]
 
     # determine uv plane coordinates in kλ
     uu = fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
