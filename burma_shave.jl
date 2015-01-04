@@ -1,7 +1,6 @@
 # lnprob evaluation for V4046Sgr
 
 const global keylist = Int[i for i=1:23] # which channels of the dset to fit
-@everywhere const global basedir = "/scratch/"
 
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
@@ -18,6 +17,8 @@ cleardirs!(keylist)
 
 nchild = length(keylist)
 addprocs(nchild)
+
+@everywhere const global basedir = "/scratch/"
 
 @everywhere using constants
 @everywhere using parallel
