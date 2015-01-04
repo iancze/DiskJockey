@@ -83,7 +83,7 @@ function f(dv::DataVis, key::Int, p::Parameters)
     toc()
 
     # Apply the phase correction here, since there are fewer data points
-    phase_shift!(mvis, p.mu_x, p.mu_y)
+    phase_shift!(mvis, p.mu_RA, p.mu_DEC)
 
     # Calculate chi^2 between these two
     lnprob(dv, mvis)
@@ -117,13 +117,13 @@ incl = 33. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
 PA = 73.
-mu_x = 0.0 # [arcsec]
-mu_y = 0.0 # [arcsec]
+mu_RA = 0.0 # [arcsec]
+mu_DEC = 0.0 # [arcsec]
 
 # Turn the parameters in the YAML file into the parameters object
 # The code will only fit the parameters listed in the file
 
-pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
+pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
 write_model(pars)
 tic()

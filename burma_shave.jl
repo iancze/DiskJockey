@@ -168,15 +168,15 @@ r_c =  45. # [AU] characteristic radius
 T_10 =  113.5 # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
-M_CO = 0.933 # [M_earth] disk mass of CO
+M_CO = 1.0 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
-incl = 33. # [degrees] inclination
+incl = 34. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
 PA = 75.
-mu_RA = -0.1 # [arcsec]
-mu_DEC = 0.7 # [arcsec]
+mu_RA = 0.15 # [arcsec]
+mu_DEC = 0.67 # [arcsec]
 
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -196,7 +196,7 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
-jump_param = PDiagMat([0.005, 0.3, 0.2, 0.002, 0.01, 0.01, 0.1, 0.1, 0.005, 0.005, 0.005].^2)
+jump_param = PDiagMat([0.005, 0.3, 0.2, 0.001, 0.01, 0.01, 0.1, 0.1, 0.005, 0.005, 0.005].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
