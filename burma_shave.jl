@@ -152,7 +152,7 @@ function fprob(p::Vector{Float64})
 
     # Copy new parameter files to all subdirectories
     for key in keylist
-        keydir = "jud$key"
+        keydir = basedir * "jud$key"
         run(`cp numberdens_co.inp $keydir`)
         run(`cp gas_velocity.inp $keydir`)
         run(`cp gas_temperature.inp $keydir`)
