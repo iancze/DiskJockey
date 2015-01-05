@@ -164,18 +164,18 @@ function fprob(p::Vector{Float64})
 end
 
 #From Rosenfeld et al. 2012, Table 1
-M_star = 1.75 # [M_sun] stellar mass
-r_c =  45. # [AU] characteristic radius
-T_10 =  113.5 # [K] temperature at 10 AU
+M_star = 1.8 # [M_sun] stellar mass
+r_c =  48. # [AU] characteristic radius
+T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
-M_CO = 1.0 # [M_earth] disk mass of CO
+M_CO = 1.15 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
 incl = 34. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
-vel = -31.18 # [km/s]
-PA = 75.
+vel = -31.16 # [km/s]
+PA = 76.
 mu_RA = 0.15 # [arcsec]
 mu_DEC = 0.67 # [arcsec]
 
@@ -197,7 +197,7 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
-jump_param = PDiagMat([0.005, 0.3, 0.2, 0.001, 0.01, 0.01, 0.1, 0.1, 0.005, 0.005, 0.005].^2)
+jump_param = PDiagMat([0.005, 0.1, 0.15, 0.0005, 0.01, 0.01, 0.1, 0.1, 0.005, 0.002, 0.002].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
@@ -219,7 +219,7 @@ jump_param = PDiagMat([0.005, 0.3, 0.2, 0.001, 0.01, 0.01, 0.1, 0.1, 0.005, 0.00
 
 using LittleMC
 
-mc = MC(fp, 2000, starting_param, jump_param)
+mc = MC(fp, 6000, starting_param, jump_param)
 
 start(mc)
 
