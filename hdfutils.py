@@ -229,3 +229,7 @@ if args.chain:
 if args.triangle:
     assert len(flatchainList) == 1, "If making Triangle, only specify one flatchain"
     plot(flatchainList[0])
+
+if args.cov:
+    assert len(flatchainList) == 1, "If estimating covariance, only specify one flatchain"
+    estimate_covariance(flatchainList[0])
