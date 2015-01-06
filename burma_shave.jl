@@ -20,7 +20,7 @@ end
 
 parsed_args = parse_args(ARGS, s)
 
-outfmt(run_index::Int) = @sprintf("output/run%02d/", run_index)
+outfmt(run_index::Int) = @sprintf("output/V4046Sgr/run%02d/", run_index)
 
 # This code is necessary for multiple simultaneous runs on odyssey
 # so that different runs do not write into the same output directory
@@ -251,11 +251,7 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
-jump_param = PDiagMat([0.02, 0.2, 0.7, 0.002, 0.04, 0.002, 0.35, 0.1, 0.002, 0.005, 0.005].^2)
-
-# 'Optimal' jumps
-# [ 0.02848856  0.26640336  0.74039341  0.00252954  0.04231246  0.00289525
-# 0.3510008   0.18502766  0.00252     0.00501644  0.00700693]
+jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
@@ -277,7 +273,7 @@ jump_param = PDiagMat([0.02, 0.2, 0.7, 0.002, 0.04, 0.002, 0.35, 0.1, 0.002, 0.0
 
 using LittleMC
 
-mc = MC(fp, 100, starting_param, jump_param)
+mc = MC(fp, 6000, starting_param, jump_param)
 
 start(mc)
 
