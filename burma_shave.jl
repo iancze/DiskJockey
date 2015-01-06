@@ -67,9 +67,11 @@ end
 
 @everywhere const global basedir = basefmt(run_id)
 
-# make the internal Judith directory
-println("Creating ", basedir)
-mkdir(basedir)
+# make the internal Judith directory, if it doesn't exist
+if !ispath(basedir)
+    println("Creating ", basedir)
+    mkdir(basedir)
+end
 
 # Clear all directories
 cleardirs!(keylist)
@@ -105,7 +107,8 @@ Logging.configure(filename=logfile, level=DEBUG)
     # Copy all relevant configuration scripts to this subdirectory
     # these are mainly setup files which will not change throughout the run
     run(`cp radmc3d.inp $keydir`)
-    run(`cp amr_grid.inp $keydir`)
+    ag = basedir * "amr_grid.inp"
+    run(`cp $ag $keydir`)
     run(`cp lines.inp $keydir`)
     run(`cp molecule_co.inp $keydir`)
     run(`cp wavelength_micron.inp $keydir`)
@@ -159,7 +162,7 @@ end
 
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
-write_grid()
+write_grid(basedir)
 
 pipes = initialize(nchild, keylist, initfunc, f)
 gather!(pipes)

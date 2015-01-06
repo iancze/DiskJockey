@@ -62,9 +62,9 @@ const thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
 const phis = Float64[0.0]
 
 #This function only needs to be run once, upon setup.
-function write_grid()
+function write_grid(basedir::AbstractString)
     #amr_grid.inp
-    f = open("amr_grid.inp", "w")
+    f = open(basedir * "amr_grid.inp", "w")
 
     #Write the header
     @printf(f, "%d\n", 1) #iformat
