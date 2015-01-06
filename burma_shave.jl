@@ -59,6 +59,7 @@ nchild = length(keylist)
 addprocs(nchild)
 
 @everywhere basefmt(id::Int) = @sprintf("/scratch/run%02d/", id)
+#@everywhere basefmt(id::Int) = @sprintf("testrun/run%02d/", id)
 
 # make the value of run_index available on all processes
 for process in procs()

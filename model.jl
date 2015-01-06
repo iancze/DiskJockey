@@ -62,7 +62,7 @@ const thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
 const phis = Float64[0.0]
 
 #This function only needs to be run once, upon setup.
-function write_grid(basedir::AbstractString)
+function write_grid(basedir::String)
     #amr_grid.inp
     f = open(basedir * "amr_grid.inp", "w")
 
@@ -164,7 +164,7 @@ end
 
 microturbulence(pars::Parameters) = microturbulence(pars.ksi)
 
-function write_model(pars::Parameters, basedir::AbstractString)
+function write_model(pars::Parameters, basedir::String)
     # numberdens_co.inp
     fdens = open(basedir * "numberdens_co.inp", "w")
     @printf(fdens, "%d\n", 1) #iformat
