@@ -286,6 +286,6 @@ println(std(mc.samples, 2))
 
 runstats(mc)
 
-write(mc, outdir * "mc.hdf5")
+LittleMC.write(mc, outdir * "mc.hdf5")
 
 quit!(pipes)
