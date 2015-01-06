@@ -247,7 +247,11 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
-jump_param = PDiagMat([0.005, 0.1, 0.15, 0.0005, 0.01, 0.01, 0.1, 0.1, 0.005, 0.002, 0.002].^2)
+jump_param = PDiagMat([0.02, 0.2, 0.7, 0.002, 0.04, 0.002, 0.35, 0.1, 0.002, 0.005, 0.005].^2)
+
+# 'Optimal' jumps
+# [ 0.02848856  0.26640336  0.74039341  0.00252954  0.04231246  0.00289525
+# 0.3510008   0.18502766  0.00252     0.00501644  0.00700693]
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
