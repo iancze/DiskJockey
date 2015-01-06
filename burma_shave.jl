@@ -39,7 +39,7 @@ else
     run(`rm -rf $outdir`)
 end
 
-# make the directory
+# make the output directory
 println("Creating ", outdir)
 mkdir(outdir)
 
@@ -66,6 +66,10 @@ for process in procs()
 end
 
 @everywhere const global basedir = basefmt(run_id)
+
+# make the internal Judith directory
+println("Creating ", basedir)
+mkdir(basedir)
 
 # Clear all directories
 cleardirs!(keylist)
