@@ -1,5 +1,48 @@
 # lnprob evaluation for V4046Sgr
 
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    # "--opt1"
+    # help = "an option with an argument"
+    "--run_index", "-r"
+    help = "Output run index"
+    arg_type = Int
+    # default = 0
+    # "--flag1"
+    # help = "an option without argument, i.e. a flag"
+    # action = :store_true
+    # "config"
+    # help = "a YAML configuration file"
+    # required = true
+end
+
+parsed_args = parse_args(ARGS, s)
+
+outfmt(run_index::Int) = @sprintf("output/run%02d/", run_index)
+
+# This code is necessary for multiple simultaneous runs on odyssey
+# so that different runs do not write into the same output directory
+if parsed_args["run_index"] == nothing
+    run_index = 0
+    outdir = outfmt(run_index)
+    while ispath(outdir)
+        println(outdir, " exists")
+        run_index += 1
+        outdir = outfmt(run_index)
+    end
+else
+    run_index = parsed_args["run_index"]
+    outdir = outfmt(run_index)
+    println("Deleting old $outdir")
+    run(`rm -rf $outdir`)
+end
+
+# make the directory
+println("Creating ", outdir)
+mkdir(outdir)
+
 const global keylist = Int[i for i=1:23] # which channels of the dset to fit
 
 # go through any previously created directories and remove them
@@ -15,7 +58,14 @@ end
 nchild = length(keylist)
 addprocs(nchild)
 
-@everywhere const global basedir = "/scratch/"
+@everywhere basefmt(id::Int) = @sprintf("/scratch/run%02d/", id)
+
+# make the value of run_index available on all processes
+for process in procs()
+    @spawnat process global run_id=run_index
+end
+
+@everywhere const global basedir = basefmt(run_id)
 
 # Clear all directories
 cleardirs!(keylist)
@@ -219,7 +269,7 @@ jump_param = PDiagMat([0.005, 0.1, 0.15, 0.0005, 0.01, 0.01, 0.1, 0.1, 0.005, 0.
 
 using LittleMC
 
-mc = MC(fp, 6000, starting_param, jump_param)
+mc = MC(fp, 100, starting_param, jump_param)
 
 start(mc)
 
@@ -228,6 +278,6 @@ println(std(mc.samples, 2))
 
 runstats(mc)
 
-write(mc, "mc.hdf5")
+write(mc, outdir * "mc.hdf5")
 
 quit!(pipes)

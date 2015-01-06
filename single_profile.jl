@@ -9,23 +9,49 @@ s = ArgParseSettings()
 @add_arg_table s begin
     # "--opt1"
     # help = "an option with an argument"
-    # "--opt2", "-o"
-    # help = "another option with an argument"
-    # arg_type = Int
+    "--run_index", "-r"
+    help = "Output run index"
+    arg_type = Int
     # default = 0
     # "--flag1"
     # help = "an option without argument, i.e. a flag"
     # action = :store_true
-    "config"
-    help = "a YAML configuration file"
-    required = true
+    # "config"
+    # help = "a YAML configuration file"
+    # required = true
 end
 
 parsed_args = parse_args(ARGS, s)
 
+outfmt(run_index::Int) = @sprintf("output/run%02d/", run_index)
+basefmt(run_index::Int) = @sprintf("/stratch/run%02d/", run_index)
 
-import YAML
-config = YAML.load(open(parsed_args["config"]))
+# This code is necessary for multiple simultaneous runs on odyssey
+# so that different runs do not write into the same output directory
+if parsed_args["run_index"] == nothing
+    run_index = 0
+    outdir = outfmt(run_index)
+    while ispath(outdir)
+        println(outdir, " exists")
+        run_index += 1
+        outdir = outfmt(run_index)
+    end
+else
+    run_index = parsed_args["run_index"]
+    outdir = outfmt(run_index)
+    println("Deleting old $outdir")
+    run(`rm -rf $outdir`)
+end
+
+# make the directories
+println("Creating ", outdir)
+mkdir(outdir)
+
+quit()
+#
+#
+# import YAML
+# config = YAML.load(open(parsed_args["config"]))
 
 using constants
 using visibilities
