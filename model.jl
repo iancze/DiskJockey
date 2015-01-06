@@ -164,24 +164,24 @@ end
 
 microturbulence(pars::Parameters) = microturbulence(pars.ksi)
 
-function write_model(pars::Parameters)
+function write_model(pars::Parameters, basedir::AbstractString)
     # numberdens_co.inp
-    fdens = open("numberdens_co.inp", "w")
+    fdens = open(basedir * "numberdens_co.inp", "w")
     @printf(fdens, "%d\n", 1) #iformat
     @printf(fdens, "%d\n", ncells)
 
     # gas_velocity.inp
-    fvel = open("gas_velocity.inp", "w")
+    fvel = open(basedir * "gas_velocity.inp", "w")
     @printf(fvel, "%d\n", 1) #iformat
     @printf(fvel, "%d\n", ncells)
 
     # gas_temperature.inp
-    ftemp = open("gas_temperature.inp", "w")
+    ftemp = open(basedir * "gas_temperature.inp", "w")
     @printf(ftemp, "%d\n", 1) #iformat
     @printf(ftemp, "%d\n", ncells)
 
     # microturbulence.inp
-    fmicro = open("microturbulence.inp", "w")
+    fmicro = open(basedir * "microturbulence.inp", "w")
     @printf(fmicro, "%d\n", 1) #iformat
     @printf(fmicro, "%d\n", ncells)
 

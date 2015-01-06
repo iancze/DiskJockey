@@ -202,15 +202,20 @@ function fprob(p::Vector{Float64})
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
-    write_model(pars)
+    write_model(pars, basedir)
+
+    nd = basedir * "numberdens_co.inp"
+    gv = basedir * "gas_velocity.inp"
+    gt = basedir * "gas_temperature.inp"
+    mt = basedir * "microturbulence.inp"
 
     # Copy new parameter files to all subdirectories
     for key in keylist
         keydir = basedir * "jud$key"
-        run(`cp numberdens_co.inp $keydir`)
-        run(`cp gas_velocity.inp $keydir`)
-        run(`cp gas_temperature.inp $keydir`)
-        run(`cp microturbulence.inp $keydir`)
+        run(`cp $nd $keydir`)
+        run(`cp $gv $keydir`)
+        run(`cp $gt $keydir`)
+        run(`cp $mt $keydir`)
     end
 
     distribute!(pipes, pars)
