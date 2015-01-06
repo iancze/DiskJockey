@@ -84,7 +84,7 @@ cleardirs!(keylist)
 @everywhere using model
 
 # Delete the old log file (if it exists)
-const logfile = "log.log"
+const logfile = outdir * "log.log"
 if isfile(logfile)
     rm(logfile)
 end
