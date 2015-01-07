@@ -259,3 +259,7 @@ if args.triangle:
 if args.cov:
     assert len(flatchainList) == 1, "If estimating covariance, only specify one flatchain"
     estimate_covariance(flatchainList[0])
+
+if args.gelman:
+    assert len(flatchainList) > 1, "If running Gelman-Rubin test, must provide more than one flatchain"
+    gelman_rubin(flatchainList)
