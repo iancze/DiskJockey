@@ -36,6 +36,8 @@ args = parser.parse_args()
 import os
 import numpy as np
 import h5py
+from astropy.table import Table
+from astropy.io import ascii
 
 #Check to see if outdir exists.
 if not os.path.exists(args.outdir):
