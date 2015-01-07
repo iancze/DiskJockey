@@ -133,17 +133,19 @@ def plot(flatchain, base=args.outdir, format=".png"):
 
     import triangle
 
-    #Navigate the flatchain tree, and each time we encounter a flatchain, plot it.
-
     #params = flatchain.param_tuple
-    #samples = flatchain.samples
     #labels = [label_dict.get(key, "unknown") for key in params]
 
     # figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84],
     #                          show_titles=True, title_args={"fontsize": 16}, plot_contours=True,
     #                          plot_datapoints=False)
+    #[M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
+    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
+    r"$q$", r"$M_\textrm{CO} \quad [M_\oplus]$",  r"$\xi$ [km/s]",
+    r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
+    r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     figure = triangle.corner(flatchain, quantiles=[0.16, 0.5, 0.84], plot_contours=True,
-                          plot_datapoints=False)
+                          plot_datapoints=False, labels=labels, show_titles=True)
     figure.savefig(base + "triangle" + format)
 
 
@@ -191,6 +193,13 @@ def estimate_covariance(flatchain):
     print("Correlation coefficient")
     print(cor)
 
+    print("'Optimal' jumps with covariance (units squared)")
+    if args.ndim:
+        d = args.ndim
+    else:
+        d = flatchain.shape[1]
+    print(2.38**2/d * cov)
+
     print("Standard deviation")
     std_dev = np.sqrt(np.diag(cov))
     print(std_dev)
@@ -201,6 +210,9 @@ def estimate_covariance(flatchain):
     else:
         d = flatchain.shape[1]
     print(2.38/np.sqrt(d) * std_dev)
+
+
+
 
 def cat_list(file, flatchainList):
     '''

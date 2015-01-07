@@ -261,6 +261,21 @@ using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
 jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
+jump_param = full(jump_param)
+
+# Fill in the specific covariances
+# M_star v. incl; 1 v. 7 -3.78118283e-02
+jump_param[1, 7] = -3.78118283e-02
+jump_param[7, 1] = -3.78118283e-02
+
+# r_c v. M_CO; 2 v. 5 -7.57808641e-01
+jump_param[2, 5] = -7.57808641e-01
+jump_param[5, 2] = -7.57808641e-01
+
+# T_10 v. q; 3 v. 4 1.75390024e-02
+jump_param[3, 4] = 1.75390024e-02
+jump_param[4, 3] = 1.75390024e-02
+
 
 # println("Evaluating fprob")
 # println(fprob(starting_param))
