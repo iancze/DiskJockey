@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 
 parser = argparse.ArgumentParser(description="Measure statistics across multiple chains.")
@@ -15,7 +17,7 @@ parser.add_argument("--burn", type=int, default=0, help="How many samples to dis
 parser.add_argument("--thin", type=int, default=1, help="Thin the chain by this factor. E.g., --thin 100 will take every 100th sample.")
 parser.add_argument("--range", nargs=2, help="start and end ranges for chain plot, separated by WHITESPACE")
 
-
+parser.add_argument("--cat", action="store_true", help="Concatenate the list of samples.")
 parser.add_argument("--chain", action="store_true", help="Make a plot of the position of the chains.")
 parser.add_argument("-t", "--triangle", action="store_true", help="Make a triangle (staircase) plot of the parameters.")
 parser.add_argument("--params", nargs="*", default="all", help="A list of which parameters to plot,                                                                 separated by WHITESPACE. Default is to plot all.")
@@ -56,12 +58,11 @@ def h5read(fname, burn=0, thin=1):
 
 def gelman_rubin(samplelist):
     '''
-    Given a list of flatchains from separate runs (that already have burn in cut and have been
-    trimmed, if desired), compute the Gelman-Rubin statistics in Bayesian Data Analysis 3, pg 284.
-
-    If you want to compute this for fewer parameters, then slice the list before feeding it in.
+    Given a list of flatchains from separate runs (that already have burn in cut
+    and have been trimmed, if desired), compute the Gelman-Rubin statistics in
+    Bayesian Data Analysis 3, pg 284. If you want to compute this for fewer
+    parameters, then slice the list before feeding it in.
     '''
-
 
     full_iterations = len(samplelist[0])
     assert full_iterations % 2 == 0, "Number of iterations must be even. Try cutting off a different number of burn in samples."
@@ -198,6 +199,27 @@ def estimate_covariance(flatchain):
         d = flatchain.shape[1]
     print(2.38/np.sqrt(d) * std_dev)
 
+def cat_list(file, flatchainList):
+    '''
+    Given a list of flatchains, concatenate all of these and write them to a
+    single HDF5 file.
+    '''
+    #Write this out to the new file
+    print("Opening", file)
+    hdf5 = h5py.File(file, "w")
+
+    cat = np.concatenate(flatchainList, axis=0)
+
+    # id = flatchainList[0].id
+    # param_tuple = flatchainList[0].param_tuple
+
+    dset = hdf5.create_dataset("samples", cat.shape, compression='gzip',
+        compression_opts=9)
+    dset[:] = cat
+    # dset.attrs["parameters"] = "{}".format(param_tuple)
+
+    hdf5.close()
+
 #Now that all of the structures have been declared, do the initialization stuff.
 
 if args.glob:
@@ -219,6 +241,10 @@ for file in files:
         print("{} does not exist, skipping. Or error {}".format(file, e))
 
 print("Using a total of {} flatchains".format(len(flatchainList)))
+
+if args.cat:
+    assert len(flatchainList) > 1, "If concatenating samples, must provide more than one flatchain"
+    cat_list(args.output, flatchainList)
 
 # Assume that if we are using either args.chain, or args.triangle, we are only suppling one
 # chain, since these commands don't make sense otherwise.
