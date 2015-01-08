@@ -199,7 +199,7 @@ def estimate_covariance(flatchain):
     else:
         d = flatchain.shape[1]
     # opt_jump = 2.38**2/d * cov
-    opt_jump = 2.**2/d * cov
+    opt_jump = 1.2**2/d * cov
     print(opt_jump)
 
     print("Standard deviation")
