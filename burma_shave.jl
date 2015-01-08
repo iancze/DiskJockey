@@ -299,7 +299,7 @@ jump_param = npzread("opt_jump.npy")
 
 using LittleMC
 
-mc = MC(fp, 6000, starting_param, jump_param)
+mc = MC(fp, 200, starting_param, jump_param)
 
 start(mc)
 
