@@ -198,7 +198,8 @@ def estimate_covariance(flatchain):
         d = args.ndim
     else:
         d = flatchain.shape[1]
-    print(2.38**2/d * cov)
+    opt_jump = 2.38**2/d * cov
+    print(opt_jump)
 
     print("Standard deviation")
     std_dev = np.sqrt(np.diag(cov))
@@ -211,6 +212,7 @@ def estimate_covariance(flatchain):
         d = flatchain.shape[1]
     print(2.38/np.sqrt(d) * std_dev)
 
+    np.save("mcmcplot/opt_jump.npy", opt_jump)
 
 
 
