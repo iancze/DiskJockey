@@ -23,7 +23,7 @@ type MC{T <: AbstractMvNormal} #Could try making this immutable later
 end
 
 # Initialization function
-function MC{T <: AbstractPDMat}(f::Function, nsamples::Int, p0::Vector{Float64}, propcov::T)
+function MC(f::Function, nsamples::Int, p0::Vector{Float64}, propcov::Matrix{Float64})
     # Do some custom initialization
     nparams = length(p0)
 

@@ -276,7 +276,6 @@ jump_param[5, 2] = -7.57808641e-01
 jump_param[3, 4] = 1.75390024e-02
 jump_param[4, 3] = 1.75390024e-02
 
-
 # println("Evaluating fprob")
 # println(fprob(starting_param))
 # quit!(pipes)

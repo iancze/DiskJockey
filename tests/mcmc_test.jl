@@ -12,7 +12,11 @@ function Gauss(x::Vector{Float64})
     return logpdf(dist, x)
 end
 
-mc = MC(Gauss, 100000, [1.0, 1.0], PDiagMat([1.5^2, 1.5^2]))
+
+using PDMats
+
+
+mc = MC(Gauss, 100000, [1.0, 1.0], full(PDiagMat([1.5^2, 1.5^2])))
 
 start(mc)
 
