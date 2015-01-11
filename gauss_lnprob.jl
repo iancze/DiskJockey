@@ -20,7 +20,6 @@ const dec = fftspace(6., ny) # [arcsec]
 ll = sin(ra * arcsec) # direction cosines
 mm = sin(dec * arcsec)
 
-
 function f(p::Vector{Float64})
     # p is naturally in arcsec
 

@@ -118,7 +118,7 @@ function imToSky(img::RawImage, dpc::Float64)
     yy = ((Float64[i for i=0:im_ny] + 0.5) - im_ny/2.) * img.pixsize_y
 
     # The locations of the pixel centers in relative arcseconds
-    ra = xx[end:-1:1] ./(AU * dpc) # reverse order, RA increases to East
+    ra = -xx./(AU * dpc) # reverse order, RA increases to East
     dec = yy./(AU * dpc)
 
     return SkyImage(dataJy, ra, dec, img.lams)
