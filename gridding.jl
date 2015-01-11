@@ -109,8 +109,10 @@ end
 # Apply the correction function to the image.
 function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
     ny, nx, nlam = size(img.data)
-    maxra = (maximum(img.ra) - minimum(img.ra))/2.
-    maxdec = (maximum(img.dec) - minimum(img.dec))/2.
+
+    # The size of one half-of the image.
+    maxra = abs(img.ra[2] - img.ra[1]) * nx/2
+    maxdec = abs(img.dec[2] - img.dec[1]) * ny/2
 
     # If the image will be later offset via a phase shift, then this means that
     # the corrfunction will need to be applied as if the image were already
