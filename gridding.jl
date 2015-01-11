@@ -85,6 +85,7 @@ function spheroid(eta::Float64, alpha::Float64)
         return 0.0
 
     else
+        # return 0.0
         # Now you're really outside of the bounds
         println("The spheroid is only defined on the domain -1.0 <= eta <= 1.0. (modulo machine precision.)")
         throw(DomainError())
@@ -106,17 +107,25 @@ function corrfun{T}(eta::T, alpha::Float64)
 end
 
 # Apply the correction function to the image.
-function corrfun!(img::SkyImage, alpha::Float64)
-    nx, ny, nlam = size(img.data)
+function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
+    ny, nx, nlam = size(img.data)
     maxra = maximum(abs(img.ra))
     maxdec = maximum(abs(img.dec))
-    # In this case, I think we want to synchronize the pre-multiplication with the image center (first pixel is 0,0).
+
+    # If the image will be later offset via a phase shift, then this means that
+    # the corrfunction will need to be applied as if the image were already
+    # offset.
+
     for k=1:nlam
         for i=1:nx
             for j=1:ny
-                etax = img.ra[i]/maxra
-                etay = img.dec[j]/maxdec
-                img.data[j, i, k] = img.data[j, i, k] / (corrfun(etax, alpha) * corrfun(etay, alpha))
+                etax = (img.ra[i] + mu_RA)/maxra
+                etay = (img.dec[j] + mu_DEC)/maxdec
+                if abs(etax) > 1.0 || abs(etay) > 1.0
+                    img.data[j, i, k] = 0.0
+                else
+                    img.data[j, i, k] = img.data[j, i, k] / (corrfun(etax, alpha) * corrfun(etay, alpha))
+                end
             end
         end
     end

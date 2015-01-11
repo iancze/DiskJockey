@@ -146,7 +146,8 @@ end
     skim = imToSky(im, p.dpc)
 
     # Apply the gridding correction function before doing the FFT
-    corrfun!(skim, 1.0) # alpha = 1.0 (relevant for spherical gridding function)
+    # shifts necessary as if the image were already offset
+    corrfun!(skim, 1.0, p.mu_RA, p.mu_DEC) # alpha = 1.0 (relevant for spherical gridding function)
 
     # FFT the appropriate image channel
     vis_fft = transform(skim)
@@ -239,8 +240,8 @@ incl = 34. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.16 # [km/s]
 PA = 76.
-mu_RA = 0.15 # [arcsec]
-mu_DEC = 0.67 # [arcsec]
+mu_RA = 0.15 # [arcsec] # ~0.2 East
+mu_DEC = -0.67 # [arcsec] # ~0.6 South
 
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -299,7 +300,7 @@ jump_param = npzread("opt_jump.npy")
 
 using LittleMC
 
-mc = MC(fp, 10000, starting_param, jump_param)
+mc = MC(fp, 200, starting_param, jump_param)
 
 start(mc)
 

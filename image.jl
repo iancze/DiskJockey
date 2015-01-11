@@ -29,11 +29,20 @@ type RawImage <: Image
     lams::Vector{Float64}
 end
 
+# SkyImage is stored with the origin in the upper left corner. According to
+# the sky convention, this means that RA goes from positive to negative
+# and DEC goes from positive to negative
+
 type SkyImage <: Image
     data::Array{Float64, 3} # [Jy/pixel]
     ra::Vector{Float64} # [arcsec]
     dec::Vector{Float64} # [arcsec]
     lams::Vector{Float64} # [μm]
+
+    # Enforce the sky convention that the 1,1 element of the array is lower
+    # left corner and RA decreases from positive to negative while
+    # DEC goes from negative to positive
+    SkyImage(data, ra, dec, lams) = new(data, sort(ra, rev=true), sort(dec), lams)
 end
 
 # SkyImage constructor for just a single frame

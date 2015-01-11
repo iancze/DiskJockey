@@ -103,6 +103,13 @@ type RawModelVis
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
     vv::Vector{Float64} # [kλ]
     VV::Matrix{Complex128} # Output from rfft
+
+    # Assert that the uu and vv vectors are properly oriented.
+    # array element [1,1] is at the upper left corner.
+    # therefore uu goes from negative to positive
+    # and vv goes from positive to negative
+    RawModelVis(lam, uu, vv, VV) = new(lam, sort(uu), sort(vv, rev=true), VV)
+
 end
 
 # Taking the complex conjugate to make a full grid over all visibility space.
@@ -111,6 +118,12 @@ type FullModelVis
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
     vv::Vector{Float64} # [kλ]
     VV::Matrix{Complex128} # Output from rfft
+
+    # Assert that the uu and vv vectors are properly oriented.
+    # array element [1,1] is at the lower left corner.
+    # therefore uu goes from negative to positive
+    # and vv goes from negative to positive
+    FullModelVis(lam, uu, vv, VV) = new(lam, sort(uu), sort(vv), VV)
 end
 
 # Produced by gridding a RawModelVis to match the data
@@ -156,6 +169,25 @@ function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
     end
 end
 
+function phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
+    # RA is negated, because RA increases to the LEFT (East). Therefore a positive
+    # RA shift is a negative x shift according to the shift theorem
+    mu = Float64[-mu_RA, mu_DEC] * arcsec # [radians]
+
+    nu = length(fvis.uu)
+    nv = length(fvis.vv)
+    # Go through each visibility and apply the phase shift
+    for i=1:nu
+        for j=1:nv
+        # Convert from [kλ] to [λ]
+        R = Float64[fvis.uu[i], fvis.vv[j]] * 1e3 #[λ]
+        # Not actually in polar phase form
+        shift = exp(-2pi * 1.0im * (R' * mu)[1])
+        fvis.VV[j,i] = fvis.VV[j,i] * shift
+        end
+    end
+end
+
 # Transform the SkyImage produced by RADMC into a RawModelVis object using rfft
 #function transform(img::SkyImage, index::Int=1)
 #
@@ -195,7 +227,7 @@ end
 #end
 #
 
-# Transform the SkyImage produced by RADMC into a RawModelVis object using fft
+# Transform the SkyImage produced by RADMC using fft
 function transform(img::SkyImage, index::Int=1)
 
     # By default, select the first channel of any spectral hypercube.
@@ -203,7 +235,8 @@ function transform(img::SkyImage, index::Int=1)
 
     lam = img.lams[index]
 
-    # convert ra and dec in [arcsec] to radians, and then take the sin to convert to ll, mm
+    # convert ra and dec in [arcsec] to radians, and then take the sin to
+    # convert to ll, mm
     ll = sin(img.ra * arcsec)
     mm = sin(img.dec * arcsec)
 
@@ -219,10 +252,12 @@ function transform(img::SkyImage, index::Int=1)
     uu = fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
     vv = fftshift(fftfreq(nm, dm)) * 1e-3 # [kλ]
 
-    # properly pack the data for input using fftshift to move the 0,0 component to the corner.
+    # properly pack the data for input using fftshift to move the 0,0 component
+    # to the corner.
 
-    # We also want to normalize the result by the input array spacings, so that they are directly comparable with
-    # the analytic transforms (Numerical Recipes ed. 3, Press, Eqn 12.1.6)
+    # We also want to normalize the result by the input array spacings, so that
+    # they are directly comparable with the analytic transforms
+    # (Numerical Recipes ed. 3, Press, Eqn 12.1.6)
     out = dl * dm * fftshift(fft(fftshift(data)))
     return FullModelVis(lam, uu, vv, out)
 end
@@ -265,6 +300,8 @@ end
 # u,v are in [kλ]
 function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
 
+    # Note that vis.uu and vis.vv go from negative to positive
+
     # 1. Find the nearest gridpoint in the FFT'd image.
     iu0 = indmin(abs(u - vis.uu))
     iv0 = indmin(abs(v - vis.vv))
@@ -277,7 +314,8 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     du = abs(vis.uu[4] - vis.uu[1])
     dv = abs(vis.vv[4] - vis.vv[1])
 
-    # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels (3 on either side)
+    # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels
+    # (3 on either side)
 
     # Are u0 and v0 to the left or the right of the index?
     # we want to index three to the left, three to the right
@@ -313,9 +351,6 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     etau = (vis.uu[uind] .- u)/du
     etav = (vis.vv[vind] .- v)/dv
     VV = vis.VV[vind, uind] # Array is packed like the image
-
-    # println("etau: ", etau)
-    # println("etav: ", etav)
 
     # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
     # TODO: Explore using something other than alpha=1.0

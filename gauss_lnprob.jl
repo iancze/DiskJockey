@@ -10,8 +10,8 @@ const dvarr = DataVis("data/V4046Sgr_fake.hdf5") #Read in the whole fake dataset
 nlam = length(dvarr)
 
 # Dimensions of the problem
-const nx = 128
-const ny = 128
+const nx = 256
+const ny = 256
 
 const ra = fftspace(6., nx) # [arcsec]
 const dec = fftspace(6., ny) # [arcsec]
