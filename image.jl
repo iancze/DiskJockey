@@ -114,11 +114,11 @@ function imToSky(img::RawImage, dpc::Float64)
     (im_ny, im_nx) = size(img.data)[1:2] #y and x dimensions of the image
 
     # The locations of pixel centers in cm
-    xx = ((Float64[i for i=0:im_nx] + 0.5) - im_nx/2.) * img.pixsize_x
-    yy = ((Float64[i for i=0:im_ny] + 0.5) - im_ny/2.) * img.pixsize_y
+    xx = ((Float64[i for i=0:im_nx-1] + 0.5) - im_nx/2.) * img.pixsize_x
+    yy = ((Float64[i for i=0:im_ny-1] + 0.5) - im_ny/2.) * img.pixsize_y
 
     # The locations of the pixel centers in relative arcseconds
-    ra = -xx./(AU * dpc) # reverse order, RA increases to East
+    ra = sort(xx./(AU * dpc), rev=true) # reverse order, RA increases to East
     dec = yy./(AU * dpc)
 
     return SkyImage(dataJy, ra, dec, img.lams)
