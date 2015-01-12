@@ -111,6 +111,7 @@ function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
     ny, nx, nlam = size(img.data)
 
     # The size of one half-of the image.
+    # sometimes ra and dec will not be symmetric about 0, so this is more robust
     maxra = abs(img.ra[2] - img.ra[1]) * nx/2
     maxdec = abs(img.dec[2] - img.dec[1]) * ny/2
 
@@ -124,6 +125,8 @@ function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
                 etax = (img.ra[i] + mu_RA)/maxra
                 etay = (img.dec[j] + mu_DEC)/maxdec
                 if abs(etax) > 1.0 || abs(etay) > 1.0
+                    # We would be querying outside the shifted image
+                    # bounds, so set this emission to 0.0
                     img.data[j, i, k] = 0.0
                 else
                     img.data[j, i, k] = img.data[j, i, k] / (corrfun(etax, alpha) * corrfun(etay, alpha))
