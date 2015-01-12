@@ -128,7 +128,7 @@ end
     # Unpack these variables from p
     incl = p.incl # [deg]
     vel = p.vel # [km/s]
-    PA = 90. - p.PA # [deg] accounts for disk semi-major axis shift and that
+    PA = p.PA - 90. # [deg] accounts for disk semi-major axis shift and that
     # RADMC posang rotates object CLOCKWISE, contrary to manual
     npix = 256 # number of pixels, can alternatively specify x and y separately
 

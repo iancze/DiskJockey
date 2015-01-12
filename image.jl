@@ -70,13 +70,16 @@ function imread(file="image.out")
     end
 
     # Create an array with the proper size, and then read the file into it
-    data = Array(Float64, (im_nx, im_ny, nlam))
+    data = Array(Float64, (im_ny, im_nx, nlam))
 
-    # Because of the way an image is stored as a matrix, we actually pack the array indices as
-    # data[y, x, lam]
-    # Therefore we keep the loop order suggested in the RADMC manual, which states x should be in the inner loop,
-    # but  swap indices.
-    # radmc3dPy achieves something similar by keeping indices the same but swaping loop order (image.py:line 675)
+    # According to the RADMC manual, section A.15, the pixels are ordered
+    # left to right (increasing x) in the inner loop, and from bottom to top
+    # (increasing y) in the outer loop.
+
+    # Because of the way an image is stored as a matrix, we actually pack the
+    # array indices as data[y, x, lam]
+    # radmc3dPy achieves something similar by keeping indices the x,y but
+    # swaping loop order (radmcPy/image.py:line 675)
     for k=1:nlam
         readline(fim) # Junk space
         for j=1:im_ny

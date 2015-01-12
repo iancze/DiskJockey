@@ -54,7 +54,7 @@ function plot_chmaps(img::image.SkyImage)
             frame = img.data[:,:,iframe]
             frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
             max = maximum(log10(frame))
-            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="upper", cmap=plt.get_cmap("Greys"))
+            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"))
         end
     end
 
@@ -101,22 +101,22 @@ dpc = 73.0
 incl = 33. # [degrees] inclination
 vel = -31.18 # [km/s]
 PA = 73.
-mu_x = 0.0 # [arcsec]
-mu_y = 0.0 # [arcsec]
+mu_RA = 0.0 # [arcsec]
+mu_DEC = 0.0 # [arcsec]
 
-pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_x, mu_y)
+pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
 incl = pars.incl # [deg]
 vel = pars.vel # [km/s]
-PA = 90 - pars.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
+PA = pars.PA - 90. # [deg] Position angle runs counter clockwise, due to looking at sky.
 npix = 256 # number of pixels, can alternatively specify x and y separately
 
 # Doppler shift the dataset wavelength to rest-frame wavelength
 beta = vel/c_kms # relativistic Doppler formula
 shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
 
-write_grid()
-write_model(pars)
+write_grid("")
+write_model(pars, "")
 write_lambda(shift_lams)
 
 println(PA)
