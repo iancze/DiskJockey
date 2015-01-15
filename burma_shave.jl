@@ -43,7 +43,11 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
-const global keylist = Int[i for i=1:23] # which channels of the dset to fit
+# load data and figure out how many channels
+dvarr = DataVis("data/V4046Sgr.hdf5")
+nchan = length(dvarr)
+
+const global keylist = Int[i for i=1:nchan] # which channels of the dset to fit
 
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
@@ -59,7 +63,7 @@ nchild = length(keylist)
 addprocs(nchild)
 
 @everywhere basefmt(id::Int) = @sprintf("/scratch/run%02d/", id)
-#@everywhere basefmt(id::Int) = @sprintf("testrun/run%02d/", id)
+# @everywhere basefmt(id::Int) = @sprintf("testrun/run%02d/", id)
 
 # make the value of run_index available on all processes
 for process in procs()
@@ -275,6 +279,20 @@ using PDMats
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
 # jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
 # jump_param = full(jump_param)
+
+# Instead of going through a full run, let's test the likelihood evaluation at a couple points
+
+#
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
+println("0.0, 0.0, ", fp(param))
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
+println("0.2, 0.0, ", fp(param))
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
+println("0.2, -0.6, ", fp(param))
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
+println("0.2, 0.6, ", fp(param))
+
+quit()
 
 using NPZ
 jump_param = npzread("opt_jump.npy")
