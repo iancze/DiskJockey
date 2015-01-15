@@ -154,8 +154,7 @@ end
 # Given a new model centroid in the image plane (in arcseconds), shift the
 # visibilities by corresponding amount
 function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
-    # RA is negated, because RA increases to the LEFT (East). Therefore a positive
-    # RA shift is a negative x shift according to the shift theorem
+
     mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
 
     nvis = length(mvis.VV)
@@ -170,8 +169,7 @@ function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
 end
 
 function phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
-    # RA is negated, because RA increases to the LEFT (East). Therefore a positive
-    # RA shift is a negative x shift according to the shift theorem
+
     mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
 
     nu = length(fvis.uu)

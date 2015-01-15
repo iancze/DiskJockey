@@ -258,7 +258,7 @@ incl = -57. # [degrees] inclination
 vel = -31.16 # [km/s]
 PA = -17.
 mu_RA = 0.2 # [arcsec] # ~0.2 East
-mu_DEC = -0.6 # [arcsec] # ~0.6 South
+mu_DEC = 0.6 # [arcsec] # ~0.6 South (dunno why this doesn't work)
 
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -283,17 +283,16 @@ starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
 
 # Instead of going through a full run, let's test the likelihood evaluation at a couple points
 
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
+# println("0.0, 0.0, ", fp(param))
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
+# println("0.2, 0.0, ", fp(param))
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
+# println("0.2, -0.6, ", fp(param))
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
+# println("0.2, 0.6, ", fp(param))
 #
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
-println("0.0, 0.0, ", fp(param))
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
-println("0.2, 0.0, ", fp(param))
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
-println("0.2, -0.6, ", fp(param))
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
-println("0.2, 0.6, ", fp(param))
-
-quit()
+# quit()
 
 using NPZ
 jump_param = npzread("opt_jump.npy")
