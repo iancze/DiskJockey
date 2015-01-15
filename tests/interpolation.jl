@@ -9,8 +9,8 @@ using gauss_model
 # Test to see if we get the convolutional interpolation correct by using a 2D
 # Elliptical Gaussian.
 # Realistic Gaussian will have scale dimensions (fatter in x direction)
-const mu_RA = 0.2 # [arcsec]
-const mu_DEC = -0.6 # [arcsec]
+const mu_RA = 2.0 # [arcsec]
+const mu_DEC = -0.5 # [arcsec]
 const s_x = 1.2 # [arcsec]
 const s_y = 1.0 # [arcsec]
 const p0 = [mu_RA, mu_DEC, s_x, s_y] # [arcsec]
@@ -73,7 +73,7 @@ phase_shift!(vis_fft, mu_RA, mu_DEC)
 
 # println("Imaginary FFT: Minimum ", minimum(imag(plain_fft.VV)), " Maximum: ", maximum(imag(plain_fft.VV)))
 
-# Take the vis from vis_fft
+# Take the vis from the transformed dataset
 uu = plain_fft.uu # [kλ]
 vv = plain_fft.vv # [kλ]
 
@@ -93,37 +93,7 @@ function scale(data)
     return norm = plt.Normalize(vmin=-s, vmax=s, clip=false)
 end
 
-fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
-# (left, right, bottom, top)
 ext = (skim.ra[1], skim.ra[end], skim.dec[1], skim.dec[end])
-# Real, analytic Gaussian
-aximg = ax[:imshow](img, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
-ax[:set_title]("image")
-ax[:set_xlabel](L"$\alpha$ [arcsec]")
-ax[:set_ylabel](L"$\delta$ [arcsec]")
-#[left, bottom, width, height]
-cax = fig[:add_axes]([0.84, 0.25, 0.03, 0.45])
-cb = fig[:colorbar](aximg, cax=cax)
-
-fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
-plt.savefig("../plots/gaussian_img.png")
-
-# Now let's plot the contours of the Gaussian
-fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
-# (left, right, bottom, top)
-# Real, analytic Gaussian
-# ext2 = (10, 12, 10, 12)
-aximg = ax[:contour](img, origin="lower", extent=ext)
-ax[:set_title]("image")
-ax[:set_xlabel](L"$\alpha$ [arcsec]")
-ax[:set_ylabel](L"$\delta$ [arcsec]")
-ax[:set_xlim](skim.ra[1], skim.ra[end])
-#[left, bottom, width, height]
-
-fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
-plt.savefig("../plots/gaussian_contour.png")
-
-# now, let's try both
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 
 ax[:imshow](img, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
@@ -135,7 +105,7 @@ ax[:set_ylabel](L"$\delta$ [arcsec]")
 #[left, bottom, width, height]
 
 fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
-plt.savefig("../plots/gaussian_img_contour.png")
+plt.savefig("../plots/gaussian_img.png")
 
 
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
@@ -152,7 +122,7 @@ fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
 plt.savefig("../plots/gaussian_img_plain.png")
 
 # from here on out, since we are only showing visibilities, this stays same
-ext = (minimum(plain_fft.uu), maximum(plain_fft.uu), minimum(plain_fft.vv), maximum(plain_fft.vv))
+ext = (plain_fft.uu[1], plain_fft.uu[end], plain_fft.vv[1], plain_fft.vv[end])
 
 # Real and imaginary components of analytic Gaussian
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
@@ -199,7 +169,6 @@ cb = fig[:colorbar](im, cax=cax)
 plt.savefig("../plots/gaussian_fft.png")
 
 
-
 # Difference between the analytic Gaussian and FFT Gaussian
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
@@ -224,12 +193,11 @@ cb = fig[:colorbar](im, cax=cax)
 
 plt.savefig("../plots/gaussian_difference.png")
 
-
 # Next, choose some (u,v) points within the bounds and see how the
 # interpolated values compare to what the FTGauss would return.
 
 n = 100
-uu = linspace(-100, 100, n) # [kλ]
+uu = linspace(100, -100, n) # [kλ]
 approx = Array(Complex128, n)
 analytic = Array(Complex128, n)
 
@@ -258,7 +226,7 @@ ax[1][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
 ax[1][:plot](uu, real(approx), "ob", label="Approx")
 ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
 ax[1][:plot](vis_fft.uu, real(analytic_u), "or", label="Analytic")
-ax[1][:set_xlim](-100, 100)
+ax[1][:set_xlim](100, -100)
 ax[1][:set_title]("Real")
 ax[1][:set_xlabel](L"u [k $\lambda$]")
 ax[1][:legend]()
@@ -267,7 +235,7 @@ ax[2][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
 ax[2][:plot](uu, imag(approx), "ob", label="Approx")
 ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
 ax[2][:plot](vis_fft.uu, imag(analytic_u), "or", label="Analytic")
-ax[2][:set_xlim](-100, 100)
+ax[2][:set_xlim](100, -100)
 ax[2][:set_title]("Imag")
 ax[2][:set_xlabel](L"u [k $\lambda$]")
 
@@ -278,7 +246,7 @@ plt.savefig("../plots/interpolation.png")
 
 # Create analytic function on a smaller grid
 n = 100
-uu = linspace(-150, 150, n)
+uu = linspace(150, -150, n)
 vv = linspace(-150, 150, n)
 
 vis_analytic_small = FTGauss(uu, vv, p0, 1)
@@ -292,7 +260,7 @@ end
 
 fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
 
-ext = (minimum(uu), maximum(uu), minimum(vv), maximum(vv))
+ext = (uu[1], uu[end], vv[1], vv[end])
 
 axan = ax[1][:imshow](real(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
 ax[1][:set_title]("Analytic FT")
@@ -357,3 +325,26 @@ cb = fig[:colorbar](axdif, cax=cax)
 fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
 
 plt.savefig("../plots/interpolation_difference_imag.png")
+
+
+fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+
+axan = ax[1][:imshow](abs(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[1][:set_title]("Amplitude [Analytic]")
+ax[1][:set_xlabel](L"uu [k$\lambda$]")
+ax[1][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
+cb = fig[:colorbar](axan, cax=cax)
+
+axfft = ax[2][:imshow](angle(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[2][:set_title]("Phase [Analytic]")
+ax[2][:set_xlabel](L"uu [k$\lambda$]")
+ax[2][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.20, 0.03, 0.25])
+cb = fig[:colorbar](axfft, cax=cax)
+
+fig[:subplots_adjust](hspace=0.25, top=0.95, bottom=0.1)
+
+plt.savefig("../plots/interpolation_phase.png")

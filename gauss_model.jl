@@ -44,7 +44,7 @@ function FTGauss(uu::Float64, vv::Float64, p::Vector{Float64}, k::Int)
     vv = vv .* 1e3 #[λ]
     # Reverse sense of phase shift for RA. Positive RA is negative x
     mu_RA, mu_DEC = p[1:2]
-    mu = Float64[-mu_RA, mu_DEC] * arcsec #ll and mm shifts
+    mu = Float64[mu_RA, mu_DEC] * arcsec #ll and mm shifts
     R = Float64[uu, vv]
     Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
     phase_shift = exp(-2pi * 1.0im * (R' * mu)[1]) # Not actually in polar phase form
@@ -58,8 +58,9 @@ function FTGauss(uu::Vector{Float64}, vv::Vector{Float64}, p::Vector{Float64}, k
     nu = length(uu)
     nv = length(vv)
     img = Array(Complex128, nv, nu)
-    # here both uu and vv should go from negative to positive
-    uu = sort(uu)
+    # uu should go from positive to negative
+    # and vv should go from negative to positive
+    uu = sort(uu, rev=true)
     vv = sort(vv)
     for j=1:nv
         for i=1:nu

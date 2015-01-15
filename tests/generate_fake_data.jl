@@ -18,8 +18,8 @@ nvis = length(dvarr[1].VV)
 nlam = 1 #length(dvarr)
 
 # Realistic Gaussian will have scale dimensions
-const mu_RA = -2. # [arcsec]
-const mu_DEC = 0.5 # [arcsec]
+const mu_RA = 2. # [arcsec]
+const mu_DEC = -0.5 # [arcsec]
 const s_x = 1.2 # [arcsec]
 const s_y = 1.0 # [arcsec]
 const p0 = [mu_RA, mu_DEC, s_x, s_y] # [arcsec]

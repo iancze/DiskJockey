@@ -105,10 +105,10 @@ type RawModelVis
     VV::Matrix{Complex128} # Output from rfft
 
     # Assert that the uu and vv vectors are properly oriented.
-    # array element [1,1] is at the upper left corner.
-    # therefore uu goes from negative to positive
-    # and vv goes from positive to negative
-    RawModelVis(lam, uu, vv, VV) = new(lam, sort(uu), sort(vv, rev=true), VV)
+    # array element [1,1] is at the lower right corner.
+    # therefore uu goes from positive to negative
+    # and vv goes from negative to positive
+    RawModelVis(lam, uu, vv, VV) = new(lam, sort(uu, rev=true), sort(vv), VV)
 
 end
 
@@ -121,9 +121,9 @@ type FullModelVis
 
     # Assert that the uu and vv vectors are properly oriented.
     # array element [1,1] is at the lower left corner.
-    # therefore uu goes from negative to positive
+    # therefore uu goes from positive to negative
     # and vv goes from negative to positive
-    FullModelVis(lam, uu, vv, VV) = new(lam, sort(uu), sort(vv), VV)
+    FullModelVis(lam, uu, vv, VV) = new(lam, sort(uu, rev=true), sort(vv), VV)
 end
 
 # Produced by gridding a RawModelVis to match the data
@@ -156,7 +156,7 @@ end
 function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
     # RA is negated, because RA increases to the LEFT (East). Therefore a positive
     # RA shift is a negative x shift according to the shift theorem
-    mu = Float64[ -mu_RA, mu_DEC] * arcsec # [radians]
+    mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
 
     nvis = length(mvis.VV)
     # Go through each visibility and apply the phase shift
@@ -172,7 +172,7 @@ end
 function phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
     # RA is negated, because RA increases to the LEFT (East). Therefore a positive
     # RA shift is a negative x shift according to the shift theorem
-    mu = Float64[-mu_RA, mu_DEC] * arcsec # [radians]
+    mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
 
     nu = length(fvis.uu)
     nv = length(fvis.vv)
@@ -249,7 +249,7 @@ function transform(img::SkyImage, index::Int=1)
     dm = abs(mm[2] - mm[1]) # [radians]
 
     # determine uv plane coordinates in kλ
-    uu = fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
+    uu = -fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
     vv = fftshift(fftfreq(nm, dm)) * 1e-3 # [kλ]
 
     # properly pack the data for input using fftshift to move the 0,0 component
@@ -300,7 +300,8 @@ end
 # u,v are in [kλ]
 function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
 
-    # Note that vis.uu and vis.vv go from negative to positive
+    # Note that vis.uu goes from positive to negative (East-West)
+    # and vis.vv goes from negative to positive (North-South)
 
     # 1. Find the nearest gridpoint in the FFT'd image.
     iu0 = indmin(abs(u - vis.uu))
@@ -329,7 +330,7 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     @assert lenu - iu0 >= 4
     @assert lenv - iv0 >= 4
 
-    if u0 >= 0.0
+    if u0 <= 0.0
         # To the right of the index
         uind = iu0-2:iu0+3
     else
@@ -344,9 +345,6 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
         # To the left of the index
         vind = iv0-3:iv0+2
     end
-
-    # println("Sampling at uu: ", vis.uu[uind])
-    # println("Sampling at vv: ", vis.uu[vind])
 
     etau = (vis.uu[uind] .- u)/du
     etav = (vis.vv[vind] .- v)/dv
