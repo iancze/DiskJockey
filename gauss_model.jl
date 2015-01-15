@@ -6,14 +6,12 @@ using constants
 export imageGauss, FTGauss
 
 # Because of the flipped nature of the sky (but not flipped nature of the UV plane)
-# there are some tricky conventions about how to pack the array. For consistency's
-# sake, all functions expect arrays that range from negative to positive. The routine
-# itself will reverse the array if necessery.
-# The origin of the array is always located at the upper left corner.
+# there are some tricky conventions about how to pack the array.
 
 # Given two arrays of l and m coordinates, fill an array of the Gaussian image following the MATLAB convention.
 # p0 is a vector of [mu_RA, mu_DEC, sigma_x, sigma_y] in units of arcseconds
 # mu_RA and mu_DEC are the locations of the centroid emission relative to the origin.
+# First element of the array [1,1] is located in lower left corner.
 function imageGauss(ll::Vector{Float64}, mm::Vector{Float64}, p::Vector{Float64}, k::Int)
 
     # ll should decrease from left to right
@@ -22,7 +20,7 @@ function imageGauss(ll::Vector{Float64}, mm::Vector{Float64}, p::Vector{Float64}
     nx = length(ll)
     ny = length(mm)
 
-    ll = sort(ll, rev=true) # decreasing
+    ll = sort(ll, rev=true) # RA always goes from positive to negative
     mm = sort(mm) # increasing
     img = Array(Float64, ny, nx)
     mu = p[1:2] * arcsec # no reversing here

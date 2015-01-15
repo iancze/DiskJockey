@@ -95,7 +95,7 @@ end
 
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 # (left, right, bottom, top)
-ext = (maximum(ra), minimum(ra), minimum(dec), maximum(dec))
+ext = (skim.ra[1], skim.ra[end], skim.dec[1], skim.dec[end])
 # Real, analytic Gaussian
 aximg = ax[:imshow](img, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
 ax[:set_title]("image")
@@ -107,6 +107,36 @@ cb = fig[:colorbar](aximg, cax=cax)
 
 fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
 plt.savefig("../plots/gaussian_img.png")
+
+# Now let's plot the contours of the Gaussian
+fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
+# (left, right, bottom, top)
+# Real, analytic Gaussian
+# ext2 = (10, 12, 10, 12)
+aximg = ax[:contour](img, origin="lower", extent=ext)
+ax[:set_title]("image")
+ax[:set_xlabel](L"$\alpha$ [arcsec]")
+ax[:set_ylabel](L"$\delta$ [arcsec]")
+ax[:set_xlim](skim.ra[1], skim.ra[end])
+#[left, bottom, width, height]
+
+fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
+plt.savefig("../plots/gaussian_contour.png")
+
+# now, let's try both
+fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
+
+ax[:imshow](img, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[:contour](img, origin="lower", extent=ext)
+ax[:set_title]("image")
+ax[:set_xlabel](L"$\alpha$ [arcsec]")
+ax[:set_ylabel](L"$\delta$ [arcsec]")
+# ax[:set_xlim](skim.ra[1], skim.ra[end])
+#[left, bottom, width, height]
+
+fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
+plt.savefig("../plots/gaussian_img_contour.png")
+
 
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 # Real, analytic Gaussian

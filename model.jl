@@ -41,7 +41,7 @@ const nphi = 1
 const ncells = nr * ntheta * nphi
 
 const r_in = 5 * AU # Inner extent of disk
-const r_out = 500 * AU # Outer extent of disk
+const r_out = 800 * AU # Outer extent of disk
 
 #Define the cell *walls*
 const Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced

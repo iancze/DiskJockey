@@ -15,15 +15,14 @@ using constants
 #dv = DataVis("../data/V4046Sgr.hdf5", 12)
 dvarr = DataVis("../data/V4046Sgr.hdf5")
 nvis = length(dvarr[1].VV)
-nlam = 3 #length(dvarr)
+nlam = 1 #length(dvarr)
 
-# Realistic Gaussian will have scale dimensions (fatter in x direction)
-const mu_x = 1.2 # [arcsec]
-const mu_y = 1.0 # [arcsec]
+# Realistic Gaussian will have scale dimensions
+const mu_RA = -2. # [arcsec]
+const mu_DEC = 0.5 # [arcsec]
 const s_x = 1.2 # [arcsec]
 const s_y = 1.0 # [arcsec]
-const p0 = [mu_x, mu_y, s_x, s_y] # [arcsec]
-
+const p0 = [mu_RA, mu_DEC, s_x, s_y] # [arcsec]
 
 # Using the analytic formula for the FT of the Gaussian, compute the true
 # visibilities sampled at the u,v points in the SMA dataset
@@ -75,4 +74,4 @@ end
 
 
 
-write(dvarr_fake, "../data/V4046Sgr_fake.hdf5")
+visibilities.write(dvarr_fake, "../data/V4046Sgr_fake.hdf5")

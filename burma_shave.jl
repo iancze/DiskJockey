@@ -125,11 +125,24 @@ end
 # This is the likelihood function called by each individual process
 @everywhere function f(dv::DataVis, key::Int, p::Parameters)
 
-    # Unpack these variables from p
-    incl = p.incl # [deg]
+    # Unpack variables from p
+
+    # We are using the Pietu convention, where inclination ranges from +90 to -90 degrees.
+    # +90 means face on, angular momentum vector pointing at observer.
+    # 0 means edge on
+    # -90 means face on, angular momentum vector pointing away from observer.
+    # RADMC conventions define
+    # 0 as face on, angular momentum towards observer.
+    # 90 as edge on
+    # 180 as face on, angular momentum away from observer.
+    # Therefore, we convert from Pietu convention (pars.incl) to RADMC convetion (incl)
+    incl = 90. - p.incl # [deg]
+
+    # We also adopt the Pietu convention for position angle, which defines position angle
+    # by the angular momentum vector. No conversion for RADMC is necessary.
+    PA = p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
+
     vel = p.vel # [km/s]
-    PA = p.PA - 90. # [deg] accounts for disk semi-major axis shift and that
-    # RADMC posang rotates object CLOCKWISE, contrary to manual
     npix = 256 # number of pixels, can alternatively specify x and y separately
 
     # Doppler shift the dataset wavelength to rest-frame wavelength
@@ -236,12 +249,11 @@ gamma = 1.0 # surface temperature gradient exponent
 M_CO = 1.15 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
-incl = 34. # [degrees] inclination
-#vel = 2.87 # LSR [km/s]
+incl = -57. # [degrees] inclination
 vel = -31.16 # [km/s]
-PA = 76.
-mu_RA = 0.15 # [arcsec] # ~0.2 East
-mu_DEC = -0.67 # [arcsec] # ~0.6 South
+PA = -17.
+mu_RA = 0.2 # [arcsec] # ~0.2 East
+mu_DEC = -0.6 # [arcsec] # ~0.6 South
 
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)

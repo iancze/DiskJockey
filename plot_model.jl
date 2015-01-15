@@ -18,7 +18,7 @@ function plot_chmaps(img::image.SkyImage)
     # CO 2-1 rest frame
     lam0 = cc/230.538e9 * 1e4 # [microns]
     nlam = length(img.lams)
-    #vels = linspace(-4.4, 4.4, nlam) # [km/s]
+    println("Plotting ", nlam, " channels")
 
     # convert wavelengths to velocities
     vels = c_kms * (img.lams .- lam0)/lam0
@@ -26,9 +26,9 @@ function plot_chmaps(img::image.SkyImage)
     fig, ax = plt.subplots(nrows=2, ncols=12, figsize=(12, 2.8))
 
     #Plot a blank img in the last frame, moment map will go here eventually
-    ax[2, 12][:imshow](zeros((im_ny, im_nx)), cmap=plt.get_cmap("Greys"), vmin=0, vmax=20)
-    ax[2, 12][:xaxis][:set_ticklabels]([])
-    ax[2, 12][:yaxis][:set_ticklabels]([])
+    # ax[2, 12][:imshow](zeros((im_ny, im_nx)), cmap=plt.get_cmap("Greys"), vmin=0, vmax=20)
+    # ax[2, 12][:xaxis][:set_ticklabels]([])
+    # ax[2, 12][:yaxis][:set_ticklabels]([])
 
     # Loop through all of the different channels and plot them
     #for iframe=1:nlam
@@ -36,10 +36,19 @@ function plot_chmaps(img::image.SkyImage)
     for row=1:2
         for col=1:12
             iframe = col + (row - 1) * 12
+            println("Plotting channel ", iframe)
 
             if iframe > nlam
+                # Stop if we run out of channels
                 break
             end
+
+            frame = img.data[:,:,iframe]
+            frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
+            max = maximum(log10(frame))
+            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
+            levels = linspace(max - 0.8, max, 5)
+            ax[row, col][:contour](log10(frame), origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
 
             if col != 1 || row != 2
                 ax[row, col][:xaxis][:set_ticklabels]([])
@@ -51,16 +60,13 @@ function plot_chmaps(img::image.SkyImage)
 
             ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
 
-            frame = img.data[:,:,iframe]
-            frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
-            max = maximum(log10(frame))
-            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"))
         end
     end
 
     fig[:subplots_adjust](hspace=0.01, wspace=0.05, top=0.9, bottom=0.1, left=0.05, right=0.95)
 
     plt.savefig("plots/channel_maps.png")
+    plt.savefig("plots/channel_maps.pdf")
 
 end
 
@@ -98,17 +104,31 @@ gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
-incl = 33. # [degrees] inclination
+incl = -57. # [degrees] inclination
 vel = -31.18 # [km/s]
-PA = 73.
+PA = 360. - 17.
 mu_RA = 0.0 # [arcsec]
 mu_DEC = 0.0 # [arcsec]
 
 pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
-incl = pars.incl # [deg]
+
 vel = pars.vel # [km/s]
-PA = pars.PA - 90. # [deg] Position angle runs counter clockwise, due to looking at sky.
+
+# We are using the Pietu convention, where inclination ranges from +90 to -90 degrees.
+# +90 means face on, angular momentum vector pointing at observer.
+# 0 means edge on
+# -90 means face on, angular momentum vector pointing away from observer.
+# RADMC conventions define
+# 0 as face on, angular momentum towards observer.
+# 90 as edge on
+# 180 as face on, angular momentum away from observer.
+# Therefore, we convert from Pietu convention (pars.incl) to RADMC convetion (incl)
+incl = 90. - pars.incl # [deg]
+
+# We also adopt the Pietu convention for position angle, which defines position angle
+# by the angular momentum vector. No conversion for RADMC is necessary.
+PA = pars.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
 npix = 256 # number of pixels, can alternatively specify x and y separately
 
 # Doppler shift the dataset wavelength to rest-frame wavelength
