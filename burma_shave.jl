@@ -43,6 +43,7 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
+using visibilities
 # load data and figure out how many channels
 dvarr = DataVis("data/V4046Sgr.hdf5")
 nchan = length(dvarr)
