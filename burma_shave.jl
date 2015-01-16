@@ -286,6 +286,8 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
+lower = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, -90., -180., -50., -2., -2.]
+upper = [3., 200., 200., 2., 8., 0.5, 90., 180., 50., 2., 2.]
 # jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
 # jump_param = full(jump_param)
 
@@ -331,6 +333,9 @@ opt = Opt(:LN_COBYLA, nparam)
 
 max_objective!(opt, fgrad)
 ftol_abs!(opt, 0.05) # the precision we want lnprob to
+
+lower_bounds!(opt, lower)
+upper_bounds!(opt, upper)
 
 (optf,optx,ret) = optimize(opt, starting_param)
 println(optf, " ", optx, " ", ret)
