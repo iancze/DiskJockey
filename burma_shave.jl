@@ -341,7 +341,7 @@ jump_param = full(jump_param)
 
 using LittleMC
 
-mc = MC(fp, 200, starting_param, jump_param)
+mc = MC(fp, 2000, starting_param, jump_param)
 
 start(mc)
 

@@ -20,7 +20,7 @@ function imageGauss(ll::Vector{Float64}, mm::Vector{Float64}, p::Vector{Float64}
     ny = length(mm)
 
     img = Array(Float64, ny, nx)
-    mu = p[1:2] * arcsec
+    mu = p[1:2] * arcsec #ll and mm shifts
     Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
     pre = 1. / (2pi * sqrt(det(Sigma))) * k
     for j=1:ny
