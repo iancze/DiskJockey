@@ -265,8 +265,8 @@ dpc = 73.0
 incl = -57. # [degrees] inclination
 vel = -31.16 # [km/s]
 PA = 343.
-mu_RA = 0.0 # [arcsec] # ~0.2 East
-mu_DEC = 0.0 # [arcsec] # ~0.6 South
+mu_RA = 0.2 # [arcsec] # ~0.2 East
+mu_DEC = 0.6 # [arcsec] # ~0.6 South
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -291,17 +291,17 @@ jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.00
 jump_param = full(jump_param)
 
 # Instead of going through a full run, let's test the likelihood evaluation at a couple points
-
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
-println("0.0, 0.0, ", fp(param))
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
-println("0.2, 0.0, ", fp(param))
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
-println("0.2, -0.6, ", fp(param))
-param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
-println("0.2, 0.6, ", fp(param))
 #
-quit()
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
+# println("0.0, 0.0, ", fp(param))
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
+# println("0.2, 0.0, ", fp(param))
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
+# println("0.2, -0.6, ", fp(param))
+# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
+# println("0.2, 0.6, ", fp(param))
+# #
+# quit()
 
 # using NPZ
 # jump_param = npzread("opt_jump.npy")
