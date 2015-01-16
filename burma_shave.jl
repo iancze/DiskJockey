@@ -216,16 +216,18 @@ function fprob(p::Vector{Float64})
 
     # so that p coming in is
     # [M_star, r_c, T_10, dpc, incl, PA, vel]
-    M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+    M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
 
     # Enforce hard priors on physical parameters
-    if M_CO <= 0. || ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0
+    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0
         return -Inf
     end
 
     if incl < -90. || incl > 90.
         return -Inf
     end
+
+    M_CO = 10^logM_CO
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     # the p... command "unrolls" the vector into a series of arguments
@@ -259,14 +261,15 @@ r_c =  45. # [AU] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
-M_CO = 1.15 # [M_earth] disk mass of CO
+#M_CO = 1.15 # [M_earth] disk mass of CO
+logM_CO = 0.0
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
 incl = -57. # [degrees] inclination
 vel = -31.16 # [km/s]
 PA = 343.
 mu_RA = 0.2 # [arcsec] # ~0.2 East
-mu_DEC = 0.6 # [arcsec] # ~0.6 South
+mu_DEC = -0.6 # [arcsec] # ~0.6 South
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -284,10 +287,10 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
+starting_param = [M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
 # lower = [0.1, 30., 80., 0.5, 0.2, 0.05, -90., 0., -40., -2., -2.]
 # upper = [3., 80., 150., 0.9, 5., 0.3, 90., 360., -30., 2., 2.]
-jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
+jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.017, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
 jump_param = full(jump_param)
 
 # Instead of going through a full run, let's test the likelihood evaluation at a couple points

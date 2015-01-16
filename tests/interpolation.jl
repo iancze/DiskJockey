@@ -55,6 +55,9 @@ lam0 = cc/230.538e9 * 1e4 # [microns]
 skim = SkyImage(img, ra, dec, lam0)
 skim_plain = SkyImage(img_plain, ra, dec, lam0)
 
+# Do one on the actual image with the shift
+shift_fft = transform(skim)
+
 # Do one FFT without the correction function
 plain_fft = transform(skim_plain)
 phase_shift!(plain_fft, mu_RA, mu_DEC)
@@ -76,6 +79,7 @@ vis_analytic = FTGauss(uu, vv, p0, 1)
 
 # Complex subtraction
 println("Maximum FFT discrepancy: ", maximum(abs(plain_fft.VV - vis_analytic)))
+println("Maximum FFT discrepancy: ", maximum(abs(shift_fft.VV - vis_analytic)))
 
 import PyPlot
 import PyPlot.plt
@@ -162,6 +166,27 @@ cb = fig[:colorbar](im, cax=cax)
 
 plt.savefig("../plots/gaussian_fft.png")
 
+# Real and imaginary components of the FFT of the Gaussian that's already shifted
+fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+
+re = ax[1][:imshow](real(shift_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
+ax[1][:set_title]("Real FFT")
+ax[1][:set_xlabel](L"uu [k$\lambda$]")
+ax[1][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
+cb = fig[:colorbar](re, cax=cax)
+
+im = ax[2][:imshow](imag(shift_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(plain_fft.VV)))
+
+ax[2][:set_title]("Imag FFT")
+ax[2][:set_xlabel](L"uu [k$\lambda$]")
+ax[2][:set_ylabel](L"vv [k$\lambda$]")
+
+cax = fig[:add_axes]([0.84, 0.15, 0.03, 0.25])
+cb = fig[:colorbar](im, cax=cax)
+
+plt.savefig("../plots/gaussian_shift_fft.png")
 
 # Difference between the analytic Gaussian and FFT Gaussian
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
