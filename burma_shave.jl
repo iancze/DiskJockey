@@ -254,7 +254,7 @@ function fprob(p::Vector{Float64})
 end
 
 #From Rosenfeld et al. 2012, Table 1
-M_star = 1.8 # [M_sun] stellar mass
+M_star = 1.75 # [M_sun] stellar mass
 r_c =  45. # [AU] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
@@ -265,8 +265,8 @@ dpc = 73.0
 incl = -57. # [degrees] inclination
 vel = -31.16 # [km/s]
 PA = 343.
-mu_RA = 0.2 # [arcsec] # ~0.2 East
-mu_DEC = -0.6 # [arcsec] # ~0.6 South
+mu_RA = 0.0 # [arcsec] # ~0.2 East
+mu_DEC = 0.0 # [arcsec] # ~0.6 South
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -285,10 +285,10 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
-lower = [0.1, 30., 80., 0.5, 0.2, 0.05, -90., 0., -40., -2., -2.]
-upper = [3., 80., 150., 0.9, 5., 0.3, 90., 360., -30., 2., 2.]
-# jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
-# jump_param = full(jump_param)
+# lower = [0.1, 30., 80., 0.5, 0.2, 0.05, -90., 0., -40., -2., -2.]
+# upper = [3., 80., 150., 0.9, 5., 0.3, 90., 360., -30., 2., 2.]
+jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
+jump_param = full(jump_param)
 
 # Instead of going through a full run, let's test the likelihood evaluation at a couple points
 
@@ -303,8 +303,8 @@ upper = [3., 80., 150., 0.9, 5., 0.3, 90., 360., -30., 2., 2.]
 #
 # quit()
 
-using NPZ
-jump_param = npzread("opt_jump.npy")
+# using NPZ
+# jump_param = npzread("opt_jump.npy")
 
 # # Fill in the specific covariances
 # # M_star v. incl; 1 v. 7 -3.78118283e-02
@@ -325,31 +325,31 @@ jump_param = npzread("opt_jump.npy")
 # quit()
 
 # Now try optimizing the function using NLopt
-using NLopt
-
-nparam = length(starting_param)
-opt = Opt(:LN_COBYLA, nparam)
-
-max_objective!(opt, fgrad)
-ftol_abs!(opt, 0.05) # the precision we want lnprob to
-
-lower_bounds!(opt, lower)
-upper_bounds!(opt, upper)
-
-(optf,optx,ret) = optimize(opt, starting_param)
-println(optf, " ", optx, " ", ret)
-
-# using LittleMC
+# using NLopt
 #
-# mc = MC(fp, 200, starting_param, jump_param)
+# nparam = length(starting_param)
+# opt = Opt(:LN_COBYLA, nparam)
 #
-# start(mc)
+# max_objective!(opt, fgrad)
+# ftol_abs!(opt, 0.05) # the precision we want lnprob to
 #
-# println(mean(mc.samples, 2))
-# println(std(mc.samples, 2))
+# lower_bounds!(opt, lower)
+# upper_bounds!(opt, upper)
 #
-# runstats(mc)
-#
-# LittleMC.write(mc, outdir * "mc.hdf5")
+# (optf,optx,ret) = optimize(opt, starting_param)
+# println(optf, " ", optx, " ", ret)
+
+using LittleMC
+
+mc = MC(fp, 200, starting_param, jump_param)
+
+start(mc)
+
+println(mean(mc.samples, 2))
+println(std(mc.samples, 2))
+
+runstats(mc)
+
+LittleMC.write(mc, outdir * "mc.hdf5")
 
 quit!(pipes)
