@@ -132,15 +132,14 @@ end
 
     # Unpack variables from p
 
-    # We are using the Pietu convention, where inclination ranges from +90 to -90 degrees.
-    # +90 means face on, angular momentum vector pointing at observer.
-    # 0 means edge on
-    # -90 means face on, angular momentum vector pointing away from observer.
-    # RADMC conventions define
-    # 0 as face on, angular momentum towards observer.
-    # 90 as edge on
-    # 180 as face on, angular momentum away from observer.
-    # Therefore, we convert from Pietu convention (pars.incl) to RADMC convetion (incl)
+    # We are using the Pietu convention, where inclination ranges from
+    # +90 to -90 degrees. +90 means face on, angular momentum vector pointing
+    # at observer; 0 means edge on; and -90 means face on, angular momentum
+    # vector pointing away from observer.
+    # The RADMC conventions define0 as face on, angular momentum towards
+    # observer; 90 as edge on; and 180 as face on, angular momentum away from
+    # observer. Therefore, we convert from Pietu convention (pars.incl) to
+    # RADMC convetion (incl)
     incl = 90. - p.incl # [deg]
 
     # We also adopt the Pietu convention for position angle, which defines position angle
@@ -219,6 +218,15 @@ function fprob(p::Vector{Float64})
     # [M_star, r_c, T_10, dpc, incl, PA, vel]
     M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
 
+    # Enforce hard priors on physical parameters
+    if M_CO <= 0. || ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0
+        return -Inf
+    end
+
+    if incl < -90. || incl > 90.
+        return -Inf
+    end
+
     # If we are going to fit with some parameters dropped out, here's the place to do it
     # the p... command "unrolls" the vector into a series of arguments
     # The parameters type carries around everything in cgs (except mu_x, mu_y)
@@ -247,7 +255,7 @@ end
 
 #From Rosenfeld et al. 2012, Table 1
 M_star = 1.8 # [M_sun] stellar mass
-r_c =  48. # [AU] characteristic radius
+r_c =  45. # [AU] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
@@ -316,29 +324,28 @@ jump_param = npzread("opt_jump.npy")
 # quit()
 
 # Now try optimizing the function using NLopt
-# using NLopt
+using NLopt
+
+nparam = length(starting_param)
+opt = Opt(:LN_COBYLA, nparam)
+
+max_objective!(opt, fgrad)
+ftol_abs!(opt, 0.05) # the precision we want lnprob to
+
+(optf,optx,ret) = optimize(opt, starting_param)
+println(optf, " ", optx, " ", ret)
+
+# using LittleMC
 #
-# nparam = length(starting_param)
-# opt = Opt(:LN_COBYLA, nparam)
+# mc = MC(fp, 200, starting_param, jump_param)
 #
-# max_objective!(opt, fgrad)
-# ftol_abs!(opt, 0.05) # the precision we want lnprob to
+# start(mc)
 #
-# (optf,optx,ret) = optimize(opt, starting_param)
-# println(optf, " ", optx, " ", ret)
-
-
-using LittleMC
-
-mc = MC(fp, 200, starting_param, jump_param)
-
-start(mc)
-
-println(mean(mc.samples, 2))
-println(std(mc.samples, 2))
-
-runstats(mc)
-
-LittleMC.write(mc, outdir * "mc.hdf5")
+# println(mean(mc.samples, 2))
+# println(std(mc.samples, 2))
+#
+# runstats(mc)
+#
+# LittleMC.write(mc, outdir * "mc.hdf5")
 
 quit!(pipes)
