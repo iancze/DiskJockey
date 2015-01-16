@@ -8,22 +8,19 @@ export imageGauss, FTGauss
 # Because of the flipped nature of the sky (but not flipped nature of the UV plane)
 # there are some tricky conventions about how to pack the array.
 
-# Given two arrays of l and m coordinates, fill an array of the Gaussian image following the MATLAB convention.
+# Given two arrays of l and m coordinates, fill an array of the Gaussian image
+# following the MATLAB convention.
 # p0 is a vector of [mu_RA, mu_DEC, sigma_x, sigma_y] in units of arcseconds
-# mu_RA and mu_DEC are the locations of the centroid emission relative to the origin.
-# First element of the array [1,1] is located in lower left corner.
+# mu_RA and mu_DEC are the locations of the centroid emission relative to the
+# image origin (RA=0, DEC=0).
 function imageGauss(ll::Vector{Float64}, mm::Vector{Float64}, p::Vector{Float64}, k::Int)
 
-    # ll should decrease from left to right
-    # mm should increase from bottom to top
-
+    # Both ll and mm increase with array index
     nx = length(ll)
     ny = length(mm)
 
-    ll = sort(ll, rev=true) # RA always goes from positive to negative
-    mm = sort(mm) # increasing from negative to positive
     img = Array(Float64, ny, nx)
-    mu = p[1:2] * arcsec # no reversing here
+    mu = p[1:2] * arcsec
     Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
     pre = 1. / (2pi * sqrt(det(Sigma))) * k
     for j=1:ny
@@ -42,7 +39,6 @@ end
 function FTGauss(uu::Float64, vv::Float64, p::Vector{Float64}, k::Int)
     uu = uu .* 1e3 #[λ]
     vv = vv .* 1e3 #[λ]
-    # Reverse sense of phase shift for RA. Positive RA is negative x
     mu_RA, mu_DEC = p[1:2]
     mu = Float64[mu_RA, mu_DEC] * arcsec #ll and mm shifts
     R = Float64[uu, vv]
@@ -57,11 +53,8 @@ end
 function FTGauss(uu::Vector{Float64}, vv::Vector{Float64}, p::Vector{Float64}, k::Int)
     nu = length(uu)
     nv = length(vv)
+    # Both uu and vv increase with array index
     img = Array(Complex128, nv, nu)
-    # uu should go from positive to negative
-    # and vv should go from negative to positive
-    uu = sort(uu, rev=true)
-    vv = sort(vv)
     for j=1:nv
         for i=1:nu
             img[j, i] = FTGauss(uu[i], vv[j], p, k)

@@ -111,7 +111,8 @@ function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
     ny, nx, nlam = size(img.data)
 
     # The size of one half-of the image.
-    # sometimes ra and dec will not be symmetric about 0, so this is more robust
+    # sometimes ra and dec will be symmetric about 0, othertimes they won't
+    # so this is a more robust way to determine image half-size
     maxra = abs(img.ra[2] - img.ra[1]) * nx/2
     maxdec = abs(img.dec[2] - img.dec[1]) * ny/2
 

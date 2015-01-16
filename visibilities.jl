@@ -103,13 +103,6 @@ type RawModelVis
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
     vv::Vector{Float64} # [kλ]
     VV::Matrix{Complex128} # Output from rfft
-
-    # Assert that the uu and vv vectors are properly oriented.
-    # array element [1,1] is at the lower right corner.
-    # therefore uu goes from positive to negative
-    # and vv goes from negative to positive
-    RawModelVis(lam, uu, vv, VV) = new(lam, sort(uu, rev=true), sort(vv), VV)
-
 end
 
 # Taking the complex conjugate to make a full grid over all visibility space.
@@ -118,12 +111,6 @@ type FullModelVis
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
     vv::Vector{Float64} # [kλ]
     VV::Matrix{Complex128} # Output from rfft
-
-    # Assert that the uu and vv vectors are properly oriented.
-    # array element [1,1] is at the lower left corner.
-    # therefore uu goes from positive to negative
-    # and vv goes from negative to positive
-    FullModelVis(lam, uu, vv, VV) = new(lam, sort(uu, rev=true), sort(vv), VV)
 end
 
 # Produced by gridding a RawModelVis to match the data
@@ -186,49 +173,11 @@ function phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
     end
 end
 
-# Transform the SkyImage produced by RADMC into a RawModelVis object using rfft
-#function transform(img::SkyImage, index::Int=1)
-#
-#    # By default, select the first channel of any spectral hypercube.
-#    data = img.data[:, :, index]
-#
-#    lam = img.lams[index]
-#
-#    # convert ra and dec in [arcsec] to radians, and then take the sin to convert to ll, mm
-#    ll = sin(img.ra * arcsec)
-#    mm = sin(img.dec * arcsec)
-#
-#    # number of elements in each array
-#    nl = length(ll)
-#    nm = length(mm)
-#
-#    # find the spacing between the elements
-#    dl = ll[2] - ll[1] # [radians]
-#    dm = mm[2] - mm[1] # [radians]
-#
-#    # determine uv plane coordinates in kλ
-#    uu = fftfreq(nl, dl) * 1e-3 # [kλ]
-#    vv = rfftfreq(nm, dm) * 1e-3 # [kλ]
-#
-#    # properly pack the data for input using fftshift to move the 0,0 component to the corner.
-#
-#    # From rfft: If A has size (n_1, ..., n_d), the result has size (floor(n_1/2)+1, ..., n_d).
-#    # This means that the `v` dimension is halved but the `u` dimension remains the same.
-#    # Even though u has real symmetry, we still get the conjugate values. This transpose of an axes is due
-#    # to the way images are stored. Even though we have u corresponding to the x axis and v corresponding to the
-#    # y axis, the image is actually stored on disk as img[v, u], with v changing fastest.
-#
-#    # We also want to normalize the result by the input array spacings, so that they are directly comparable with
-#    # the analytic transforms (Numerical Recipes ed. 3, Press, Eqn 12.1.6)
-#    out = dl * dm * rfft(fftshift(data))
-#    return RawModelVis(lam, uu, vv, out)
-#end
-#
-
-# Transform the SkyImage produced by RADMC using fft
+# Transform the SkyImage produced by RADMC using FFT
 function transform(img::SkyImage, index::Int=1)
 
-    # By default, select the first channel of any spectral hypercube.
+    # By default, select the first channel of any spectral hypercube. This
+    # routine can only transform one channel at a time.
     data = img.data[:, :, index]
 
     lam = img.lams[index]
@@ -247,11 +196,14 @@ function transform(img::SkyImage, index::Int=1)
     dm = abs(mm[2] - mm[1]) # [radians]
 
     # determine uv plane coordinates in kλ
-    uu = -fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
+    uu = fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
     vv = fftshift(fftfreq(nm, dm)) * 1e-3 # [kλ]
 
-    # properly pack the data for input using fftshift to move the 0,0 component
-    # to the corner.
+    # properly pack the data for input using fftshift to move the component at
+    # RA=0,DEC=0 to the first array element: data[1,1]
+    # For RADMC images, we'll be moving the RA=~0.5, DEC=~0.5 element
+    # (1/2 pixel away), and so there will need to be a corresponding phase
+    # shift to correct.
 
     # We also want to normalize the result by the input array spacings, so that
     # they are directly comparable with the analytic transforms
@@ -328,7 +280,7 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     @assert lenu - iu0 >= 4
     @assert lenv - iv0 >= 4
 
-    if u0 <= 0.0
+    if u0 >= 0.0
         # To the right of the index
         uind = iu0-2:iu0+3
     else
@@ -404,3 +356,44 @@ end
 
 
 end
+
+
+
+# Transform the SkyImage produced by RADMC into a RawModelVis object using rfft
+#function transform(img::SkyImage, index::Int=1)
+#
+#    # By default, select the first channel of any spectral hypercube.
+#    data = img.data[:, :, index]
+#
+#    lam = img.lams[index]
+#
+#    # convert ra and dec in [arcsec] to radians, and then take the sin to convert to ll, mm
+#    ll = sin(img.ra * arcsec)
+#    mm = sin(img.dec * arcsec)
+#
+#    # number of elements in each array
+#    nl = length(ll)
+#    nm = length(mm)
+#
+#    # find the spacing between the elements
+#    dl = ll[2] - ll[1] # [radians]
+#    dm = mm[2] - mm[1] # [radians]
+#
+#    # determine uv plane coordinates in kλ
+#    uu = fftfreq(nl, dl) * 1e-3 # [kλ]
+#    vv = rfftfreq(nm, dm) * 1e-3 # [kλ]
+#
+#    # properly pack the data for input using fftshift to move the 0,0 component to the corner.
+#
+#    # From rfft: If A has size (n_1, ..., n_d), the result has size (floor(n_1/2)+1, ..., n_d).
+#    # This means that the `v` dimension is halved but the `u` dimension remains the same.
+#    # Even though u has real symmetry, we still get the conjugate values. This transpose of an axes is due
+#    # to the way images are stored. Even though we have u corresponding to the x axis and v corresponding to the
+#    # y axis, the image is actually stored on disk as img[v, u], with v changing fastest.
+#
+#    # We also want to normalize the result by the input array spacings, so that they are directly comparable with
+#    # the analytic transforms (Numerical Recipes ed. 3, Press, Eqn 12.1.6)
+#    out = dl * dm * rfft(fftshift(data))
+#    return RawModelVis(lam, uu, vv, out)
+#end
+#

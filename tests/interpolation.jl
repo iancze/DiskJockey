@@ -39,11 +39,9 @@ end
 nx = 128
 ny = 128
 
-# full span of the image w/ [1,1] element in the lower left
-ra = -1 .* fftspace(10., nx) # [arcsec]
+# full span of the image
+ra = fftspace(10., nx) # [arcsec]
 dec = fftspace(10., ny) # [arcsec]
-# println("RA ", maximum(ra), " ", minimum(ra))
-# println("DEC ", maximum(dec), " ", minimum(dec))
 
 # convert ra and dec in [arcsec] to radians, and then take the sin to convert to ll, mm
 ll = sin(ra * arcsec) # direction cosines
@@ -51,33 +49,29 @@ mm = sin(dec * arcsec)
 
 img = imageGauss(ll, mm, p0, 1)
 img_plain = imageGauss(ll, mm, [0., 0., s_x, s_y], 1)
-img_plain2 = imageGauss(ll, mm, [0., 0., s_x, s_y], 1)
 
 lam0 = cc/230.538e9 * 1e4 # [microns]
 
-# SkyImage automatically ensures RA and DEC arrays go in the right direction.
-skim = SkyImage(img_plain, ra, dec, lam0)
+skim = SkyImage(img, ra, dec, lam0)
+skim_plain = SkyImage(img_plain, ra, dec, lam0)
 
 # Do one FFT without the correction function
-plain_fft = transform(skim)
+plain_fft = transform(skim_plain)
 phase_shift!(plain_fft, mu_RA, mu_DEC)
 
 # Now do the same thing but apply the gridding correction function
 # before doing the FFT
 
-skim = SkyImage(img_plain, ra, dec, lam0)
-corrfun!(skim, 1.0, mu_RA, mu_DEC)
+corrfun!(skim_plain, 1.0, mu_RA, mu_DEC)
 # FFT the image and see how well it matches the visibility space
-vis_fft = transform(skim)
+vis_fft = transform(skim_plain)
 phase_shift!(vis_fft, mu_RA, mu_DEC)
-
-# println("Imaginary FFT: Minimum ", minimum(imag(plain_fft.VV)), " Maximum: ", maximum(imag(plain_fft.VV)))
 
 # Take the vis from the transformed dataset
 uu = plain_fft.uu # [kλ]
 vv = plain_fft.vv # [kλ]
 
-# Analytic visibilites
+# Return analytic visibilites
 vis_analytic = FTGauss(uu, vv, p0, 1)
 
 # Complex subtraction
@@ -93,16 +87,16 @@ function scale(data)
     return norm = plt.Normalize(vmin=-s, vmax=s, clip=false)
 end
 
-ext = (skim.ra[1], skim.ra[end], skim.dec[1], skim.dec[end])
+# Because the sky convention is different than the way the SkyImage is stored,
+# we need to flip the array
+ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 
-ax[:imshow](img, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
-ax[:contour](img, origin="lower", extent=ext)
+ax[:imshow](fliplr(skim.data[:,:,1]), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[:contour](fliplr(skim.data[:,:,1]), origin="lower", extent=ext)
 ax[:set_title]("image")
 ax[:set_xlabel](L"$\alpha$ [arcsec]")
 ax[:set_ylabel](L"$\delta$ [arcsec]")
-# ax[:set_xlim](skim.ra[1], skim.ra[end])
-#[left, bottom, width, height]
 
 fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
 plt.savefig("../plots/gaussian_img.png")
@@ -110,7 +104,7 @@ plt.savefig("../plots/gaussian_img.png")
 
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 # Real, analytic Gaussian
-aximg = ax[:imshow](img_plain, interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
+aximg = ax[:imshow](fliplr(skim_plain.data[:,:,1]), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
 ax[:set_title]("image")
 ax[:set_xlabel](L"$\alpha$ [arcsec]")
 ax[:set_ylabel](L"$\delta$ [arcsec]")
@@ -197,7 +191,7 @@ plt.savefig("../plots/gaussian_difference.png")
 # interpolated values compare to what the FTGauss would return.
 
 n = 100
-uu = linspace(100, -100, n) # [kλ]
+uu = linspace(-100, 100, n) # [kλ]
 approx = Array(Complex128, n)
 analytic = Array(Complex128, n)
 
@@ -226,7 +220,7 @@ ax[1][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
 ax[1][:plot](uu, real(approx), "ob", label="Approx")
 ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
 ax[1][:plot](vis_fft.uu, real(analytic_u), "or", label="Analytic")
-ax[1][:set_xlim](100, -100)
+ax[1][:set_xlim](-100, 100)
 ax[1][:set_title]("Real")
 ax[1][:set_xlabel](L"u [k $\lambda$]")
 ax[1][:legend]()
@@ -235,7 +229,7 @@ ax[2][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
 ax[2][:plot](uu, imag(approx), "ob", label="Approx")
 ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
 ax[2][:plot](vis_fft.uu, imag(analytic_u), "or", label="Analytic")
-ax[2][:set_xlim](100, -100)
+ax[2][:set_xlim](-100, 100)
 ax[2][:set_title]("Imag")
 ax[2][:set_xlabel](L"u [k $\lambda$]")
 
@@ -246,7 +240,7 @@ plt.savefig("../plots/interpolation.png")
 
 # Create analytic function on a smaller grid
 n = 100
-uu = linspace(150, -150, n)
+uu = linspace(-150, 150, n)
 vv = linspace(-150, 150, n)
 
 vis_analytic_small = FTGauss(uu, vv, p0, 1)
@@ -291,7 +285,6 @@ cb = fig[:colorbar](axdif, cax=cax)
 fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
 
 plt.savefig("../plots/interpolation_difference_real.png")
-
 
 
 fig, ax = plt.subplots(nrows=3, figsize=(5, 11))

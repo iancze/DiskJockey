@@ -1,8 +1,6 @@
 # Read the image format written by RADMC3D.
 
-# Read the ascii text and parse things into a 3 dimensional matrix (x, y, lambda)
-
-# Read `image.out`
+# Read the ascii text in `image.out` and parse things into a 3 dimensional matrix (x, y, lambda)
 
 # The first four lines are format information
 # iformat # = 1 (2 is local observer)
@@ -22,6 +20,9 @@ using constants
 
 abstract Image
 
+# RawImage reflects the RADMC convention that both x and y are increasing
+# with array index. This means that to display the image as RADMC intends it,
+# you must set the first array element to the lower left corner.
 type RawImage <: Image
     data::Array{Float64, 3} # [ergs/s/cm^2]
     pixsize_x::Float64
@@ -29,20 +30,16 @@ type RawImage <: Image
     lams::Vector{Float64}
 end
 
-# SkyImage is stored with the origin in the upper left corner. According to
-# the sky convention, this means that RA goes from positive to negative
-# and DEC goes from positive to negative
-
+# SkyImage is a holder that has both RA and DEC increasing with array index
+# This convention is necessary for the FFT step
+# However, to display this image in the traditional sky convention (North up,
+# East to the left), you must set the first array element to the lower left
+# corner *and* flip the array along the RA axis: `fliplr(data)`
 type SkyImage <: Image
     data::Array{Float64, 3} # [Jy/pixel]
     ra::Vector{Float64} # [arcsec]
     dec::Vector{Float64} # [arcsec]
     lams::Vector{Float64} # [μm]
-
-    # Enforce the sky convention that the 1,1 element of the array is lower
-    # left corner and RA decreases from positive to negative while
-    # DEC goes from negative to positive
-    SkyImage(data, ra, dec, lams) = new(data, sort(ra, rev=true), sort(dec), lams)
 end
 
 # SkyImage constructor for just a single frame
@@ -99,8 +96,11 @@ end
 # Assumes dpc is parsecs
 function imToSky(img::RawImage, dpc::Float64)
 
-    # The image is oriented with North up and East increasing to the left
-    # this means that the delta RA array goes from + to -
+    # The RawImage is oriented with North up and East increasing to the left.
+    # this means that for the RawImage, the delta RA array goes from + to -
+
+    # However, the SkyImage actually requires RA (ll) in increasing form.
+    # Therefore we flip along the RA axis, fliplr(data)
 
     #println("Min and max intensity ", minimum(img.data), " ", maximum(img.data))
     #println("Pixel size ", img.pixsize_x)
@@ -112,9 +112,9 @@ function imToSky(img::RawImage, dpc::Float64)
     # Conversion from erg/s/cm^2/Hz/ster to Jy/pixel at 1 pc distance.
     # conv = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2
 
-    dataJy = img.data .* conv
+    dataJy = fliplr(img.data) .* conv
 
-    (im_ny, im_nx) = size(img.data)[1:2] #y and x dimensions of the image
+    (im_ny, im_nx) = size(dataJy)[1:2] #y and x dimensions of the image
 
     # The locations of pixel centers in cm
     # if n_x = 16, goes [-7.5, -6.5, ..., -0.5, 0.5, ..., 6.5, 7.5] * pixsize
@@ -122,7 +122,8 @@ function imToSky(img::RawImage, dpc::Float64)
     yy = ((Float64[i for i=0:im_ny-1] + 0.5) - im_ny/2.) * img.pixsize_y
 
     # The locations of the pixel centers in relative arcseconds
-    ra = sort(xx./(AU * dpc), rev=true) # reverse order, RA increases to East
+    # Note both RA and DEC increase with array index. 
+    ra = xx./(AU * dpc)
     dec = yy./(AU * dpc)
 
     return SkyImage(dataJy, ra, dec, img.lams)

@@ -30,10 +30,11 @@ m0 = mu_gas * amu #mean molecular weight of gas
 # convert from arcseconds to radians
 arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
 
-# Oftentimes it is necessary to get a symmetric coordinate array that spans N elements from -width to +width,
-# but makes sure that the middle point lands on 0. The indices go from 0 to N -1.
-# `linspace` returns  the end points inclusive, wheras we want to leave out the right endpoint,
-# because we are sampling the function in a cyclic manner.
+# Oftentimes it is necessary to get a symmetric coordinate array that spans N
+# elements from -width to +width, but makes sure that the middle point lands
+# on 0. The indices go from 0 to N -1.
+# `linspace` returns  the end points inclusive, wheras we want to leave out the
+# right endpoint, because we are sampling the function in a cyclic manner.
 function fftspace(width::Real, N::Int)
     @assert(N % 2 == 0, "N must be even.")
 

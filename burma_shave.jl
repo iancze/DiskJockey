@@ -264,10 +264,9 @@ ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
 incl = -57. # [degrees] inclination
 vel = -31.16 # [km/s]
-PA = -17.
+PA = 343.
 mu_RA = 0.2 # [arcsec] # ~0.2 East
-mu_DEC = 0.6 # [arcsec] # ~0.6 South (dunno why this doesn't work)
-
+mu_DEC = -0.6 # [arcsec] # ~0.6 South
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -286,8 +285,8 @@ using Distributions
 using PDMats
 
 starting_param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
-lower = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, -90., -180., -50., -2., -2.]
-upper = [3., 200., 200., 2., 8., 0.5, 90., 180., 50., 2., 2.]
+lower = [0.1, 30., 80., 0.5, 0.2, 0.05, -90., 0., -40., -2., -2.]
+upper = [3., 80., 150., 0.9, 5., 0.3, 90., 360., -30., 2., 2.]
 # jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.04, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
 # jump_param = full(jump_param)
 

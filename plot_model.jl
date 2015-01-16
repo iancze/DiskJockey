@@ -9,11 +9,9 @@ using HDF5
 import PyPlot.plt
 using LaTeXStrings
 
-function plot_chmaps(img::image.SkyImage)
+function plot_chmaps(img::image.RawImage)
 
     (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
-
-    ext = (img.ra[1], img.ra[end], img.dec[1], img.dec[end])
 
     # CO 2-1 rest frame
     lam0 = cc/230.538e9 * 1e4 # [microns]
@@ -25,18 +23,11 @@ function plot_chmaps(img::image.SkyImage)
 
     fig, ax = plt.subplots(nrows=2, ncols=12, figsize=(12, 2.8))
 
-    #Plot a blank img in the last frame, moment map will go here eventually
-    # ax[2, 12][:imshow](zeros((im_ny, im_nx)), cmap=plt.get_cmap("Greys"), vmin=0, vmax=20)
-    # ax[2, 12][:xaxis][:set_ticklabels]([])
-    # ax[2, 12][:yaxis][:set_ticklabels]([])
-
-    # Loop through all of the different channels and plot them
-    #for iframe=1:nlam
+    ext = (1, im_nx, 1, im_ny) # Python array convention for Matplotlib
 
     for row=1:2
         for col=1:12
             iframe = col + (row - 1) * 12
-            println("Plotting channel ", iframe)
 
             if iframe > nlam
                 # Stop if we run out of channels
@@ -44,6 +35,59 @@ function plot_chmaps(img::image.SkyImage)
             end
 
             frame = img.data[:,:,iframe]
+            frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
+            max = maximum(log10(frame))
+            ax[row, col][:imshow](log10(frame), vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"), extent=ext)
+            levels = linspace(max - 0.8, max, 5)
+            ax[row, col][:contour](log10(frame), origin="lower", colors="k", levels=levels, linestyles="solid", linewidths=0.2, extent=ext)
+
+            if col != 1 || row != 2
+                ax[row, col][:xaxis][:set_ticklabels]([])
+                ax[row, col][:yaxis][:set_ticklabels]([])
+            else
+                ax[row, col][:set_xlabel](L"$X$")
+                ax[row, col][:set_ylabel](L"$Y$")
+            end
+
+            ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
+
+        end
+    end
+
+    fig[:subplots_adjust](hspace=0.01, wspace=0.05, top=0.9, bottom=0.1, left=0.05, right=0.95)
+
+    plt.savefig("plots/channel_maps_raw.png")
+
+end
+
+function plot_chmaps(img::image.SkyImage)
+
+    (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
+
+    # Image will be flipped
+    ext = (img.ra[end], img.ra[1], img.dec[1], img.dec[end])
+
+    # CO 2-1 rest frame
+    lam0 = cc/230.538e9 * 1e4 # [microns]
+    nlam = length(img.lams)
+    println("Plotting ", nlam, " channels")
+
+    # convert wavelengths to velocities
+    vels = c_kms * (img.lams .- lam0)/lam0
+
+    fig, ax = plt.subplots(nrows=2, ncols=12, figsize=(12, 2.8))
+
+    for row=1:2
+        for col=1:12
+            iframe = col + (row - 1) * 12
+
+            if iframe > nlam
+                # Stop if we run out of channels
+                break
+            end
+
+            #Flip the frame for Sky convention
+            frame = fliplr(img.data[:,:,iframe])
             frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
             max = maximum(log10(frame))
             ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
@@ -65,8 +109,7 @@ function plot_chmaps(img::image.SkyImage)
 
     fig[:subplots_adjust](hspace=0.01, wspace=0.05, top=0.9, bottom=0.1, left=0.05, right=0.95)
 
-    plt.savefig("plots/channel_maps.png")
-    plt.savefig("plots/channel_maps.pdf")
+    plt.savefig("plots/channel_maps_sky.png")
 
 end
 
@@ -104,14 +147,14 @@ gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
-incl = -57. # [degrees] inclination
+incl = -53. # [degrees] inclination
 vel = -31.18 # [km/s]
-PA = 360. - 17.
+# PA = 343.
+PA = 343.
 mu_RA = 0.0 # [arcsec]
 mu_DEC = 0.0 # [arcsec]
 
 pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-
 
 vel = pars.vel # [km/s]
 
@@ -129,7 +172,7 @@ incl = 90. - pars.incl # [deg]
 # We also adopt the Pietu convention for position angle, which defines position angle
 # by the angular momentum vector. No conversion for RADMC is necessary.
 PA = pars.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
-npix = 256 # number of pixels, can alternatively specify x and y separately
+npix = 128 # number of pixels, can alternatively specify x and y separately
 
 # Doppler shift the dataset wavelength to rest-frame wavelength
 beta = vel/c_kms # relativistic Doppler formula
@@ -139,11 +182,11 @@ write_grid("")
 write_model(pars, "")
 write_lambda(shift_lams)
 
-println(PA)
-
 run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
 
 im = imread()
+
+plot_chmaps(im)
 
 skim = imToSky(im, pars.dpc)
 
