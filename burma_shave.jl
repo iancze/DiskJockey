@@ -292,16 +292,16 @@ jump_param = full(jump_param)
 
 # Instead of going through a full run, let's test the likelihood evaluation at a couple points
 
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
-# println("0.0, 0.0, ", fp(param))
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
-# println("0.2, 0.0, ", fp(param))
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
-# println("0.2, -0.6, ", fp(param))
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
-# println("0.2, 0.6, ", fp(param))
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
+println("0.0, 0.0, ", fp(param))
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
+println("0.2, 0.0, ", fp(param))
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
+println("0.2, -0.6, ", fp(param))
+param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
+println("0.2, 0.6, ", fp(param))
 #
-# quit()
+quit()
 
 # using NPZ
 # jump_param = npzread("opt_jump.npy")

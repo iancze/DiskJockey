@@ -13,7 +13,7 @@ nlam = length(dvarr)
 const nx = 256
 const ny = 256
 
-const ra = -1 .* fftspace(10., nx) # [arcsec]
+const ra = fftspace(10., nx) # [arcsec]
 const dec = fftspace(10., ny) # [arcsec]
 
 # convert ra and dec in [arcsec] to radians, and then take the sin to convert to ll, mm
