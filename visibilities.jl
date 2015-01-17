@@ -132,6 +132,12 @@ function ModelVis(dvis::DataVis, fmvis::FullModelVis)
     return ModelVis(dvis, VV)
 end
 
+# For testing purposes, collapse a ModelVis into a DataVis
+function ModelVis2DataVis(mvis::FullModelVis)
+    dvis = mvis.dvis
+    return DataVis(dvis.lam, dvis.uu, dvis.vv, mvis.VV. dvis.invsig)
+end
+
 function lnprob(dvis::DataVis, mvis::ModelVis)
     @assert dvis == mvis.dvis # Using the wrong ModelVis, otherwise!
 

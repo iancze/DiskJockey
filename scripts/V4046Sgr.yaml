@@ -6,17 +6,17 @@ out_base: output/V4046Sgr/
 # format is parameter : [guess, jump]
 
 parameters:
-  M_star: [1.12, 0.02] # [M_sun] stellar mass
-  r_c: [34., 0.2] # [AU] characteristic radius
-  T_10: [88., 0.5] # [K] temperature at 10 AU
-  q: [0.81, 0.002] # temperature gradient exponent
+  M_star: [1.75, 0.02] # [M_sun] stellar mass
+  r_c: [45., 0.2] # [AU] characteristic radius
+  T_10: [115., 0.5] # [K] temperature at 10 AU
+  q: [0.63, 0.002] # temperature gradient exponent
   logM_CO: [-0.4, 0.02] # [M_earth] disk mass of CO
-  ksi: [0.2, 0.002] # [km/s] microturbulence
-  incl: [156., 0.3] # [degrees] inclination
+  ksi: [0.14, 0.002] # [km/s] microturbulence
+  incl: [147., 0.3] # [degrees] inclination
   PA: [-18., 0.1] # [degrees] position angle
   vel: [-31.18, 0.002] # [km/s]
-  mu_RA: [0.22, 0.01] # [arcsec] centroid location
-  mu_DEC: [0.88, 0.01] # [arcsec]
+  mu_RA: [0.2, 0.01] # [arcsec] centroid location
+  mu_DEC: [0.8, 0.01] # [arcsec]
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
