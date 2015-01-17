@@ -72,6 +72,4 @@ end
 # # Make the fake dataset using these Gaussian visibilities and noise terms
 # dv_fake = DataVis(dv.lam, uu, vv, VV_fake, invsig)
 
-
-
 visibilities.write(dvarr_fake, "../data/V4046Sgr_fake.hdf5")

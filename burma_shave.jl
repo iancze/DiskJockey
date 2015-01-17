@@ -1,3 +1,12 @@
+# The bearded devil
+# Is forced
+# To dwell
+# In the only place
+# Where they don't sell
+# BURMA SHAVE
+
+# http://burma-shave.org/jingles/
+
 # lnprob evaluation for V4046Sgr
 
 using ArgParse

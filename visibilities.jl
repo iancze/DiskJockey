@@ -7,7 +7,7 @@ using image
 using gridding
 using constants
 
-export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, write
+export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis
 export interpolate_uv
 export transform, rfftfreq, fftfreq, phase_shift!
 export lnprob
