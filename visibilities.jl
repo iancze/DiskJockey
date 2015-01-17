@@ -133,9 +133,9 @@ function ModelVis(dvis::DataVis, fmvis::FullModelVis)
 end
 
 # For testing purposes, collapse a ModelVis into a DataVis
-function ModelVis2DataVis(mvis::FullModelVis)
-    dvis = mvis.dvis
-    return DataVis(dvis.lam, dvis.uu, dvis.vv, mvis.VV. dvis.invsig)
+function ModelVis2DataVis(mvis::ModelVis)
+    DV = mvis.dvis
+    return DataVis(DV.lam, DV.uu, DV.vv, mvis.VV, DV.invsig)
 end
 
 function lnprob(dvis::DataVis, mvis::ModelVis)
