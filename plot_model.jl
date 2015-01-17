@@ -127,7 +127,6 @@ function plot_spectrum(spec::Array{Float64, 2})
     ax[:set_ylabel](L"$f_\nu$ [Jy]")
     ax[:set_xlabel](L"$v$ [$\textrm{km/s}$]")
 
-
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
     plt.savefig("plots/spectrum.png")

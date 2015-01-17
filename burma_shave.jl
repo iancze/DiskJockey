@@ -13,14 +13,17 @@ s = ArgParseSettings()
     # "--flag1"
     # help = "an option without argument, i.e. a flag"
     # action = :store_true
-    # "config"
-    # help = "a YAML configuration file"
-    # required = true
+    "config"
+    help = "a YAML configuration file"
+    required = true
 end
 
 parsed_args = parse_args(ARGS, s)
 
-outfmt(run_index::Int) = @sprintf("output/V4046Sgr/run%02d/", run_index)
+import YAML
+config = YAML.load(open(parsed_args["config"]))
+
+outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
 
 # This code is necessary for multiple simultaneous runs on odyssey
 # so that different runs do not write into the same output directory
@@ -45,10 +48,11 @@ mkdir(outdir)
 
 using visibilities
 # load data and figure out how many channels
-dvarr = DataVis("data/V4046Sgr.hdf5")
+dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
 
 const global keylist = Int[i for i=1:nchan] # which channels of the dset to fit
+# const global keylist = Int[i for i=1:2] # which channels of the dset to fit
 
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
@@ -63,13 +67,16 @@ end
 nchild = length(keylist)
 addprocs(nchild)
 
-@everywhere basefmt(id::Int) = @sprintf("/scratch/run%02d/", id)
-# @everywhere basefmt(id::Int) = @sprintf("testrun/run%02d/", id)
-
-# make the value of run_index available on all processes
+# make the values of run_index and config available on all processes
 for process in procs()
     @spawnat process global run_id=run_index
+    @spawnat process global cfg=config
 end
+
+@everywhere basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
+# @everywhere basefmt(id::Int) = @sprintf("testrun/run%02d/", id)
+
+
 
 @everywhere const global basedir = basefmt(run_id)
 
@@ -104,7 +111,7 @@ Logging.configure(filename=logfile, level=DEBUG)
 @everywhere function initfunc(key)
 
     # Load the relevant chunk of the dataset
-    dset = DataVis("data/V4046Sgr.hdf5", key)
+    dset = DataVis(cfg["data_file"], key)
 
     # Create a directory where all RADMC files will reside and be driven from
     keydir = basedir * "jud$key"
@@ -254,22 +261,6 @@ function fprob(p::Vector{Float64})
     return gather!(pipes)
 end
 
-#From Rosenfeld et al. 2012, Table 1
-M_star = 1.75 # [M_sun] stellar mass
-r_c =  45. # [AU] characteristic radius
-T_10 =  115. # [K] temperature at 10 AU
-q = 0.63 # temperature gradient exponent
-gamma = 1.0 # surface temperature gradient exponent
-#M_CO = 1.15 # [M_earth] disk mass of CO
-logM_CO = 0.0
-ksi = 0.14 # [km/s] microturbulence
-dpc = 73.0
-incl = 135. # [degrees] inclination
-vel = -31.16 # [km/s]
-PA = -17.
-mu_RA = 0.0 # [arcsec] # ~0.2 East
-mu_DEC = 0.0 # [arcsec] # ~0.6 South
-
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
     val = fprob(p)
@@ -286,24 +277,18 @@ end
 using Distributions
 using PDMats
 
-starting_param = [M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
-# lower = [0.1, 30., 80., 0.5, 0.2, 0.05, -90., 0., -40., -2., -2.]
-# upper = [3., 80., 150., 0.9, 5., 0.3, 90., 360., -30., 2., 2.]
-jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.02, 0.002, 0.3, 0.1, 0.002, 0.01, 0.01].^2)
-jump_param = full(jump_param)
+pp = config["parameters"]
+params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+nparam = length(pp)
+starting_param = Array(Float64, nparam)
+jumps = Array(Float64, nparam)
 
-# Instead of going through a full run, let's test the likelihood evaluation at a couple points
-#
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.0, 0.0]
-# println("0.0, 0.0, ", fp(param))
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.0]
-# println("0.2, 0.0, ", fp(param))
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, -0.6]
-# println("0.2, -0.6, ", fp(param))
-# param = [M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, 0.2, 0.6]
-# println("0.2, 0.6, ", fp(param))
-# #
-# quit()
+for i=1:nparam
+    starting_param[i], jumps[i] = pp[params[i]]
+end
+
+jump_param = PDiagMat(jumps.^2)
+jump_param = full(jump_param)
 
 # using NPZ
 # jump_param = npzread("opt_jump.npy")
@@ -326,7 +311,7 @@ jump_param = full(jump_param)
 
 using LittleMC
 
-mc = MC(fp, 200, starting_param, jump_param)
+mc = MC(fp, config["samples"], starting_param, jump_param)
 
 start(mc)
 

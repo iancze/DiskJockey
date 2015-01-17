@@ -1,0 +1,33 @@
+name: V4046Sgr
+
+out_base: output/V4046Sgr/
+
+# parameters and starting guess
+# format is parameter : [guess, jump]
+
+parameters:
+  M_star: [1.71, 0.02] # [M_sun] stellar mass
+  r_c: [39., 0.2] # [AU] characteristic radius
+  T_10: [96., 0.5] # [K] temperature at 10 AU
+  q: [0.72, 0.002] # temperature gradient exponent
+  logM_CO: [-0.4, 0.02] # [M_earth] disk mass of CO
+  ksi: [0.14, 0.002] # [km/s] microturbulence
+  incl: [147., 0.3] # [degrees] inclination
+  PA: [-17., 0.1] # [degrees] position angle
+  vel: [-31.18, 0.002] # [km/s]
+  mu_RA: [0.003, 0.02] # [arcsec] centroid location
+  mu_DEC: [0.18, 0.02] # [arcsec]
+
+# Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
+# specified under `parameters`
+# opt_jump: opt_jump.npy
+
+# where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
+base_dir: /scratch/
+#base_dir: testrun/
+
+# The HDF5 file containing the visibilities
+data_file: data/V4046Sgr.hdf5
+
+# MCMC setup
+samples: 200
