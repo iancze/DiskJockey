@@ -147,10 +147,9 @@ gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
-incl = -53. # [degrees] inclination
+incl = 135. # [degrees] inclination
 vel = -31.18 # [km/s]
-# PA = 343.
-PA = 343.
+PA = -17.
 mu_RA = 0.0 # [arcsec]
 mu_DEC = 0.0 # [arcsec]
 
@@ -167,7 +166,7 @@ vel = pars.vel # [km/s]
 # 90 as edge on
 # 180 as face on, angular momentum away from observer.
 # Therefore, we convert from Pietu convention (pars.incl) to RADMC convetion (incl)
-incl = 90. - pars.incl # [deg]
+incl = pars.incl # [deg]
 
 # We also adopt the Pietu convention for position angle, which defines position angle
 # by the angular momentum vector. No conversion for RADMC is necessary.

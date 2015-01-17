@@ -132,19 +132,18 @@ end
 
     # Unpack variables from p
 
-    # We are using the Pietu convention, where inclination ranges from
-    # +90 to -90 degrees. +90 means face on, angular momentum vector pointing
-    # at observer; 0 means edge on; and -90 means face on, angular momentum
+    # We are using the following convention: inclination ranges from
+    # 0 to 180 degrees. 0 means face on, angular momentum vector pointing
+    # at observer; 90 means edge on; and 180 means face on, angular momentum
     # vector pointing away from observer.
-    # The RADMC conventions define0 as face on, angular momentum towards
-    # observer; 90 as edge on; and 180 as face on, angular momentum away from
-    # observer. Therefore, we convert from Pietu convention (pars.incl) to
-    # RADMC convetion (incl)
-    incl = 90. - p.incl # [deg]
+    # These are also the RADMC conventions.
+    incl = p.incl # [deg]
 
-    # We also adopt the Pietu convention for position angle, which defines position angle
-    # by the angular momentum vector. No conversion for RADMC is necessary.
-    PA = p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
+    # We also adopt the RADMC convention for position angle, which defines position angle
+    # by the angular momentum vector.
+    # A positive PA angle means the disk angular momentum vector will be
+    # rotated counter clockwise (from North towards East).
+    PA = p.PA # [deg]
 
     vel = p.vel # [km/s]
     npix = 256 # number of pixels, can alternatively specify x and y separately
@@ -223,7 +222,7 @@ function fprob(p::Vector{Float64})
         return -Inf
     end
 
-    if incl < -90. || incl > 90.
+    if incl < 0. || incl > 180.
         return -Inf
     end
 
@@ -265,11 +264,11 @@ gamma = 1.0 # surface temperature gradient exponent
 logM_CO = 0.0
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
-incl = -57. # [degrees] inclination
+incl = 135. # [degrees] inclination
 vel = -31.16 # [km/s]
-PA = 343.
-mu_RA = 0.2 # [arcsec] # ~0.2 East
-mu_DEC = -0.6 # [arcsec] # ~0.6 South
+PA = -17.
+mu_RA = 0.0 # [arcsec] # ~0.2 East
+mu_DEC = 0.0 # [arcsec] # ~0.6 South
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
 function fgrad(p::Vector, grad::Vector)
@@ -290,7 +289,7 @@ using PDMats
 starting_param = [M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
 # lower = [0.1, 30., 80., 0.5, 0.2, 0.05, -90., 0., -40., -2., -2.]
 # upper = [3., 80., 150., 0.9, 5., 0.3, 90., 360., -30., 2., 2.]
-jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.017, 0.002, 0.3, 0.1, 0.002, 0.005, 0.005].^2)
+jump_param = PDiagMat([0.02, 0.2, 0.5, 0.002, 0.02, 0.002, 0.3, 0.1, 0.002, 0.01, 0.01].^2)
 jump_param = full(jump_param)
 
 # Instead of going through a full run, let's test the likelihood evaluation at a couple points
@@ -309,23 +308,6 @@ jump_param = full(jump_param)
 # using NPZ
 # jump_param = npzread("opt_jump.npy")
 
-# # Fill in the specific covariances
-# # M_star v. incl; 1 v. 7 -3.78118283e-02
-# jump_param[1, 7] = -3.78118283e-02
-# jump_param[7, 1] = -3.78118283e-02
-#
-# # r_c v. M_CO; 2 v. 5 -7.57808641e-01
-# jump_param[2, 5] = -7.57808641e-01
-# jump_param[5, 2] = -7.57808641e-01
-#
-# # T_10 v. q; 3 v. 4 1.75390024e-02
-# jump_param[3, 4] = 1.75390024e-02
-# jump_param[4, 3] = 1.75390024e-02
-
-# println("Evaluating fprob")
-# println(fprob(starting_param))
-# quit!(pipes)
-# quit()
 
 # Now try optimizing the function using NLopt
 # using NLopt
@@ -344,7 +326,7 @@ jump_param = full(jump_param)
 
 using LittleMC
 
-mc = MC(fp, 2000, starting_param, jump_param)
+mc = MC(fp, 200, starting_param, jump_param)
 
 start(mc)
 

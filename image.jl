@@ -72,6 +72,7 @@ function imread(file="image.out")
     # According to the RADMC manual, section A.15, the pixels are ordered
     # left to right (increasing x) in the inner loop, and from bottom to top
     # (increasing y) in the outer loop.
+    # Basically, pack the array in order but display with origin=lower.
 
     # Because of the way an image is stored as a matrix, we actually pack the
     # array indices as data[y, x, lam]
@@ -122,7 +123,7 @@ function imToSky(img::RawImage, dpc::Float64)
     yy = ((Float64[i for i=0:im_ny-1] + 0.5) - im_ny/2.) * img.pixsize_y
 
     # The locations of the pixel centers in relative arcseconds
-    # Note both RA and DEC increase with array index. 
+    # Note both RA and DEC increase with array index.
     ra = xx./(AU * dpc)
     dec = yy./(AU * dpc)
 
