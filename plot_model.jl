@@ -1,6 +1,26 @@
 # Given some model parameters, synthesize and plot the channel maps and
 # integrated spectrum
 
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    # "--opt1"
+    # help = "an option with an argument"
+    # default = 0
+    # "--flag1"
+    # help = "an option without argument, i.e. a flag"
+    # action = :store_true
+    "config"
+    help = "a YAML configuration file"
+    required = true
+end
+
+parsed_args = parse_args(ARGS, s)
+
+import YAML
+config = YAML.load(open(parsed_args["config"]))
+
 using constants
 using image
 using model
@@ -187,53 +207,26 @@ function plot_spectrum(spec::Array{Float64, 2})
 end
 
 # read the wavelengths for all 23 channels
-fid = h5open("data/V4046Sgr.hdf5", "r")
+fid = h5open(config["data_file"], "r")
 lams = read(fid["lams"]) # [μm]
 close(fid)
 
-# See how different this looks...
+pp = config["parameters"]
+params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+nparam = length(pp)
+starting_param = Array(Float64, nparam)
 
-#From Rosenfeld et al. 2012, Table 1
-M_star = 1.75 # [M_sun] stellar mass
-# M_star = 0.71 # [M_sun] stellar mass
-r_c =  45. # [AU] characteristic radius
-# r_c =  37.5 # [AU] characteristic radius
-T_10 =  115. # [K] temperature at 10 AU
-# T_10 =  79. # [K] temperature at 10 AU
-q = 0.63 # temperature gradient exponent
-# q = 0.95 # temperature gradient exponent
-gamma = 1.0 # surface temperature gradient exponent
-M_CO = 0.933 # [M_earth] disk mass of CO
-# M_CO = 10^1.36 # [M_earth] disk mass of CO
-ksi = 0.14 # [km/s] microturbulence
-# ksi = 0.48 # [km/s] microturbulence
-dpc = 73.0
-incl = 147. # [degrees] inclination
-# incl = 162. # [degrees] inclination
-vel = -31.18 # [km/s]
-PA = -17.
-mu_RA = 0.0 # [arcsec]
-mu_DEC = 0.0 # [arcsec]
+for i=1:nparam
+    starting_param[i] = pp[params[i]][1]
+end
 
-pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+pars = Parameters(starting_param...)
 
 vel = pars.vel # [km/s]
-
-# We are using the Pietu convention, where inclination ranges from +90 to -90 degrees.
-# +90 means face on, angular momentum vector pointing at observer.
-# 0 means edge on
-# -90 means face on, angular momentum vector pointing away from observer.
-# RADMC conventions define
-# 0 as face on, angular momentum towards observer.
-# 90 as edge on
-# 180 as face on, angular momentum away from observer.
-# Therefore, we convert from Pietu convention (pars.incl) to RADMC convetion (incl)
+# RADMC conventions for inclination and PA
 incl = pars.incl # [deg]
-
-# We also adopt the Pietu convention for position angle, which defines position angle
-# by the angular momentum vector. No conversion for RADMC is necessary.
-PA = pars.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
-npix = 256 # number of pixels, can alternatively specify x and y separately
+PA = pars.PA # [deg] Position angle runs counter clockwise
+npix = config["npix"] # number of pixels
 
 # Doppler shift the dataset wavelength to rest-frame wavelength
 beta = vel/c_kms # relativistic Doppler formula
@@ -247,12 +240,12 @@ run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
 
 im = imread()
 
-plot_chmaps(im)
+# plot_chmaps(im)
 
 skim = imToSky(im, pars.dpc)
 
 plot_chmaps(skim)
-plot_chmaps_data(skim)
+# plot_chmaps_data(skim)
 
-spec = imToSpec(skim)
-plot_spectrum(spec)
+# spec = imToSpec(skim)
+# plot_spectrum(spec)

@@ -10,6 +10,7 @@ parameters:
   r_c: [45., 0.1] # [AU] characteristic radius
   T_10: [115., 0.3] # [K] temperature at 10 AU
   q: [0.63, 0.002] # temperature gradient exponent
+  gamma: [1.0, 0.0] # surface density gradient
   logM_CO: [0.2, 0.05] # [M_earth] disk mass of CO
   ksi: [0.14, 0.005] # [km/s] microturbulence
   incl: [147., 0.1] # [degrees] inclination
@@ -30,4 +31,4 @@ base_dir: /scratch/
 data_file: data/V4046Sgr.hdf5
 
 # MCMC setup
-samples: 300
+samples: 5000
