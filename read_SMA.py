@@ -9,6 +9,7 @@ cc = 2.99792458e10 # [cm s^-1]
 
 # Reading SMA dataset
 fname = "data/V4046Sgr.12CO21.final.vis.fits"
+# fname = "data/V4046Sgr.12CO21.model.vis.fits"
 
 f = fits.open(fname)
 
@@ -37,6 +38,7 @@ weight = vis[:, :, 2].T
 
 # Now, stuff each of these into an HDF5 file.
 fid = h5py.File("data/V4046Sgr.hdf5", "w")
+# fid = h5py.File("data/V4046Sgr_model_read.hdf5", "w")
 
 # Convert the frequencies from Hz to micron.
 fid.create_dataset("lams", (nfreq,), dtype="float64")[:] = cc/freqs*1e4 #[microns]

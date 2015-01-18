@@ -9,6 +9,8 @@ gas_velocity.inp
 microturbulence.inp
 numberdens_co.inp
 
+log.log
+
 # Reference files
 C/
 
