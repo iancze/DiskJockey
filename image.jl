@@ -113,7 +113,8 @@ function imToSky(img::RawImage, dpc::Float64)
     # Conversion from erg/s/cm^2/Hz/ster to Jy/pixel at 1 pc distance.
     # conv = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2
 
-    dataJy = fliplr(img.data) .* conv
+    # Flip across RA dimension, then rotate 180 degrees.
+    dataJy = fliplr(img.data)[end:-1:1, end:-1:1, :] .* conv
 
     (im_ny, im_nx) = size(dataJy)[1:2] #y and x dimensions of the image
 

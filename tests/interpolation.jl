@@ -63,7 +63,7 @@ plain_fft = transform(skim_plain)
 phase_shift!(plain_fft, mu_RA, mu_DEC)
 
 # Now do the same thing but apply the gridding correction function
-# before doing the FFT
+# before doing the FFT, to be used for interpolation tests.
 
 corrfun!(skim_plain, 1.0, mu_RA, mu_DEC)
 # FFT the image and see how well it matches the visibility space
@@ -74,7 +74,7 @@ phase_shift!(vis_fft, mu_RA, mu_DEC)
 uu = plain_fft.uu # [kλ]
 vv = plain_fft.vv # [kλ]
 
-# Return analytic visibilites
+# Return analytic visibilites for these spacings
 vis_analytic = FTGauss(uu, vv, p0, 1)
 
 # Complex subtraction
@@ -93,14 +93,22 @@ end
 
 # Because the sky convention is different than the way the SkyImage is stored,
 # we need to flip the array
-ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
-fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 
-ax[:imshow](fliplr(skim.data[:,:,1]), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
-ax[:contour](fliplr(skim.data[:,:,1]), origin="lower", extent=ext)
-ax[:set_title]("image")
-ax[:set_xlabel](L"$\alpha$ [arcsec]")
-ax[:set_ylabel](L"$\delta$ [arcsec]")
+fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+
+ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
+ax[1][:imshow](fliplr(skim.data[:,:,1]), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[1][:contour](fliplr(skim.data[:,:,1]), origin="lower", extent=ext)
+ax[1][:set_title]("Sky Projection")
+ax[1][:set_xlabel](L"$\alpha$ [arcsec]")
+ax[1][:set_ylabel](L"$\delta$ [arcsec]")
+
+ext = (ll[1], ll[end], mm[1], mm[end])
+ax[2][:imshow](skim.data[:,:,1], interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[2][:contour](skim.data[:,:,1], origin="lower", extent=ext)
+ax[2][:set_title]("Raw Array")
+ax[2][:set_xlabel](L"$ll$")
+ax[2][:set_ylabel](L"$mm$")
 
 fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
 plt.savefig("../plots/gaussian_img.png")
@@ -108,6 +116,7 @@ plt.savefig("../plots/gaussian_img.png")
 
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 # Real, analytic Gaussian
+ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
 aximg = ax[:imshow](fliplr(skim_plain.data[:,:,1]), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
 ax[:set_title]("image")
 ax[:set_xlabel](L"$\alpha$ [arcsec]")
@@ -145,24 +154,38 @@ cb = fig[:colorbar](im, cax=cax)
 plt.savefig("../plots/gaussian_analytic.png")
 
 # Real and imaginary components of the FFT Gaussian
-fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
 
-re = ax[1][:imshow](real(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
-ax[1][:set_title]("Real FFT")
-ax[1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1][:set_ylabel](L"vv [k$\lambda$]")
+re = ax[1,1][:imshow](real(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
+ax[1,1][:set_title]("Real FFT")
+ax[1,1][:set_xlabel](L"uu [k$\lambda$]")
+ax[1,1][:set_ylabel](L"vv [k$\lambda$]")
 
-cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
+cax = fig[:add_axes]([0.14, 0.65, 0.03, 0.25])
 cb = fig[:colorbar](re, cax=cax)
 
-im = ax[2][:imshow](imag(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(plain_fft.VV)))
+im = ax[2,1][:imshow](imag(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(plain_fft.VV)))
 
-ax[2][:set_title]("Imag FFT")
-ax[2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2][:set_ylabel](L"vv [k$\lambda$]")
+ax[2,1][:set_title]("Imag FFT")
+ax[2,1][:set_xlabel](L"uu [k$\lambda$]")
+ax[2,1][:set_ylabel](L"vv [k$\lambda$]")
 
-cax = fig[:add_axes]([0.84, 0.15, 0.03, 0.25])
+cax = fig[:add_axes]([0.14, 0.15, 0.03, 0.25])
 cb = fig[:colorbar](im, cax=cax)
+
+amp = ax[1,2][:imshow](abs(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
+ax[1,2][:set_title]("Amp FFT")
+ax[1,2][:set_xlabel](L"uu [k$\lambda$]")
+ax[1,2][:set_ylabel](L"vv [k$\lambda$]")
+cax = fig[:add_axes]([0.90, 0.65, 0.03, 0.25])
+cb = fig[:colorbar](amp, cax=cax)
+
+pha = ax[2,2][:imshow](angle(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
+ax[2,2][:set_title]("Phase FFT")
+ax[2,2][:set_xlabel](L"uu [k$\lambda$]")
+ax[2,2][:set_ylabel](L"vv [k$\lambda$]")
+cax = fig[:add_axes]([0.90, 0.15, 0.03, 0.25])
+cb = fig[:colorbar](pha, cax=cax)
 
 plt.savefig("../plots/gaussian_fft.png")
 

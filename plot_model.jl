@@ -9,6 +9,7 @@ using HDF5
 import PyPlot.plt
 using LaTeXStrings
 
+# Plot the raw channel maps directly from RADMC
 function plot_chmaps(img::image.RawImage)
 
     (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
@@ -16,7 +17,6 @@ function plot_chmaps(img::image.RawImage)
     # CO 2-1 rest frame
     lam0 = cc/230.538e9 * 1e4 # [microns]
     nlam = length(img.lams)
-    println("Plotting ", nlam, " channels")
 
     # convert wavelengths to velocities
     vels = c_kms * (img.lams .- lam0)/lam0
@@ -56,21 +56,21 @@ function plot_chmaps(img::image.RawImage)
 
     fig[:subplots_adjust](hspace=0.01, wspace=0.05, top=0.9, bottom=0.1, left=0.05, right=0.95)
 
-    plt.savefig("plots/channel_maps_raw.png")
+    plt.savefig("plots/channel_maps_raw_image.png")
 
 end
 
+# Plot the channel maps as sky convention
 function plot_chmaps(img::image.SkyImage)
 
     (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
 
-    # Image will be flipped
+    # Image needs to be flipped along RA dimension
     ext = (img.ra[end], img.ra[1], img.dec[1], img.dec[end])
 
     # CO 2-1 rest frame
     lam0 = cc/230.538e9 * 1e4 # [microns]
     nlam = length(img.lams)
-    println("Plotting ", nlam, " channels")
 
     # convert wavelengths to velocities
     vels = c_kms * (img.lams .- lam0)/lam0
@@ -87,7 +87,7 @@ function plot_chmaps(img::image.SkyImage)
             end
 
             #Flip the frame for Sky convention
-            frame = fliplr(img.data[:,:,iframe])
+            frame = fliplr(rot180(img.data[:,:,iframe]))
             frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
             max = maximum(log10(frame))
             ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
@@ -113,6 +113,60 @@ function plot_chmaps(img::image.SkyImage)
 
 end
 
+# Plot the raw array for the Sky image
+function plot_chmaps_data(img::image.SkyImage)
+
+    (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
+
+    ll = sin(img.ra .* arcsec)
+    mm = sin(img.dec .* arcsec)
+    ext = (ll[1], ll[end], mm[1], mm[end])
+
+    # CO 2-1 rest frame
+    lam0 = cc/230.538e9 * 1e4 # [microns]
+    nlam = length(img.lams)
+
+    # convert wavelengths to velocities
+    vels = c_kms * (img.lams .- lam0)/lam0
+
+    fig, ax = plt.subplots(nrows=2, ncols=12, figsize=(12, 2.8))
+
+    for row=1:2
+        for col=1:12
+            iframe = col + (row - 1) * 12
+
+            if iframe > nlam
+                # Stop if we run out of channels
+                break
+            end
+
+            frame = img.data[:,:,iframe]
+            frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
+            max = maximum(log10(frame))
+            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
+            levels = linspace(max - 0.8, max, 5)
+            ax[row, col][:contour](log10(frame), origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
+
+            if col != 1 || row != 2
+                ax[row, col][:xaxis][:set_ticklabels]([])
+                ax[row, col][:yaxis][:set_ticklabels]([])
+            else
+                ax[row, col][:set_xlabel](L"$ll$")
+                ax[row, col][:set_ylabel](L"$mm$")
+            end
+
+            ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
+
+        end
+    end
+
+    fig[:subplots_adjust](hspace=0.01, wspace=0.05, top=0.9, bottom=0.1, left=0.05, right=0.95)
+
+    plt.savefig("plots/channel_maps_sky_raw.png")
+
+end
+
+
 # Plot the spatially-integrated spectrum
 function plot_spectrum(spec::Array{Float64, 2})
 
@@ -137,16 +191,25 @@ fid = h5open("data/V4046Sgr.hdf5", "r")
 lams = read(fid["lams"]) # [μm]
 close(fid)
 
+# See how different this looks...
+
 #From Rosenfeld et al. 2012, Table 1
 M_star = 1.75 # [M_sun] stellar mass
+# M_star = 0.71 # [M_sun] stellar mass
 r_c =  45. # [AU] characteristic radius
+# r_c =  37.5 # [AU] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
+# T_10 =  79. # [K] temperature at 10 AU
 q = 0.63 # temperature gradient exponent
+# q = 0.95 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
+# M_CO = 10^1.36 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
+# ksi = 0.48 # [km/s] microturbulence
 dpc = 73.0
-incl = 135. # [degrees] inclination
+incl = 147. # [degrees] inclination
+# incl = 162. # [degrees] inclination
 vel = -31.18 # [km/s]
 PA = -17.
 mu_RA = 0.0 # [arcsec]
@@ -170,7 +233,7 @@ incl = pars.incl # [deg]
 # We also adopt the Pietu convention for position angle, which defines position angle
 # by the angular momentum vector. No conversion for RADMC is necessary.
 PA = pars.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
-npix = 128 # number of pixels, can alternatively specify x and y separately
+npix = 256 # number of pixels, can alternatively specify x and y separately
 
 # Doppler shift the dataset wavelength to rest-frame wavelength
 beta = vel/c_kms # relativistic Doppler formula
@@ -189,6 +252,7 @@ plot_chmaps(im)
 skim = imToSky(im, pars.dpc)
 
 plot_chmaps(skim)
+plot_chmaps_data(skim)
 
 spec = imToSpec(skim)
 plot_spectrum(spec)
