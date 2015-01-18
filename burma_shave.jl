@@ -121,7 +121,7 @@ Logging.configure(filename=logfile, level=DEBUG)
 
     # Load the relevant chunk of the dataset
     # Conjugation is necessary for the SMA
-    dset = conj!(DataVis(cfg["data_file"], key))
+    dset = visibilities.conj!(DataVis(cfg["data_file"], key))
 
     # Create a directory where all RADMC files will reside and be driven from
     keydir = basedir * "jud$key"
