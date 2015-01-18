@@ -284,8 +284,9 @@ using Distributions
 using PDMats
 
 pp = config["parameters"]
+# The parameters we'll be using
 params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-nparam = length(pp)
+nparam = length(params)
 starting_param = Array(Float64, nparam)
 jumps = Array(Float64, nparam)
 

@@ -13,6 +13,7 @@ parameters:
   gamma: [1.0, 0.0] # surface density gradient
   logM_CO: [0.2, 0.05] # [M_earth] disk mass of CO
   ksi: [0.14, 0.005] # [km/s] microturbulence
+  dpc: [73., 0.1] # [pc] distance
   incl: [147., 0.1] # [degrees] inclination
   PA: [-17., 0.05] # [degrees] position angle
   vel: [-31.18, 0.002] # [km/s]
@@ -29,6 +30,9 @@ base_dir: /scratch/
 
 # The HDF5 file containing the visibilities
 data_file: data/V4046Sgr.hdf5
+
+# Image setup
+npix: 256
 
 # MCMC setup
 samples: 5000

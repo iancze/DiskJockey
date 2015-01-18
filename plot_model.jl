@@ -80,7 +80,7 @@ function plot_chmaps(img::image.RawImage)
 
 end
 
-# Plot the channel maps as sky convention
+# Plot the channel maps using sky convention
 function plot_chmaps(img::image.SkyImage)
 
     (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
@@ -107,7 +107,7 @@ function plot_chmaps(img::image.SkyImage)
             end
 
             #Flip the frame for Sky convention
-            frame = fliplr(rot180(img.data[:,:,iframe]))
+            frame = fliplr(img.data[:,:,iframe])
             frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
             max = maximum(log10(frame))
             ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
