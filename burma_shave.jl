@@ -7,8 +7,6 @@
 
 # http://burma-shave.org/jingles/
 
-# lnprob evaluation for V4046Sgr
-
 using ArgParse
 
 s = ArgParseSettings()
@@ -108,7 +106,7 @@ if isfile(logfile)
     rm(logfile)
 end
 
-# enable the logging module
+
 using Logging
 # change the default logger
 Logging.configure(filename=logfile, level=DEBUG)
@@ -298,9 +296,12 @@ end
 jump_param = PDiagMat(jumps.^2)
 jump_param = full(jump_param)
 
-# using NPZ
-# jump_param = npzread("opt_jump.npy")
-
+# If we've provided an empirically measured covariance matrix for the MCMC
+# jump proposals, use that instead
+if haskey(config, "opt_jump")
+    using NPZ
+    jump_param = npzread(config["opt_jump"])
+end
 
 # Now try optimizing the function using NLopt
 # using NLopt

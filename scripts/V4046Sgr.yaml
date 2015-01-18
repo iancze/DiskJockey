@@ -10,7 +10,7 @@ parameters:
   r_c: [45., 0.1] # [AU] characteristic radius
   T_10: [115., 0.3] # [K] temperature at 10 AU
   q: [0.63, 0.002] # temperature gradient exponent
-  logM_CO: [0.0, 0.05] # [M_earth] disk mass of CO
+  logM_CO: [0.2, 0.05] # [M_earth] disk mass of CO
   ksi: [0.14, 0.005] # [km/s] microturbulence
   incl: [147., 0.1] # [degrees] inclination
   PA: [-17., 0.05] # [degrees] position angle
@@ -20,7 +20,7 @@ parameters:
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-# opt_jump: opt_jump.npy
+opt_jump: opt_jump.npy
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/
@@ -30,4 +30,4 @@ base_dir: /scratch/
 data_file: data/V4046Sgr.hdf5
 
 # MCMC setup
-samples: 1000
+samples: 300
