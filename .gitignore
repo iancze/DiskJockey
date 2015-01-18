@@ -1,5 +1,17 @@
 # Created by https://www.gitignore.io
 
+output/
+
+# RADMC creations
+amr_grid.inp
+gas_temperature.inp
+gas_velocity.inp
+microturbulence.inp
+numberdens_co.inp
+
+# Reference files
+C/
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
