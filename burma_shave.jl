@@ -83,9 +83,6 @@ for process in procs()
 end
 
 @everywhere basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
-# @everywhere basefmt(id::Int) = @sprintf("testrun/run%02d/", id)
-
-
 
 @everywhere const global basedir = basefmt(run_id)
 
@@ -120,8 +117,9 @@ Logging.configure(filename=logfile, level=DEBUG)
 @everywhere function initfunc(key)
 
     # Load the relevant chunk of the dataset
-    # Conjugation is necessary for the SMA
-    dset = visibilities.conj!(DataVis(cfg["data_file"], key))
+    dset = DataVis(cfg["data_file"], key)
+    # Conjugation is necessary for the SMA, methinks
+    visibilities.conj!(dset)
 
     # Create a directory where all RADMC files will reside and be driven from
     keydir = basedir * "jud$key"

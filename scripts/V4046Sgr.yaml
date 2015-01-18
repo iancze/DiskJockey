@@ -24,10 +24,10 @@ parameters:
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/
-#base_dir: testrun/
+# base_dir: testrun/
 
 # The HDF5 file containing the visibilities
 data_file: data/V4046Sgr.hdf5
 
 # MCMC setup
-samples: 400
+samples: 300
