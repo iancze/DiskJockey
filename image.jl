@@ -114,7 +114,10 @@ function imToSky(img::RawImage, dpc::Float64)
     # conv = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2
 
     # Flip across RA dimension, then rotate 180 degrees.
-    dataJy = fliplr(img.data)[end:-1:1, end:-1:1, :] .* conv
+    #dataJy = fliplr(img.data)[end:-1:1, end:-1:1, :] .* conv
+
+    # Flip across RA dimension
+    dataJy = fliplr(img.data) .* conv
 
     (im_ny, im_nx) = size(dataJy)[1:2] #y and x dimensions of the image
 

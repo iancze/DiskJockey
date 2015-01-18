@@ -7,6 +7,8 @@ using image
 using gridding
 using constants
 
+import Base.conj! # extend this later
+
 export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis
 export interpolate_uv
 export transform, rfftfreq, fftfreq, phase_shift!
@@ -59,6 +61,14 @@ function DataVis(fname::ASCIIString, index::Int)
 
     #Return a DataVis object
     return DataVis(lam, uu, vv, VV, invsig)
+end
+
+# Import the complex conjugate function from Base, and extend it to work
+# on a DataVis.
+# I think this is necessary because the SMA conventions are different from
+# what I'm using in the textbooks.
+function conj!(dv::DataVis)
+    conj!(dv.VV)
 end
 
 # Take in a visibility data set and then write it to the HDF5 file

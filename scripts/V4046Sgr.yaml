@@ -15,8 +15,8 @@ parameters:
   incl: [147., 0.3] # [degrees] inclination
   PA: [-17., 0.1] # [degrees] position angle
   vel: [-31.18, 0.002] # [km/s]
-  mu_RA: [-0.2, 0.01] # [arcsec] centroid location
-  mu_DEC: [0.6, 0.01] # [arcsec]
+  mu_RA: [0.2, 0.01] # [arcsec] centroid location
+  mu_DEC: [-0.6, 0.01] # [arcsec]
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
