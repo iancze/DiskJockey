@@ -201,7 +201,7 @@ gather!(pipes)
 function lnprior(pars::Parameters)
     mu_d = 141. # [pc]
     sig_d = 7. # [pc]
-    return -0.5 * (pars.d - mu_d)^2 / sig_d^2
+    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
 end
 
 # this function is called only on the main process, which proposes MCMC jumps
