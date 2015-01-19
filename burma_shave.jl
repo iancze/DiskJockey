@@ -224,11 +224,9 @@ function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    dpc = 73.0 # [pc] distance
+    # dpc = 73.0 # [pc] distance
 
-    # so that p coming in is
-    # [M_star, r_c, T_10, dpc, incl, PA, vel]
-    M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+    M_star, r_c, T_10, q, logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
 
     # Enforce hard priors on physical parameters
     if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0
@@ -242,8 +240,6 @@ function fprob(p::Vector{Float64})
     M_CO = 10^logM_CO
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    # the p... command "unrolls" the vector into a series of arguments
-    # The parameters type carries around everything in cgs (except mu_x, mu_y)
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
@@ -285,7 +281,7 @@ using PDMats
 
 pp = config["parameters"]
 # The parameters we'll be using
-params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 jumps = Array(Float64, nparam)

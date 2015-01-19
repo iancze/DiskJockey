@@ -8,9 +8,9 @@ s = ArgParseSettings()
     # "--opt1"
     # help = "an option with an argument"
     # default = 0
-    # "--flag1"
-    # help = "an option without argument, i.e. a flag"
-    # action = :store_true
+    "--norad"
+    help = "Use the image alread here."
+    action = :store_true
     "config"
     help = "a YAML configuration file"
     required = true
@@ -95,26 +95,17 @@ function plot_chmaps(img::image.SkyImage)
     # convert wavelengths to velocities
     vels = c_kms * (img.lams .- lam0)/lam0
 
-    fig, ax = plt.subplots(nrows=2, ncols=12, figsize=(12, 2.8))
+    # Figure out how many plots we'll have.
+    ncols = 8
+    nrows = iceil(nlam/ncols)
 
-    for row=1:2
-        for col=1:12
-            iframe = col + (row - 1) * 12
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
 
-            if iframe > nlam
-                # Stop if we run out of channels
-                break
-            end
+    for row=1:nrows
+        for col=1:ncols
+            iframe = col + (row - 1) * ncols
 
-            #Flip the frame for Sky convention
-            frame = fliplr(img.data[:,:,iframe])
-            frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
-            max = maximum(log10(frame))
-            ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
-            levels = linspace(max - 0.8, max, 5)
-            ax[row, col][:contour](log10(frame), origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
-
-            if col != 1 || row != 2
+            if col != 1 || row != nrows
                 ax[row, col][:xaxis][:set_ticklabels]([])
                 ax[row, col][:yaxis][:set_ticklabels]([])
             else
@@ -122,12 +113,29 @@ function plot_chmaps(img::image.SkyImage)
                 ax[row, col][:set_ylabel](L"$\Delta \delta$ ('')")
             end
 
-            ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
+            if iframe > nlam
+                # Stop if we run out of channels
+                # Plot a blank square
+                ax[row, col][:imshow](zeros((im_ny, im_nx)), cmap=plt.get_cmap("PuBu"), vmin=0, vmax=20, extent=ext, origin="lower")
+
+            else
+                #Flip the frame for Sky convention
+                frame = fliplr(img.data[:,:,iframe])
+                frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
+                max = maximum(log10(frame))
+                ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
+                levels = linspace(max - 0.8, max, 5)
+                ax[row, col][:contour](log10(frame), origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
+
+
+
+                ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
+            end
 
         end
     end
 
-    fig[:subplots_adjust](hspace=0.01, wspace=0.05, top=0.9, bottom=0.1, left=0.05, right=0.95)
+    fig[:subplots_adjust](hspace=0.06, wspace=0.01, top=0.9, bottom=0.1, left=0.05, right=0.95)
 
     plt.savefig("plots/channel_maps_sky.png")
 
@@ -213,12 +221,15 @@ close(fid)
 
 pp = config["parameters"]
 params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-nparam = length(pp)
+nparam = length(params)
 starting_param = Array(Float64, nparam)
 
 for i=1:nparam
     starting_param[i] = pp[params[i]][1]
 end
+
+# Convert logM_CO to M_CO
+starting_param[6] = 10^starting_param[6]
 
 pars = Parameters(starting_param...)
 
@@ -236,7 +247,9 @@ write_grid("")
 write_model(pars, "")
 write_lambda(shift_lams)
 
-run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
+if !parsed_args["norad"]
+    run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
+end
 
 im = imread()
 

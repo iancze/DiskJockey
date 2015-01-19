@@ -62,15 +62,15 @@ weight = data["Wt"]
 # Now, stuff each of these into an HDF5 file.
 fid = h5py.File("data/AKSco/AKSco.hdf5", "w")
 
-# Convert the frequencies from Hz to micron.
-fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams
+#Currently, everything is stored in decreasing wavelength order, lets flip this.
+fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams[::-1]
 
-fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu
-fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv
+fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu[::-1, :]
+fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv[::-1, :]
 
-fid.create_dataset("real", shape, dtype="float64")[:,:] = real
-fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag
+fid.create_dataset("real", shape, dtype="float64")[:,:] = real[::-1, :]
+fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag[::-1, :]
 
-fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)
+fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)[::-1, :]
 
 fid.close()
