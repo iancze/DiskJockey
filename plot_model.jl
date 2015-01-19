@@ -122,11 +122,14 @@ function plot_chmaps(img::image.SkyImage)
                 #Flip the frame for Sky convention
                 frame = fliplr(img.data[:,:,iframe])
                 frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
-                max = maximum(log10(frame))
-                ax[row, col][:imshow](log10(frame), extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
-                levels = linspace(max - 0.8, max, 5)
-                ax[row, col][:contour](log10(frame), origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
-
+                lframe = log10(frame)
+                max = maximum(lframe)
+                ix,iy = ind2sub(size(lframe), indmax(lframe))
+                ax[row, col][:imshow](lframe, extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
+                levels = linspace(max - 0.8, max, 8)
+                ax[row, col][:contour](lframe, origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
+                # ax[row, col][:plot](img.ra[end - ix], img.dec[iy], "k.")
+                # ax[row, col][:plot](ix, iy, "k.")
 
 
                 ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)

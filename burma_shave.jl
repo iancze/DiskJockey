@@ -143,8 +143,6 @@ end
 # This is the likelihood function called by each individual process
 @everywhere function f(dv::DataVis, key::Int, p::Parameters)
 
-    # Unpack variables from p
-
     # We are using the following convention: inclination ranges from
     # 0 to 180 degrees. 0 means face on, angular momentum vector pointing
     # at observer; 90 means edge on; and 180 means face on, angular momentum
@@ -176,7 +174,8 @@ end
 
     # Apply the gridding correction function before doing the FFT
     # shifts necessary as if the image were already offset
-    corrfun!(skim, 1.0, p.mu_RA, p.mu_DEC) # alpha = 1.0 (relevant for spherical gridding function)
+    # corrfun!(skim, 1.0, p.mu_RA, p.mu_DEC) # alpha = 1.0 (relevant for spherical gridding function)
+    corrfun!(skim, 1.0, 0.0, 0.0) # alpha = 1.0 (relevant for spherical gridding function)
 
     # FFT the appropriate image channel
     vis_fft = transform(skim)
@@ -224,9 +223,9 @@ function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    # dpc = 73.0 # [pc] distance
+    dpc = 73.0 # [pc] distance
 
-    M_star, r_c, T_10, q, logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+    M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
 
     # Enforce hard priors on physical parameters
     if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0
@@ -281,7 +280,7 @@ using PDMats
 
 pp = config["parameters"]
 # The parameters we'll be using
-params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 jumps = Array(Float64, nparam)
