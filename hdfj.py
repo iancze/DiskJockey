@@ -141,7 +141,7 @@ def plot(flatchain, base=args.outdir, format=".png"):
     #                          plot_datapoints=False)
     #[M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
     labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
-    r"$q$", r"$M_\textrm{CO} \quad [M_\oplus]$",  r"$\xi$ [km/s]",
+    r"$q$", r"$\log M_\textrm{CO} \quad \log [M_\oplus]$",  r"$\xi$ [km/s]",
     r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
     r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     figure = triangle.corner(flatchain, quantiles=[0.16, 0.5, 0.84], plot_contours=True,

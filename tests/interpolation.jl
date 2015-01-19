@@ -64,6 +64,11 @@ phase_shift!(plain_fft, mu_RA, mu_DEC)
 
 # Now do the same thing but apply the gridding correction function
 # before doing the FFT, to be used for interpolation tests.
+skim_plain_corr_center = SkyImage(imageGauss(ll, mm, [0., 0., s_x, s_y], 1), ra, dec, lam0)
+corrfun!(skim_plain_corr_center, 1.0, 0.0, 0.0)
+vis_fft_center = transform(skim_plain_corr_center)
+phase_shift!(vis_fft_center, mu_RA, mu_DEC)
+
 
 corrfun!(skim_plain, 1.0, mu_RA, mu_DEC)
 # FFT the image and see how well it matches the visibility space
@@ -265,7 +270,7 @@ end
 
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 ax[1][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
-ax[1][:plot](uu, real(approx), "ob", label="Approx")
+ax[1][:plot](uu, real(approx), "ob", label="Interp")
 ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
 ax[1][:plot](vis_fft.uu, real(analytic_u), "or", label="Analytic")
 ax[1][:set_xlim](-100, 100)
@@ -274,7 +279,7 @@ ax[1][:set_xlabel](L"u [k $\lambda$]")
 ax[1][:legend]()
 
 ax[2][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
-ax[2][:plot](uu, imag(approx), "ob", label="Approx")
+ax[2][:plot](uu, imag(approx), "ob", label="Interp")
 ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
 ax[2][:plot](vis_fft.uu, imag(analytic_u), "or", label="Analytic")
 ax[2][:set_xlim](-100, 100)
@@ -283,6 +288,48 @@ ax[2][:set_xlabel](L"u [k $\lambda$]")
 
 
 plt.savefig("../plots/interpolation.png")
+
+
+for i=1:n
+    u = uu[i]
+    v = 0.0
+    #println("Interpolating at $u, $v")
+    approx[i] = interpolate_uv(u, v, vis_fft_center)
+    analytic[i] = FTGauss(u, v, p0, 1)
+end
+
+fig = plt.figure()
+ax = fig[:add_subplot](111)
+
+nu = length(vis_fft.uu)
+
+zer = zeros(length(vis_fft_center.uu))
+
+analytic_u = Array(Complex128, nu)
+for i=1:nu
+    analytic_u[i] = FTGauss(vis_fft_center.uu[i], 0.0, p0, 1)
+end
+
+fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+ax[1][:plot](vis_fft_center.uu, zer, ".k", label="Grid spacing")
+ax[1][:plot](uu, real(approx), "ob", label="Interp")
+ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
+ax[1][:plot](vis_fft_center.uu, real(analytic_u), "or", label="Analytic")
+ax[1][:set_xlim](-100, 100)
+ax[1][:set_title]("Real")
+ax[1][:set_xlabel](L"u [k $\lambda$]")
+ax[1][:legend]()
+
+ax[2][:plot](vis_fft_center.uu, zer, ".k", label="Grid spacing")
+ax[2][:plot](uu, imag(approx), "ob", label="Interp")
+ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
+ax[2][:plot](vis_fft_center.uu, imag(analytic_u), "or", label="Analytic")
+ax[2][:set_xlim](-100, 100)
+ax[2][:set_title]("Imag")
+ax[2][:set_xlabel](L"u [k $\lambda$]")
+
+plt.savefig("../plots/interpolation_gcf_noshift.png")
+
 
 # Let's try this over a full grid of images.
 

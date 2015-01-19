@@ -117,8 +117,8 @@ function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
     maxdec = abs(img.dec[2] - img.dec[1]) * ny/2
 
     # If the image will be later offset via a phase shift, then this means that
-    # the corrfunction will need to be applied as if the image were already
-    # offset.
+    # the corrfunction will need to be applied *as if the image were already
+    # offset.*
 
     for k=1:nlam
         for i=1:nx
