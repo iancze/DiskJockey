@@ -197,6 +197,13 @@ write_grid(basedir)
 pipes = initialize(nchild, keylist, initfunc, f)
 gather!(pipes)
 
+# Calculate the lnprior based upon the current parameter values
+function lnprior(pars::Parameters)
+    mu_d = 141. # [pc]
+    sig_d = 7. # [pc]
+    return -0.5 * (pars.d - mu_d)^2 / sig_d^2
+end
+
 # this function is called only on the main process, which proposes MCMC jumps
 # to this function, and farms out the likelihood evaluation to all of the child
 # processes
@@ -228,6 +235,7 @@ function fprob(p::Vector{Float64})
     M_star, r_c, T_10, q, logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
 
     # Enforce hard priors on physical parameters
+    # Short circuit evaluation if we know the RADMC won't be valid.
     if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0
         return -Inf
     end
@@ -240,6 +248,8 @@ function fprob(p::Vector{Float64})
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+
+    prior = lnprior(pars)
 
     # Compute parameter file using model.jl, write to disk
     write_model(pars, basedir)
@@ -259,7 +269,7 @@ function fprob(p::Vector{Float64})
     end
 
     distribute!(pipes, pars)
-    return gather!(pipes)
+    return gather!(pipes) + prior # the summed lnprob plus the prior
 end
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
