@@ -6,19 +6,19 @@ out_base: output/AKSco/
 # format is parameter : [guess, jump]
 
 parameters:
-  M_star: [2.6, 0.02] # [M_sun] stellar mass
-  r_c: [40., 0.3] # [AU] characteristic radius
-  T_10: [144., 0.4] # [K] temperature at 10 AU
-  q: [0.5, 0.005] # temperature gradient exponent
+  M_star: [2.25, 0.02] # [M_sun] stellar mass
+  r_c: [24., 0.1] # [AU] characteristic radius
+  T_10: [140., 0.2] # [K] temperature at 10 AU
+  q: [0.53, 0.002] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [-2.3, 0.05] # [M_earth] disk mass of CO
-  ksi: [0.25, 0.01] # [km/s] microturbulence
+  logM_CO: [-1.88, 0.03] # [M_earth] disk mass of CO
+  ksi: [0.19, 0.005] # [km/s] microturbulence
   dpc: [141., 0.1] # [pc] distance
-  incl: [114., 0.1] # [degrees] inclination
-  PA: [135., 0.05] # [degrees] position angle
+  incl: [112.5, 0.1] # [degrees] inclination
+  PA: [136., 0.03] # [degrees] position angle
   vel: [-25.98, 0.002] # [km/s]
-  mu_RA: [0.05, 0.005] # [arcsec] centroid location
-  mu_DEC: [0.05, 0.005] # [arcsec]
+  mu_RA: [0.074, 0.005] # [arcsec] centroid location
+  mu_DEC: [0.062, 0.005] # [arcsec]
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
