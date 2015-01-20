@@ -142,6 +142,7 @@ def plot(flatchain, base=args.outdir, format=".png"):
     #[M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
     labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
     r"$q$", r"$\log M_\textrm{CO} \quad \log [M_\oplus]$",  r"$\xi$ [km/s]",
+    r"$d$ [pc]",
     r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
     r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     figure = triangle.corner(flatchain, quantiles=[0.16, 0.5, 0.84], plot_contours=True,
@@ -199,7 +200,7 @@ def estimate_covariance(flatchain):
     else:
         d = flatchain.shape[1]
     # opt_jump = 2.38**2/d * cov
-    opt_jump = 1.35**2/d * cov # gives about 0.25
+    opt_jump = 1.5**2/d * cov # gives about 0.25
     print(opt_jump)
 
     print("Standard deviation")
