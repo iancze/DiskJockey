@@ -302,8 +302,12 @@ end
 jump_param = PDiagMat(jumps.^2)
 jump_param = full(jump_param)
 
+# Perturb the starting parameters
+proposal = MvNormal(jump_param)
+starting_param = starting_param .+ 15. * rand(proposal)
+
 # If we've provided an empirically measured covariance matrix for the MCMC
-# jump proposals, use that instead
+# jump proposals, use that instead of our jumps without covariance
 if haskey(config, "opt_jump")
     using NPZ
     jump_param = npzread(config["opt_jump"])
