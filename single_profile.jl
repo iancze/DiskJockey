@@ -1,4 +1,4 @@
-# lnprob evaluation for V4046Sgr
+# lnprob evaluation
 # for a single process only, designed for profiling purposes
 # that means the starting point is receiving the pars::Parameters object
 # and the end point is returning a lnprop
@@ -7,24 +7,22 @@ using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
-    # "--opt1"
-    # help = "an option with an argument"
     "--run_index", "-r"
     help = "Output run index"
     arg_type = Int
-    # default = 0
-    # "--flag1"
-    # help = "an option without argument, i.e. a flag"
-    # action = :store_true
-    # "config"
-    # help = "a YAML configuration file"
-    # required = true
+    "config"
+    help = "a YAML configuration file"
+    required = true
 end
 
 parsed_args = parse_args(ARGS, s)
 
-outfmt(run_index::Int) = @sprintf("output/run%02d/", run_index)
-basefmt(run_index::Int) = @sprintf("/stratch/run%02d/", run_index)
+import YAML
+config = YAML.load(open(parsed_args["config"]))
+
+outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
+basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
+
 
 # This code is necessary for multiple simultaneous runs on odyssey
 # so that different runs do not write into the same output directory
@@ -47,12 +45,6 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
-quit()
-#
-#
-# import YAML
-# config = YAML.load(open(parsed_args["config"]))
-
 using constants
 using visibilities
 using image
@@ -65,7 +57,7 @@ function f(dv::DataVis, key::Int, p::Parameters)
     # Unpack these variables from p
     incl = p.incl # [deg]
     vel = p.vel # [km/s]
-    PA = 90. - p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
+    PA = p.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
     npix = 256 # number of pixels, can alternatively specify x and y separately
 
     # Doppler shift the dataset wavelength to rest-frame wavelength
@@ -85,7 +77,7 @@ function f(dv::DataVis, key::Int, p::Parameters)
     skim = imToSky(im, p.dpc)
 
     # Apply the gridding correction function before doing the FFT
-    corrfun!(skim, 1.0) # alpha = 1.0 (relevant for spherical gridding function)
+    corrfun!(skim, 1.0, p.RA, p.DEC) # alpha = 1.0
 
     tic()
     im = imread()
@@ -129,6 +121,7 @@ key = 12
 
 # call the initfunc with a chosen key, returning the data
 dset = DataVis("data/V4046Sgr.hdf5", key)
+visibilities.conj!(dset) 
 
 #From Rosenfeld et al. 2012, Table 1
 M_star = 1.75 # [M_sun] stellar mass
@@ -139,12 +132,12 @@ gamma = 1.0 # surface temperature gradient exponent
 M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
-incl = 33. # [degrees] inclination
+incl = 147. # [degrees] inclination
 #vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
-PA = 73.
-mu_RA = 0.0 # [arcsec]
-mu_DEC = 0.0 # [arcsec]
+PA = -14.
+mu_RA = 0.22 # [arcsec]
+mu_DEC = -0.57 # [arcsec]
 
 # Turn the parameters in the YAML file into the parameters object
 # The code will only fit the parameters listed in the file
