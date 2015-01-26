@@ -22,7 +22,7 @@ parameters:
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-opt_jump: opt_jump_AKSco.npy
+# opt_jump: opt_jump_AKSco.npy
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/
@@ -35,4 +35,4 @@ data_file: data/AKSco/AKSco.hdf5
 npix: 256
 
 # MCMC setup
-samples: 10000
+samples: 100

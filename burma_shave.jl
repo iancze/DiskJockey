@@ -230,9 +230,9 @@ function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    # dpc = 73.0 # [pc] distance
+    dpc = 141.0 # [pc] distance
 
-    M_star, r_c, T_10, q, logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+    M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
@@ -290,7 +290,7 @@ using PDMats
 
 pp = config["parameters"]
 # The parameters we'll be using
-params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 jumps = Array(Float64, nparam)
