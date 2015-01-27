@@ -18,11 +18,9 @@ end
 parsed_args = parse_args(ARGS, s)
 
 import YAML
-config = YAML.load(open(parsed_args["config"]))
-
-outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
+cfg = YAML.load(open(parsed_args["config"]))
+outfmt(run_index::Int) = cfg["out_base"] * @sprintf("run%02d/", run_index)
 basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
-
 
 # This code is necessary for multiple simultaneous runs on odyssey
 # so that different runs do not write into the same output directory
@@ -70,6 +68,7 @@ function f(dv::DataVis, key::Int, p::Parameters)
     println("RADMC3D time")
     toc()
 
+    tic()
     # Read the RADMC3D image from disk
     im = imread()
 
@@ -77,16 +76,10 @@ function f(dv::DataVis, key::Int, p::Parameters)
     skim = imToSky(im, p.dpc)
 
     # Apply the gridding correction function before doing the FFT
-    corrfun!(skim, 1.0, p.RA, p.DEC) # alpha = 1.0
-
-    tic()
-    im = imread()
-    skim = imToSky(im, p.dpc)
-    corrfun!(skim, 1.0) # alpha = 1.0 (relevant for spherical gridding function)
-    println("Image reading time")
+    corrfun!(skim, 1.0, p.mu_RA, p.mu_DEC) # alpha = 1.0
+    println("Image read time")
     toc()
 
-    vis_fft = transform(skim)
     tic()
     # FFT the appropriate image channel
     vis_fft = transform(skim)
@@ -94,7 +87,6 @@ function f(dv::DataVis, key::Int, p::Parameters)
     toc()
 
     # Interpolate the `vis_fft` to the same locations as the DataSet
-    mvis = ModelVis(dv, vis_fft)
     tic()
     mvis = ModelVis(dv, vis_fft)
     println("Interpolate time")
@@ -104,7 +96,6 @@ function f(dv::DataVis, key::Int, p::Parameters)
     phase_shift!(mvis, p.mu_RA, p.mu_DEC)
 
     # Calculate chi^2 between these two
-    lnprob(dv, mvis)
     tic()
     println("lnprob time")
     lnp = lnprob(dv, mvis)
@@ -115,13 +106,13 @@ end
 
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
-write_grid()
+write_grid("")
 
 key = 12
 
 # call the initfunc with a chosen key, returning the data
 dset = DataVis("data/V4046Sgr.hdf5", key)
-visibilities.conj!(dset) 
+visibilities.conj!(dset)
 
 #From Rosenfeld et al. 2012, Table 1
 M_star = 1.75 # [M_sun] stellar mass
@@ -133,7 +124,6 @@ M_CO = 0.933 # [M_earth] disk mass of CO
 ksi = 0.14 # [km/s] microturbulence
 dpc = 73.0
 incl = 147. # [degrees] inclination
-#vel = 2.87 # LSR [km/s]
 vel = -31.18 # [km/s]
 PA = -14.
 mu_RA = 0.22 # [arcsec]
@@ -144,9 +134,9 @@ mu_DEC = -0.57 # [arcsec]
 
 pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
-write_model(pars)
 tic()
-write_model(pars)
+write_model(pars, "")
+
 println("Model writing time")
 toc()
 
@@ -154,3 +144,11 @@ toc()
 
 # given these made up parameters, call fprob
 println(f(dset, key, pars))
+println("Now for the profiling.")
+
+clear_malloc_data()
+f(dset, key, pars)
+
+
+# @profile f(dset, key, pars)
+# Profile.print()

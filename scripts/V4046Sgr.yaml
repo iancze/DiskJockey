@@ -28,6 +28,7 @@ opt_jump: opt_jump.npy
 base_dir: /scratch/
 # base_dir: testrun/
 
+
 # The HDF5 file containing the visibilities
 data_file: data/V4046Sgr.hdf5
 

@@ -11,3 +11,4 @@ clean:
 	-rm radmc3d.out
 	-rm image.out
 	-rm spectrum.out
+	-rm *.mem
