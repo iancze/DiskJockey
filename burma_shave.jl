@@ -17,9 +17,9 @@ s = ArgParseSettings()
     help = "Output run index"
     arg_type = Int
     # default = 0
-    # "--flag1"
-    # help = "an option without argument, i.e. a flag"
-    # action = :store_true
+    "--chain"
+    help = "Write the chain to ~/web/ directory?"
+    action = :store_true
     "config"
     help = "a YAML configuration file"
     required = true
@@ -318,8 +318,9 @@ starting_param = starting_param .+ 7. * rand(proposal)
 # jump proposals, use that instead of our jumps without covariance
 if haskey(config, "opt_jump")
     using NPZ
-    jump_param = npzread(config["opt_jump"])
+    jump_param = config["jump_scale"]^2 * npzread(config["opt_jump"])
 end
+
 
 # Now try optimizing the function using NLopt
 # using NLopt
@@ -337,6 +338,13 @@ end
 # println(optf, " ", optx, " ", ret)
 
 using LittleMC
+
+# Code to hook into the chain.js plot generator
+if config["chain"]
+    csv = "~/web/mc.csv"
+else
+    csv = outdir * "mc.csv"
+end
 
 mc = MC(fp, config["samples"], starting_param, jump_param)
 debug("Initialized MCMC")

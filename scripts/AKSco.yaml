@@ -11,7 +11,7 @@ parameters:
   T_10: [91.5, 0.1] # [K] temperature at 10 AU
   q: [0.54, 0.001] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [-0.29, 0.01] # [M_earth] disk mass of CO
+  logM_CO: [-0.1, 0.01] # [M_earth] disk mass of CO
   ksi: [0.29, 0.003] # [km/s] microturbulence
   dpc: [141.7, 0.1] # [pc] distance
   incl: [108.7, 0.1] # [degrees] inclination
@@ -22,7 +22,10 @@ parameters:
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-# opt_jump: opt_jump_AKSco.npy
+opt_jump: opt_jump_AKSco.npy
+# Factor by which to scale the jumps (ie covariance matrix is multiplied by
+# this *squared*)
+jump_scale : 0.5
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/
