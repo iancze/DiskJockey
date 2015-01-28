@@ -85,6 +85,7 @@ function start(mc::MC)
         mc.samples[:, i] = p0
         mc.lnprobs[i] = lnprob0
         writecsv(mc.csv, p0')
+        flush(mc.csv) # Make sure this gets written.
     end
 
     close(mc.csv)

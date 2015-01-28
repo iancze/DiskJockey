@@ -38,4 +38,4 @@ data_file: data/AKSco/AKSco.hdf5
 npix: 256
 
 # MCMC setup
-samples: 4000
+samples: 500

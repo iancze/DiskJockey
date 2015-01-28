@@ -346,7 +346,7 @@ else
     csv = outdir * "mc.csv"
 end
 
-mc = MC(fp, config["samples"], starting_param, jump_param)
+mc = MC(fp, config["samples"], starting_param, jump_param, csv)
 debug("Initialized MCMC")
 
 start(mc)
