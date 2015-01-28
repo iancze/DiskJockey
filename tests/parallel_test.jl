@@ -1,13 +1,14 @@
 push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
 
-nchild = 15
-addprocs(nchild)
+println("On startup, we have ", nprocs(), " processes.")
+println("On startup, we have ", nworkers(), " workers.")
 
 @everywhere using parallel
 
 @everywhere function f(dset, key, p)
-    0.0
-    #println("Likelihood call to $dset, $p, $key")
+    println("Likelihood call to $dset, $p, $key on process ", myid())
+    return 0.0
 end
 
 @everywhere function initfunc(key::Int)
@@ -17,7 +18,7 @@ end
 
 pipes = initialize(nchild, initfunc, f)
 
-for j=1:10
+for j=1:nworkers()
     distribute!(pipes, [0.0, 0.0])
     result = gather!(pipes)
     println(result)
