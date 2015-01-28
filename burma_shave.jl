@@ -341,7 +341,7 @@ using LittleMC
 
 # Code to hook into the chain.js plot generator
 if config["chain"]
-    csv = "~/web/mc.csv"
+    csv = "~/web/chain.js/mc.csv"
 else
     csv = outdir * "mc.csv"
 end
