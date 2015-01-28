@@ -340,7 +340,7 @@ end
 using LittleMC
 
 # Code to hook into the chain.js plot generator
-if config["chain"]
+if parsed_args["chain"]
     csv = "~/web/chain.js/mc.csv"
 else
     csv = outdir * "mc.csv"
