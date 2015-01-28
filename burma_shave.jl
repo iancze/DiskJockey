@@ -111,6 +111,8 @@ using Logging
 # change the default logger
 Logging.configure(filename=logfile, level=DEBUG)
 
+debug("Created logfile.")
+
 
 @everywhere function initfunc(key)
 
@@ -192,10 +194,14 @@ end
 
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
+debug("Writing grid")
 write_grid(basedir)
+debug("Wrote grid")
 
+debug("Initializing processes")
 pipes = initialize(nchild, keylist, initfunc, f)
 gather!(pipes)
+debug("Initialized processes")
 
 # Calculate the lnprior based upon the current parameter values
 function lnprior(pars::Parameters)
@@ -285,6 +291,8 @@ function fp(p::Vector)
     return val
 end
 
+
+debug("Initializing MCMC")
 using Distributions
 using PDMats
 
@@ -331,6 +339,7 @@ end
 using LittleMC
 
 mc = MC(fp, config["samples"], starting_param, jump_param)
+debug("Initialized MCMC")
 
 start(mc)
 
@@ -338,6 +347,8 @@ println(mean(mc.samples, 2))
 println(std(mc.samples, 2))
 
 runstats(mc)
+
+debug("Acceptance: ", LittleMC.acceptance(mc))
 
 LittleMC.write(mc, outdir * "mc.hdf5")
 
