@@ -3,6 +3,7 @@ push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
 
 println("On startup, we have ", nprocs(), " processes.")
 println("On startup, we have ", nworkers(), " workers.")
+nchild = nworkers()
 
 @everywhere using parallel
 
