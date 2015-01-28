@@ -15,11 +15,13 @@ end
 
 using PDMats
 
+jump = full(PDiagMat([1.5^2, 1.5^2]))
 
-mc = MC(Gauss, 100000, [1.0, 1.0], full(PDiagMat([1.5^2, 1.5^2])))
+println(typeof(jump))
+
+mc = MC(Gauss, 100000, [1.0, 1.0], jump)
 
 start(mc)
-
 
 println(mean(mc.samples, 2))
 println(std(mc.samples, 2))
