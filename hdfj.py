@@ -133,20 +133,13 @@ def plot(flatchain, base=args.outdir, format=".png"):
 
     import triangle
 
-    #params = flatchain.param_tuple
-    #labels = [label_dict.get(key, "unknown") for key in params]
-
-    # figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84],
-    #                          show_titles=True, title_args={"fontsize": 16}, plot_contours=True,
-    #                          plot_datapoints=False)
-    #[M_star, r_c, T_10, q, M_CO, ksi, incl, PA, vel, mu_RA, mu_DEC]
     labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
     r"$q$", r"$\log M_\textrm{CO} \quad \log [M_\oplus]$",  r"$\xi$ [km/s]",
-    r"$d$ [pc]",
+    # r"$d$ [pc]",
     r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
     r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
-    figure = triangle.corner(flatchain, quantiles=[0.16, 0.5, 0.84], plot_contours=True,
-                          plot_datapoints=False, labels=labels, show_titles=True)
+    figure = triangle.corner(flatchain, quantiles=[0.16, 0.5, 0.84],
+        plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True)
     figure.savefig(base + "triangle" + format)
 
 
@@ -199,7 +192,7 @@ def estimate_covariance(flatchain):
         d = args.ndim
     else:
         d = flatchain.shape[1]
-    opt_jump = 2.38**2/d * cov 
+    opt_jump = 2.38**2/d * cov
     # opt_jump = 1.7**2/d * cov # gives about ??
     print(opt_jump)
 
