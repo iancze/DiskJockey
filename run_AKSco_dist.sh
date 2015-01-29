@@ -20,6 +20,10 @@
 
 #SBATCH -n 10
 
+##SBATCH --cpus-per-task=10
+
+#SBATCH --ntasks-per-node=5
+
 ./hostgen.sh
 
 julia --machinefile hosts.txt tests/parallel_test.jl
