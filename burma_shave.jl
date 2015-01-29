@@ -341,10 +341,13 @@ using LittleMC
 
 # Code to hook into the chain.js plot generator
 if parsed_args["chain"]
-    csv = "/n/home07/iczekala/web/chain.js/mc.csv"
+    csv = open("/n/home07/iczekala/web/chain.js/mc.csv", "w")
 else
-    csv = outdir * "mc.csv"
+    csv = open(outdir * "mc.csv", "w")
 end
+
+#Write the parameter header
+writecsv(mc.csv, params')
 
 mc = MC(fp, config["samples"], starting_param, jump_param, csv)
 debug("Initialized MCMC")
@@ -359,5 +362,6 @@ runstats(mc)
 debug("Acceptance: ", LittleMC.acceptance(mc))
 
 LittleMC.write(mc, outdir * "mc.hdf5")
+close(csv)
 
 quit!(pipes)

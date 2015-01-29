@@ -24,7 +24,7 @@ type MC{T <: AbstractMvNormal} #Could try making this immutable later
 end
 
 # Initialization function
-function MC(f::Function, nsamples::Int, p0::Vector{Float64}, propcov::Matrix{Float64}, csv="mc.csv")
+function MC(f::Function, nsamples::Int, p0::Vector{Float64}, propcov::Matrix{Float64}, csv::IOStream)
     # Do some custom initialization
     nparams = length(p0)
 
@@ -38,7 +38,7 @@ function MC(f::Function, nsamples::Int, p0::Vector{Float64}, propcov::Matrix{Flo
     # Turn propcov matrix into a distribution
     proposal = MvNormal(propcov)
 
-    MC(f, nsamples, p0, proposal, nparams, samples, lnprobs, 0, open(csv, "w"))
+    MC(f, nsamples, p0, proposal, nparams, samples, lnprobs, 0, csv))
 end
 
 function sample(mc::MC, p0::Vector{Float64}, lnprob0::Float64)
@@ -87,8 +87,6 @@ function start(mc::MC)
         writecsv(mc.csv, p0')
         flush(mc.csv) # Make sure this gets written.
     end
-
-    close(mc.csv)
 end
 
 # Calculate the Metropolis acceptance fraction
