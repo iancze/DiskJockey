@@ -7,7 +7,7 @@ out_base: output/AKSco/
 
 parameters:
   M_star: [2.40, 0.005] # [M_sun] stellar mass
-  r_c: [12.87, 0.05] # [AU] characteristic radius
+  r_c: [10.6, 0.05] # [AU] characteristic radius
   T_10: [91.5, 0.1] # [K] temperature at 10 AU
   q: [0.54, 0.001] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
@@ -25,7 +25,7 @@ parameters:
 opt_jump: opt_jump_AKSco.npy
 # Factor by which to scale the jumps (ie covariance matrix is multiplied by
 # this *squared*)
-jump_scale : 0.5
+jump_scale : 0.3
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/
@@ -38,4 +38,4 @@ data_file: data/AKSco/AKSco.hdf5
 npix: 256
 
 # MCMC setup
-samples: 500
+samples: 8000
