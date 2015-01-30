@@ -17,7 +17,8 @@ end
     return key
 end
 
-pipes = initialize(nchild, initfunc, f)
+const global keylist = Int[i for i=1:nchild]
+pipes = initialize(nchild, keylist, initfunc, f)
 
 for j=1:nworkers()
     distribute!(pipes, [0.0, 0.0])
