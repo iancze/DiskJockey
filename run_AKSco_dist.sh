@@ -16,7 +16,7 @@
 
 #SBATCH --mail-user=iancze@gmail.com
 
-#SBATCH --mem-per-cpu 10 #memory request per node
+#SBATCH --mem-per-cpu 100 #memory request per node
 
 #SBATCH -n 6
 
