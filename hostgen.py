@@ -45,11 +45,14 @@ hostfile = "slurm/run{}hosts.txt".format(args.run)
 if os.path.isfile(hostfile):
     os.remove(hostfile)
 
+print("Hostlist", hostlist)
+print("Tasks", tasks)
+
 f = open(hostfile, "w")
 skipped = False
 
-for i, host in enumerate(hostlist):
-    for j in range(tasks[i]):
+for ntask, host in zip(tasks, hostlist):
+    for j in range(ntask):
         if (host == masterhost) and (not skipped):
             skipped = True
         else:

@@ -76,6 +76,8 @@ end
 # nchild = length(keylist)
 # addprocs(nchild)
 nchild = nworkers()
+println("We have $nchild worker processes.")
+println("They are ", workers())
 
 # make the values of run_index and config available on all processes
 for process in procs()
