@@ -11,8 +11,8 @@ slurm_job_nodelist = check("echo $SLURM_JOB_NODELIST")
 
 hostlist = check("scontrol show hostname " + slurm_job_nodelist).split("\n")
 
-hostname = check("hostname")[:-1]
-print(hostname)
+masterhost = check("hostname").split(".")[0]
+print(masterhost)
 
 # hostlist = "holy2a03108\nholy2a03201\nholy2a03106".split("\n")
 
@@ -39,10 +39,14 @@ if os.path.isfile(hostfile):
     os.remove(hostfile)
 
 f = open(hostfile, "w")
+skipped = False
 
 for i, host in enumerate(hostlist):
     for j in range(tasks[i]):
-        f.write(host + "\n")
+        if (host == masterhost) and (not skipped):
+            skipped = True
+        else:
+            f.write(host + "\n")
 
 f.close()
 
