@@ -351,7 +351,7 @@ else
 end
 
 #Write the parameter header
-writecsv(mc.csv, params')
+writecsv(csv, params')
 
 mc = MC(fp, config["samples"], starting_param, jump_param, csv)
 debug("Initialized MCMC")
