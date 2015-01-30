@@ -8,7 +8,7 @@ import numpy as np
 cc = 2.99792458e10 # [cm s^-1]
 
 # Reading SMA dataset
-fname = "data/V4046Sgr.12CO21.final.vis.fits"
+fname = "../data/V4046Sgr/V4046Sgr.12CO21.final.vis.fits"
 # fname = "data/V4046Sgr.12CO21.model.vis.fits"
 
 f = fits.open(fname)
@@ -37,7 +37,7 @@ imag = vis[:, :, 1].T
 weight = vis[:, :, 2].T
 
 # Now, stuff each of these into an HDF5 file.
-fid = h5py.File("data/V4046Sgr.hdf5", "w")
+fid = h5py.File("../data/V4046Sgr/V4046Sgr.hdf5", "w")
 # fid = h5py.File("data/V4046Sgr_model_read.hdf5", "w")
 
 # Convert the frequencies from Hz to micron.
@@ -74,4 +74,4 @@ ax.set_xlim(max(uu[10]), min(uu[10]))
 #ax.set_ylim(-75, 75)
 fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
 
-plt.savefig("plots/uv_spacings_SMA.png")
+plt.savefig("../plots/uv_spacings_SMA.png")

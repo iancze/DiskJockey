@@ -22,7 +22,7 @@ parameters:
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-opt_jump: opt_jump.npy
+opt_jump: data/V4046Sgr/opt_jump.npy
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/
@@ -30,7 +30,7 @@ base_dir: /scratch/
 
 
 # The HDF5 file containing the visibilities
-data_file: data/V4046Sgr.hdf5
+data_file: data/V4046Sgr/V4046Sgr.hdf5
 
 # Image setup
 npix: 256

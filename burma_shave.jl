@@ -71,12 +71,10 @@ function cleardirs!(keylist::Vector{Int})
     println("Removed directories")
 end
 
-# Since we are starting with a machinefile, it is no longer necessary to
+# Since we are starting with the -p option, it is no longer necessary to
 # programatically add processes.
 nchild = length(keylist)
 # addprocs(nchild)
-# nchild = nworkers()
-# println("We have $nchild worker processes.")
 println("Workers allocated ", workers())
 
 # make the values of run_index and config available on all processes

@@ -263,5 +263,5 @@ skim = imToSky(im, pars.dpc)
 plot_chmaps(skim)
 # plot_chmaps_data(skim)
 
-# spec = imToSpec(skim)
-# plot_spectrum(spec)
+spec = imToSpec(skim)
+plot_spectrum(spec)

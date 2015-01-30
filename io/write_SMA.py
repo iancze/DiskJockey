@@ -8,7 +8,7 @@ import shutil
 cc = 2.99792458e10 # [cm s^-1]
 
 # Read all of the data from the HDF5 file
-fid = h5py.File("data/V4046Sgr_model.hdf5", "r")
+fid = h5py.File("../data/V4046Sgr/V4046Sgr_model.hdf5", "r")
 
 freqs = cc/fid["lams"][:]*1e4 # [Hz]
 uu = fid["uu"][:,:] # [klam]
@@ -21,10 +21,10 @@ fid.close()
 # (nfreq, nvis) arrays
 
 # New SMA dataset
-fname = "data/V4046Sgr.12CO21.model.vis.fits"
+fname = "../data/V4046Sgr/V4046Sgr.12CO21.model.vis.fits"
 
 # Copy the original dataset to something new
-shutil.copy("data/V4046Sgr.12CO21.final.vis.fits", fname)
+shutil.copy("../data/V4046Sgr/V4046Sgr.12CO21.final.vis.fits", fname)
 
 # Overwrite a copy of the original dataset with these values.
 hdulist = fits.open(fname, mode="update")

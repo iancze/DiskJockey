@@ -3,7 +3,7 @@ import numpy as np
 
 cc = 2.99792458e10 # [cm s^-1]
 
-data = np.load("data/AKSco/AKSco.vis.npz")
+data = np.load("../data/AKSco/AKSco.vis.npz")
 
 # This file has categories
 # ['Re', 'Wt', 'u', 'Im', 'v']
@@ -47,7 +47,7 @@ ax.set_xlim(max(uu[25]), min(uu[25]))
 # ax.set_ylim(-75, 75)
 fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
 
-plt.savefig("plots/uv_spacings_ALMA.png")
+plt.savefig("../plots/uv_spacings_ALMA.png")
 
 # uu, vv are now (nchan, nvis) shape arrays
 shape = uu.shape
@@ -58,7 +58,7 @@ imag = data["Im"]
 weight = data["Wt"]
 
 # Now, stuff each of these into an HDF5 file.
-fid = h5py.File("data/AKSco/AKSco.hdf5", "w")
+fid = h5py.File("../data/AKSco/AKSco.hdf5", "w")
 
 #Currently, everything is stored in decreasing wavelength order, lets flip this.
 fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams[::-1]
