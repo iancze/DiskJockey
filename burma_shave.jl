@@ -92,7 +92,7 @@ end
 # make the internal Judith directory, if it doesn't exist
 if !ispath(basedir)
     println("Creating ", basedir)
-    mkpath(basedir)
+    mkdir(basedir)
 end
 
 # Clear all directories
@@ -118,7 +118,6 @@ Logging.configure(filename=logfile, level=DEBUG)
 
 debug("Created logfile.")
 
-
 @everywhere function initfunc(key)
 
     # Load the relevant chunk of the dataset
@@ -128,7 +127,7 @@ debug("Created logfile.")
 
     # Create a directory where all RADMC files will reside and be driven from
     keydir = basedir * "jud$key"
-    mkpath(keydir)
+    mkdir(keydir)
 
     # Copy all relevant configuration scripts to this subdirectory
     # these are mainly setup files which will not change throughout the run
