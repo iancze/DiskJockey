@@ -71,8 +71,11 @@ function cleardirs!(keylist::Vector{Int})
     println("Removed directories")
 end
 
-nchild = length(keylist)
-addprocs(nchild)
+# Since we are starting with a machinefile, it is no longer necessary to
+# programatically add processes.
+# nchild = length(keylist)
+# addprocs(nchild)
+nchild = nworkers()
 
 # make the values of run_index and config available on all processes
 for process in procs()
@@ -87,7 +90,7 @@ end
 # make the internal Judith directory, if it doesn't exist
 if !ispath(basedir)
     println("Creating ", basedir)
-    mkdir(basedir)
+    mkpath(basedir)
 end
 
 # Clear all directories
@@ -123,7 +126,7 @@ debug("Created logfile.")
 
     # Create a directory where all RADMC files will reside and be driven from
     keydir = basedir * "jud$key"
-    mkdir(keydir)
+    mkpath(keydir)
 
     # Copy all relevant configuration scripts to this subdirectory
     # these are mainly setup files which will not change throughout the run

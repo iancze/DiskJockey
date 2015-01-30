@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+'''
+The point of this script is to generate a `machinefile` for Julia. This is a
+list of *additional* hostnames on which to start worker processes. That means
+that if we want to have a total of 51 processes running (1 master and 50 workers)
+then the hostfile will need to have 50 lines containing the hostnames of the 50
+other nodes. This requires first figuring out all of the nodes which SLURM has allocated, how many cores (CPUs) have been allocated on each node and the hostname of the master process. Then we loop through and write out all of the hostnames except the current master host.
+'''
+
 # Figure out what job index we submitted with, if any
 import argparse
 parser = argparse.ArgumentParser(description="Create a file of hostnames.")

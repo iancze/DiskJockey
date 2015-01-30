@@ -34,8 +34,6 @@ lams = cc/freqs * 1e4 # [microns]
 # convert these to kilo-lambda
 uu = 1e-3 * (np.tile(data["u"] * 1e6, (nchan, 1)).T / lams).T
 vv = 1e-3 * (np.tile(data["v"] * 1e6, (nchan, 1)).T / lams).T
-# uu = data["u"] * 1e2 / lams
-# vv = data["v"] * 1e2 / lams
 
 # Plot the UV samples for a given channel
 import matplotlib.pyplot as plt

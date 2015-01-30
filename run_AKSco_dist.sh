@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH -J Dist #Single job name for the entire JobArray
+#SBATCH -J AKScoD #Single job name for the entire JobArray
 
-#SBATCH -o slurm/multi_%A_%a.out #standard output
+#SBATCH -o slurm/AKScoD_%A_%a.out #standard output
 
-#SBATCH -e slurm/multi_%A_%a.err #standard error
+#SBATCH -e slurm/AKScoD_%A_%a.err #standard error
 
 #SBATCH -p general #partition
 
-#SBATCH -t 00:10:00 #running time
+#SBATCH -t 01:00:00 #running time
 
 #SBATCH --mail-type=BEGIN
 
@@ -16,14 +16,13 @@
 
 #SBATCH --mail-user=iancze@gmail.com
 
-#SBATCH --mem-per-cpu 100 #memory request per node
+#SBATCH --mem-per-cpu 500 #memory request per cpu
 
-#SBATCH -n 6
+#SBATCH -n 51
 
 ##SBATCH --cpus-per-task=10
-
-#SBATCH --ntasks-per-node=2
+##SBATCH --ntasks-per-node=2
 
 python hostgen.py $SLURM_ARRAY_TASK_ID
 
-julia --machinefile slurm/run${SLURM_ARRAY_TASK_ID}hosts.txt tests/parallel_test.jl
+julia --machinefile slurm/run${SLURM_ARRAY_TASK_ID}hosts.txt burma_shave.jl -r $SLURM_ARRAY_TASK_ID scripts/AKSco.yaml --chain
