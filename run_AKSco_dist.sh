@@ -18,7 +18,7 @@
 
 #SBATCH --mem-per-cpu 10 #memory request per node
 
-#SBATCH -n 4
+#SBATCH -n 6
 
 ##SBATCH --cpus-per-task=10
 
