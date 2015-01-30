@@ -8,7 +8,7 @@ nchild = nworkers()
 @everywhere using parallel
 
 @everywhere function f(dset, key, p)
-    println("Likelihood call to $dset, $p, $key on process ", myid())
+    println("Likelihood call to $dset, $p, $key on process ", myid(), " Hostname: ", readall(`hostname`))
     return 0.0
 end
 
