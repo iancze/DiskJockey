@@ -38,7 +38,7 @@ function MC(f::Function, nsamples::Int, p0::Vector{Float64}, propcov::Matrix{Flo
     # Turn propcov matrix into a distribution
     proposal = MvNormal(propcov)
 
-    MC(f, nsamples, p0, proposal, nparams, samples, lnprobs, 0, csv))
+    MC(f, nsamples, p0, proposal, nparams, samples, lnprobs, 0, csv)
 end
 
 function sample(mc::MC, p0::Vector{Float64}, lnprob0::Float64)
