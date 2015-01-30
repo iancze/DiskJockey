@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+# Figure out what job index we submitted with, if any
+import argparse
+parser = argparse.ArgumentParser(description="Create a file of hostnames.")
+parser.add_argument("run", type=int, default=0, help="JobArray index.")
+args = parser.parse_args()
+
 # Create a list of all the CPU's we've been allocated, in addition to the one
 # currently running.
 from subprocess import check_output
@@ -12,11 +18,6 @@ slurm_job_nodelist = check("echo $SLURM_JOB_NODELIST")
 hostlist = check("scontrol show hostname " + slurm_job_nodelist).split("\n")
 
 masterhost = check("hostname").split(".")[0]
-print(masterhost)
-
-# hostlist = "holy2a03108\nholy2a03201\nholy2a03106".split("\n")
-
-print(hostlist)
 
 tasklist = check("echo $SLURM_JOB_CPUS_PER_NODE").split(",")
 # tasklist = "4,2(x3),5".split(",")
@@ -32,9 +33,7 @@ for task in tasklist:
     else:
         tasks.append(int(task))
 
-print(tasks)
-
-hostfile = "hosts.txt"
+hostfile = "slurm/run{}hosts.txt".format(args["run"])
 if os.path.isfile(hostfile):
     os.remove(hostfile)
 
@@ -49,20 +48,3 @@ for i, host in enumerate(hostlist):
             f.write(host + "\n")
 
 f.close()
-
-# hostlist=$(scontrol show hostname $SLURM_JOB_NODELIST)
-# rm -f hosts.txt
-#
-# # The way SLURM/Julia works, we might need to try to figure out our current
-# # host, and make sure we don't add that to the list of hosts to SSH to.
-#
-# for f in $hostlist
-# do
-#   for i in {1..5}
-#   do
-#     echo $f >> hosts.txt
-#   done
-# done
-
-#echo $SLURM_JOB_CPUS_PER_NODE >> hosts.txt
-#echo $SLURM_TASKS_PER_NODE >> hosts.txt

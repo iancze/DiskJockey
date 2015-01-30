@@ -24,6 +24,6 @@
 
 #SBATCH --ntasks-per-node=2
 
-python hostgen.py
+python hostgen.py $SLURM_ARRAY_TASK_ID
 
-julia --machinefile hosts.txt tests/parallel_test.jl
+julia --machinefile slurm/run${SLURM_ARRAY_TASK_ID}hosts.txt tests/parallel_test.jl
