@@ -1,6 +1,6 @@
 #!/bin/bash
 
-##SBATCH -J AKSco #Single job name for the entire JobArray
+#SBATCH -J Dist #Single job name for the entire JobArray
 
 #SBATCH -o slurm/multi_%A_%a.out #standard output
 
@@ -18,12 +18,12 @@
 
 #SBATCH --mem-per-cpu 10 #memory request per node
 
-#SBATCH -n 10
+#SBATCH -n 4
 
 ##SBATCH --cpus-per-task=10
 
-#SBATCH --ntasks-per-node=5
+#SBATCH --ntasks-per-node=2
 
-./hostgen.sh
+python hostgen.py
 
 julia --machinefile hosts.txt tests/parallel_test.jl
