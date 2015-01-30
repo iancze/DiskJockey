@@ -35,7 +35,8 @@ for task in tasklist:
 print(tasks)
 
 hostfile = "hosts.txt"
-os.remove(hostfile)
+if os.path.isfile(hostfile):
+    os.remove(hostfile)
 
 f = open(hostfile, "w")
 
