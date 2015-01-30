@@ -23,7 +23,7 @@ check = lambda cmd: check_output(cmd, shell=True, universal_newlines=True)
 
 slurm_job_nodelist = check("echo $SLURM_JOB_NODELIST")
 
-hostlist = check("scontrol show hostname " + slurm_job_nodelist).split("\n")
+hostlist = check("scontrol show hostname " + slurm_job_nodelist)[:-1].split("\n")
 
 masterhost = check("hostname").split(".")[0]
 

@@ -21,7 +21,7 @@
 #SBATCH -n 51
 
 ##SBATCH --cpus-per-task=10
-##SBATCH --ntasks-per-node=2
+#SBATCH --ntasks-per-node=8
 
 python hostgen.py $SLURM_ARRAY_TASK_ID
 
