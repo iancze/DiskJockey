@@ -17,38 +17,7 @@ function write_lambda(lams::Array{Float64, 1})
 end
 
 const eqmirror = true # mirror the grid about the z=0 midplane ?
-
-# Specify a 2D axisymmetric *separable* grid in spherical coordinates:
-# {r, theta, phi}, where theta is angle from zenith, phi is azimuth
-
-# Number of cells in each dimension
 # if we decide to mirror, then ncells = 1/2 of the true value
-# const nr = 64
-# const ntheta = 32 # if mirror about the equator, total of 64
-# const nphi = 1
-#
-# const ncells = nr * ntheta * nphi
-#
-# const r_in = .5 * AU # Inner extent of disk
-# const r_out = 400 * AU # Outer extent of disk
-#
-# #Define the cell *walls*
-# const Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
-#
-# if eqmirror
-# ped = 0.1
-# #Thetas = linspace(0, pi/2., ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
-# const Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1] #Spaced closer near the z=0
-# else
-# const Thetas = linspace(0, pi, ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
-# end
-#
-# const Phis = Float64[0.0, 0.0] # [rad] cell walls for inactive coordinate
-#
-# #Define the cell centers as the average between walls
-# const rs = 0.5 * (Rs[1:end-1] + Rs[2:end])
-# const thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
-# const phis = Float64[0.0]
 
 # Define a grid object which stores all of these variables
 # This will not change for the duration of the run
@@ -68,7 +37,10 @@ immutable Grid
 end
 
 function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool)
+    # Specify a 2D axisymmetric *separable* grid in spherical coordinates:
+    # {r, theta, phi}, where theta is angle from zenith, phi is azimuth
 
+    # Number of cells in each dimension
     nphi = 1 # axisymmetric disk
     ncells = nr * ntheta * nphi
     r_in = convert(Float64, r_in) * AU # Inner extent of disk
