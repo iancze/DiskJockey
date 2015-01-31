@@ -1,19 +1,8 @@
 module model
 
-export write_grid, write_model, write_lambda, Parameters
+export write_grid, write_model, write_lambda, Parameters, Grid
 
-using constants #Import all of my constants defined in constants.jl
-
-#These grid parameters are fixed for the start of each run, they depend on the dataset.
-
-# Write out the camera wavelength file
-# Line frequency center, CO J = 2-1
-# Compute the various wavelengths at which we want to synthesize images
-# 23 images spaced -4.40 -0- 4.40 km/s
-lam0 = cc/230.538e9 * 1e4 # [microns]
-nvels = 23
-vels = linspace(-4.4, 4.4, nvels) # [km/s]
-const lambdas = vels/c_kms * lam0 + lam0
+using constants
 
 # Write the wavelength sampling file. Only run on setup
 function write_lambda(lams::Array{Float64, 1})
@@ -29,40 +18,89 @@ end
 
 const eqmirror = true # mirror the grid about the z=0 midplane ?
 
-# Specify a 2D axisymmetric *separable* grid in spherical coordinates, {r, theta, phi}.
-# theta is angle from zenith, phi is azimuth
+# Specify a 2D axisymmetric *separable* grid in spherical coordinates:
+# {r, theta, phi}, where theta is angle from zenith, phi is azimuth
 
 # Number of cells in each dimension
 # if we decide to mirror, then ncells = 1/2 of the true value
-const nr = 64
-const ntheta = 32 # if mirror about the equator
-const nphi = 1
+# const nr = 64
+# const ntheta = 32 # if mirror about the equator, total of 64
+# const nphi = 1
+#
+# const ncells = nr * ntheta * nphi
+#
+# const r_in = .5 * AU # Inner extent of disk
+# const r_out = 400 * AU # Outer extent of disk
+#
+# #Define the cell *walls*
+# const Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+#
+# if eqmirror
+# ped = 0.1
+# #Thetas = linspace(0, pi/2., ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
+# const Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1] #Spaced closer near the z=0
+# else
+# const Thetas = linspace(0, pi, ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
+# end
+#
+# const Phis = Float64[0.0, 0.0] # [rad] cell walls for inactive coordinate
+#
+# #Define the cell centers as the average between walls
+# const rs = 0.5 * (Rs[1:end-1] + Rs[2:end])
+# const thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
+# const phis = Float64[0.0]
 
-const ncells = nr * ntheta * nphi
-
-const r_in = .5 * AU # Inner extent of disk
-const r_out = 400 * AU # Outer extent of disk
-
-#Define the cell *walls*
-const Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
-
-if eqmirror
-ped = 0.1
-#Thetas = linspace(0, pi/2., ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
-const Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1] #Spaced closer near the z=0
-else
-const Thetas = linspace(0, pi, ntheta+1)  # [rad] Angles are internally defined in radians, not degrees
+# Define a grid object which stores all of these variables
+# This will not change for the duration of the run
+immutable Grid
+    nr::Int
+    ntheta::Int
+    nphi::Int
+    ncells::Int
+    # cell edges
+    Rs::Vector{Float64}
+    Thetas::Vector{Float64}
+    Phis::Vector{Float64}
+    # cell centers
+    rs::Vector{Float64}
+    thetas::Vector{Float64}
+    phis::Vector{Float64}
 end
 
-const Phis = Float64[0.0, 0.0] # [rad] cell walls for inactive coordinate
+function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool)
 
-#Define the cell centers as the average between walls
-const rs = 0.5 * (Rs[1:end-1] + Rs[2:end])
-const thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
-const phis = Float64[0.0]
+    nphi = 1 # axisymmetric disk
+    ncells = nr * ntheta * nphi
+    r_in = convert(Float64, r_in) * AU # Inner extent of disk
+    r_out = convert(Float64, r_out) * AU # Outer extent of disk
+
+    #Define the cell *walls*
+    Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+
+    if eqmirror
+        ped = 0.1
+        #Thetas = linspace(0, pi/2., ntheta+1)
+        # [rad] Angles are internally defined in radians, not degrees
+        Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        #Spaced closer near the z=0
+    else
+        Thetas = linspace(0, pi, ntheta+1)
+        # [rad] Angles are internally defined in radians, not degrees
+    end
+
+    Phis = Float64[0.0, 0.0] # [rad] cell walls for inactive coordinate
+
+    #Define the cell centers as the average between walls
+    rs = 0.5 * (Rs[1:end-1] + Rs[2:end])
+    thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
+    phis = Float64[0.0]
+
+    return Grid(nr, ntheta, nphi, ncells, Rs, Thetas, Phis, rs, thetas, phis)
+
+end
 
 #This function only needs to be run once, upon setup.
-function write_grid(basedir::String)
+function write_grid(basedir::String, grid::Grid)
     #amr_grid.inp
     f = open(basedir * "amr_grid.inp", "w")
 
@@ -74,17 +112,17 @@ function write_grid(basedir::String)
     #incl_r incl_phi incl_z #use this axis?
     @printf(f, "%d %d %d \n", 1, 1, 0) # 2D axisymmetric
     #n_r    n_phi   n_z #number of cells in this dimension
-    @printf(f, "%d %d %d \n", nr, ntheta, nphi)
+    @printf(f, "%d %d %d \n", grid.nr, grid.ntheta, grid.nphi)
 
-    for R in Rs
+    for R in grid.Rs
         @printf(f, "%.9e\n", R)
     end
 
-    for Theta in Thetas
+    for Theta in grid.Thetas
         @printf(f, "%.9e\n", Theta)
     end
 
-    for Phi in Phis
+    for Phi in grid.Phis
         @printf(f, "%.9e\n", Phi)
     end
 
@@ -164,35 +202,35 @@ end
 
 microturbulence(pars::Parameters) = microturbulence(pars.ksi)
 
-function write_model(pars::Parameters, basedir::String)
+function write_model(pars::Parameters, basedir::String, grid::Grid)
     # numberdens_co.inp
     fdens = open(basedir * "numberdens_co.inp", "w")
     @printf(fdens, "%d\n", 1) #iformat
-    @printf(fdens, "%d\n", ncells)
+    @printf(fdens, "%d\n", grid.ncells)
 
     # gas_velocity.inp
     fvel = open(basedir * "gas_velocity.inp", "w")
     @printf(fvel, "%d\n", 1) #iformat
-    @printf(fvel, "%d\n", ncells)
+    @printf(fvel, "%d\n", grid.ncells)
 
     # gas_temperature.inp
     ftemp = open(basedir * "gas_temperature.inp", "w")
     @printf(ftemp, "%d\n", 1) #iformat
-    @printf(ftemp, "%d\n", ncells)
+    @printf(ftemp, "%d\n", grid.ncells)
 
     # microturbulence.inp
     fmicro = open(basedir * "microturbulence.inp", "w")
     @printf(fmicro, "%d\n", 1) #iformat
-    @printf(fmicro, "%d\n", ncells)
+    @printf(fmicro, "%d\n", grid.ncells)
 
     # Now, we will need to write the three other files as a function of grid position.
     # Therefore we will do *one* loop over these indices, calculate the required value,
     # and write it to the appropriate file.
 
     #Looping over the cell centers
-    for phi in phis
-        for theta in thetas
-            for r in rs
+    for phi in grid.phis
+        for theta in grid.thetas
+            for r in grid.rs
                 #Convert from spherical to cylindrical coordinates
                 z = r * cos(theta)
                 r_cyl = r * sin(theta)

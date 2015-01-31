@@ -1,5 +1,25 @@
 push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
 
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    # "--opt1"
+    # help = "an option with an argument"
+    # default = 0
+    "--norad"
+    help = "Use the image alread here."
+    action = :store_true
+    "config"
+    help = "a YAML configuration file"
+    required = true
+end
+
+parsed_args = parse_args(ARGS, s)
+
+import YAML
+config = YAML.load(open(parsed_args["config"]))
+
 # Make some diagnostic plots to show what the model looks like in analytic terms
 
 using model
@@ -7,11 +27,9 @@ import PyPlot.plt
 using LaTeXStrings
 using constants
 
-rr = rs ./ AU # convert to AU
-
 # velocity structure
-function plot_vel(pars::Parameters)
-    vels = model.velocity(rs, pars) .* 1e-5 # convert from cm/s to km/s
+function plot_vel(pars::Parameters, grid)
+    vels = model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -24,8 +42,8 @@ function plot_vel(pars::Parameters)
 end
 
 # temperature structure
-function plot_temp(pars::Parameters)
-    temps = model.temperature(rs, pars)
+function plot_temp(pars::Parameters, grid)
+    temps = model.temperature(grid.rs, pars)
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -38,8 +56,8 @@ function plot_temp(pars::Parameters)
 end
 
 # scale height
-function plot_height(pars::Parameters)
-    heights = model.Hp(rs, pars) ./ AU
+function plot_height(pars::Parameters, grid)
+    heights = model.Hp(grid.rs, pars) ./ AU
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -52,11 +70,11 @@ function plot_height(pars::Parameters)
 end
 
 # density structure
-function plot_dens(pars::Parameters)
+function plot_dens(pars::Parameters, grid)
     nz = 64
     zs = linspace(0, 300 * AU, nz)
     zz = zs./AU
-    nr = length(rs)
+    nr = length(grid.rs)
 
     xx = Array(Float64, (nz, nr))
     yy = Array(Float64, (nz, nr))
@@ -72,7 +90,7 @@ function plot_dens(pars::Parameters)
 
     for i=1:nz
         for j=1:nr
-            nn[i,j] = model.n_CO(rs[j], zs[i], pars)
+            nn[i,j] = model.n_CO(grid.rs[j], zs[i], pars)
         end
     end
 
@@ -84,7 +102,7 @@ function plot_dens(pars::Parameters)
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
-    ax[:set_ylabel](L"$r$ [AU]")
+    ax[:set_ylabel](L"$z$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
 
@@ -103,17 +121,17 @@ function plot_dens(pars::Parameters)
     # First, the radial lines
 
     # Basically, each of these originates from x = 0, z = 0, and has a slope of theta
-    for theta in (pi/2 - model.Thetas)
+    for theta in (pi/2 - grid.Thetas)
         slope = tan(theta)
         ax[:plot](rr, slope .* rr, "k", lw=0.1)
     end
 
     # Arcs
-    xs = Array(Float64, (model.ntheta + 1))
-    ys = Array(Float64, (model.ntheta + 1))
+    xs = Array(Float64, (grid.ntheta + 1))
+    ys = Array(Float64, (grid.ntheta + 1))
 
     for r in rr
-        for (i, theta) in enumerate(pi/2 - model.Thetas)
+        for (i, theta) in enumerate(pi/2 - grid.Thetas)
             xs[i] = cos(theta) * r
             ys[i] = sin(theta) * r
         end
@@ -126,7 +144,25 @@ function plot_dens(pars::Parameters)
 
 end
 
-plot_vel(params)
-plot_temp(params)
-plot_height(params)
-plot_dens(params)
+pp = config["parameters"]
+params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+nparam = length(params)
+starting_param = Array(Float64, nparam)
+
+for i=1:nparam
+    starting_param[i] = pp[params[i]][1]
+end
+
+# Convert logM_CO to M_CO
+starting_param[6] = 10^starting_param[6]
+
+pars = Parameters(starting_param...)
+
+grd = config["grid"]
+grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+const global rr = grid.rs ./ AU # convert to AU
+
+plot_vel(pars, grid)
+plot_temp(pars, grid)
+plot_height(pars, grid)
+plot_dens(pars, grid)

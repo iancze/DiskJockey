@@ -5,6 +5,13 @@ out_base: output/AKSco/
 # parameters and starting guess
 # format is parameter : [guess, jump]
 
+grid:
+  nr: 64
+  ntheta: 32 # if mirror about the equator, total of 64
+  nphi: 1
+  r_in: 0.5 # [AU] # Inner extent of disk
+  r_out: 400. # [AU] # Outer extent of disk
+
 parameters:
   M_star: [2.40, 0.005] # [M_sun] stellar mass
   r_c: [10.6, 0.05] # [AU] characteristic radius

@@ -194,10 +194,14 @@ end
     return lnprob(dv, mvis)
 end
 
+# Create the model grid
+grd = config["grid"]
+global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
 debug("Writing grid")
-write_grid(basedir)
+write_grid(basedir, grid)
 debug("Wrote grid")
 
 debug("Initializing processes")
@@ -260,7 +264,7 @@ function fprob(p::Vector{Float64})
     prior = lnprior(pars)
 
     # Compute parameter file using model.jl, write to disk
-    write_model(pars, basedir)
+    write_model(pars, basedir, grid)
 
     nd = basedir * "numberdens_co.inp"
     gv = basedir * "gas_velocity.inp"

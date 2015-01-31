@@ -199,14 +199,18 @@ end
 
 
 # Plot the spatially-integrated spectrum
-function plot_spectrum(spec::Array{Float64, 2})
+function plot_spectrum(img::image.SkyImage)
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
 
-    lam0 = cc/230.538e9 * 1e6 # [microns]
-    nvels = length(spec[:,1])
-    vels = linspace(-4.4, 4.4, nvels) # [km/s]
+    spec = imToSpec(img)
+
+    # CO 2-1 rest frame
+    lam0 = cc/230.538e9 * 1e4 # [microns]
+
+    # convert wavelengths to velocities
+    vels = c_kms * (img.lams .- lam0)/lam0 # [km/s]
 
     ax[:plot](vels, spec[:,2], ls="steps-mid")
     ax[:set_ylabel](L"$f_\nu$ [Jy]")
@@ -246,8 +250,11 @@ npix = config["npix"] # number of pixels
 beta = vel/c_kms # relativistic Doppler formula
 shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
 
-write_grid("")
-write_model(pars, "")
+grd = config["grid"]
+grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+
+write_grid("", grid)
+write_model(pars, "", grid)
 write_lambda(shift_lams)
 
 if !parsed_args["norad"]
@@ -263,5 +270,4 @@ skim = imToSky(im, pars.dpc)
 plot_chmaps(skim)
 # plot_chmaps_data(skim)
 
-spec = imToSpec(skim)
-plot_spectrum(spec)
+plot_spectrum(skim)
