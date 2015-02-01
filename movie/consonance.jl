@@ -5,13 +5,20 @@ push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
 
 module consonance
 
-export pars, nframes, nframes_per_proc, nchan, vels, lams, vmax, scratchdir, outdir
+export pars, nframes, nframes_per_proc, nchan, vels, lams, vmax, homedir, scratchdir, outdir
 
 using constants
 using model
 
+# For odyssey use
+homedir = "/n/home07/iczekala/JudithExcalibur/"
 scratchdir = "/scratch/"
-outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
+outdir = "/n/regal/panstarrs/iczekala/output/movie/" #Where the images.out and images.png are stored
+
+# For local use
+# homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
+# scratchdir = ""
+# outdir = ""
 
 # How many frames per process?
 # let's say 10 for now.

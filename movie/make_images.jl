@@ -30,10 +30,12 @@ println("Now in ", pwd())
 
 files = ["radmc3d.inp", "lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
 for file in files
-    src = "/n/home07/iczekala/JudithExcalibur/" * file
+    src = homedir * file
     dst = scratchdir * file
     cp(src, dst)
 end
+
+println("Copied all RADMC files")
 
 using constants
 using image
@@ -49,8 +51,10 @@ function make_image(pars, id::Int)
     PA = pars.PA # [deg] Position angle runs counter clockwise
 
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
+    println("RADMC finished")
 
     cp("image.out", outdir * @sprintf("image%04d.out", id))
+    println("copied image to outdir")
 
 end
 
