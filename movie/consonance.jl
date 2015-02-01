@@ -22,7 +22,7 @@ outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.ou
 
 # How many frames per process?
 # let's say 10 for now.
-nframes_per_proc = 10
+nframes_per_proc = 50
 
 global const nchan = 7
 global const vels = linspace(-1.5, 1.5, nchan) # [km/s]
@@ -57,13 +57,13 @@ end
 
 # Create a master parameter list
 # First, adjust in inclination
-incls = smooth_vary(incl, 0., 90., 5.)
+incls = smooth_vary(incl, 0., 90., 1.)
 nincls = length(incls)
 # then, adjust in mass
-masses = smooth_vary(M_star, 1.0, 2.5, 0.25)
+masses = smooth_vary(M_star, 1.0, 2.5, 0.05)
 nmasses = length(masses)
 
-radiuses = smooth_vary(r_c, 25., 65., 5.)
+radiuses = smooth_vary(r_c, 25., 65., 1.)
 nradiuses = length(radiuses)
 
 nframes = nincls + nmasses + nradiuses
