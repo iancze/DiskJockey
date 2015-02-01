@@ -50,7 +50,7 @@ function make_image(pars, id::Int)
 
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
 
-    cp("image.out", @sprintf(outdir * "image%04d.out", id))
+    cp("image.out", outdir * @sprintf("image%04d.out", id))
 
 end
 
