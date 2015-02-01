@@ -1,6 +1,6 @@
 push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
 
-#Make the movie!
+using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
@@ -20,6 +20,14 @@ imgdir = @sprintf("img%02d/", run_index)
 if !ispath(imgdir)
     println("Creating ", imgdir)
     mkdir(imgdir)
+end
+
+cd(imgdir)
+println("Now in ", pwd())
+
+files = ["radmc3d.inp", "lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
+for file in files
+    cp("../../" * file, file)
 end
 
 using constants
@@ -44,7 +52,7 @@ function make_image(pars, id::Int)
 
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
 
-    cp("image.out", @sprintf("image%04d.out", id))
+    cp("image.out", @sprintf("../image%04d.out", id))
 
 end
 
@@ -62,13 +70,16 @@ vel = -31.18 # [km/s]
 mu_RA = 0.2 # [arcsec] centroid location
 mu_DEC = -0.6 # [arcsec]
 
-# Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 pars = Parameters(M_star, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
 const global npix = 256 # number of pixels
 const global grid = Grid(100, 32, 0.5, 800, true)
 write_grid("", grid)
 write_lambda(lams)
+
+# Create a master parameter list
+# First, adjust in inclination
+# then, adjust in mass
 
 nframes = 4
 ids = Int[i for i=1:nframes]
