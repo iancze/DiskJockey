@@ -121,7 +121,7 @@ debug("Created logfile.")
     # Load the relevant chunk of the dataset
     dset = DataVis(cfg["data_file"], key)
     # Conjugation is necessary for the SMA, methinks
-    visibilities.conj!(dset) # Try NOT for ALMA
+    visibilities.conj!(dset) # Swap UV convention
 
     # Create a directory where all RADMC files will reside and be driven from
     keydir = basedir * "jud$key"
@@ -161,7 +161,7 @@ end
     PA = p.PA # [deg]
 
     vel = p.vel # [km/s]
-    npix = 256 # number of pixels, can alternatively specify x and y separately
+    npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
 
     # Doppler shift the dataset wavelength to rest-frame wavelength
     beta = vel/c_kms # relativistic Doppler formula
@@ -242,7 +242,7 @@ function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    dpc = 141.0 # [pc] distance
+    dpc = cfg["parameters"]["dpc"] # [pc] distance
 
     M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
 
@@ -260,8 +260,6 @@ function fprob(p::Vector{Float64})
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-
-    prior = lnprior(pars)
 
     # Compute parameter file using model.jl, write to disk
     write_model(pars, basedir, grid)
@@ -281,7 +279,7 @@ function fprob(p::Vector{Float64})
     end
 
     distribute!(pipes, pars)
-    return gather!(pipes) + prior # the summed lnprob plus the prior
+    return gather!(pipes) # the summed lnprob
 end
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)

@@ -44,4 +44,4 @@ data_file: data/V4046Sgr/V4046Sgr.hdf5
 npix: 256
 
 # MCMC setup
-samples: 4000
+samples: 6000
