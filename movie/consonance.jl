@@ -11,7 +11,7 @@ using constants
 using model
 
 scratchdir = "/scratch/"
-outdir = "../output/movie/" #Where the images.out and images.png are stored
+outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
 
 # How many frames per process?
 # let's say 10 for now.
