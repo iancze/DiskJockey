@@ -13,7 +13,7 @@ using model
 # For odyssey use
 homedir = "/n/home07/iczekala/JudithExcalibur/"
 scratchdir = "/scratch/"
-outdir = "/n/regal/panstarrs/iczekala/output/movie/" #Where the images.out and images.png are stored
+outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
 
 # For local use
 # homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"

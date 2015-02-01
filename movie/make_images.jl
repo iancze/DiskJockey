@@ -35,8 +35,6 @@ for file in files
     cp(src, dst)
 end
 
-println("Copied all RADMC files")
-
 using constants
 using image
 using model
@@ -51,19 +49,11 @@ function make_image(pars, id::Int)
     PA = pars.PA # [deg] Position angle runs counter clockwise
 
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
-    println("RADMC finished")
 
     src = "image.out"
     dst = outdir * @sprintf("image%04d.out", id)
 
-    println("Current directory is ", pwd())
-    println("And has files ", readdir())
-    run(`ls` |> STDOUT)
-
-    println("Copying from $src to $dst")
-
     cp(src, dst)
-    println("copied image to outdir")
 
 end
 
