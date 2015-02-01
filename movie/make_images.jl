@@ -2,11 +2,30 @@ push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
 
 #Make the movie!
 
+s = ArgParseSettings()
+@add_arg_table s begin
+    # "--opt1"
+    # help = "an option with an argument"
+    "--run_index", "-r"
+    help = "Output run index"
+    arg_type = Int
+end
+
+parsed_args = parse_args(ARGS, s)
+run_index = parsed_args["run_index"]
+
+imgdir = @sprintf("img%02d/", run_index)
+
+# make the directory where RADMC will make all its files exist
+if !ispath(imgdir)
+    println("Creating ", imgdir)
+    mkdir(imgdir)
+end
+
 using constants
 using image
 using model
 
-# Movie of V4046Sgr, showing 7 representative channels
 
 global const nchan = 7
 global const vels = linspace(-1.5, 1.5, nchan) # [km/s]
