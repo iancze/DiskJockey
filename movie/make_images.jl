@@ -30,7 +30,7 @@ println("Now in ", pwd())
 
 files = ["radmc3d.inp", "lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
 for file in files
-    src = "../../" * file
+    src = "/n/home07/iczekala/JudithExcalibur/" * file
     dst = scratchdir * file
     cp(src, dst)
 end

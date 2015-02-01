@@ -1,4 +1,6 @@
 # Using ffmpeg, create a movie
+
+# following https://trac.ffmpeg.org/wiki/Create%20a%20video%20slideshow%20from%20images
 using consonance
 
 ints = outdir * "%04d.png"
