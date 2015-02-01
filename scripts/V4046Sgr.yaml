@@ -30,6 +30,7 @@ parameters:
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
 opt_jump: data/V4046Sgr/opt_jump.npy
+jump_scale : 0.3
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/

@@ -48,9 +48,9 @@ mu_DEC = 0.0 # [arcsec]
 # Given a starting parameter, vary it by steps dp to the low bound, then high
 # bound, then back to where we started
 function smooth_vary(start, low, high, dp)
-    ndown1 = iround((start - low)/dp)
-    nup = iround((high - low)/dp)
-    ndown2 = iround((high - start)/dp)
+    ndown1 = iround((start - low)/dp) + 1
+    nup = iround((high - low)/dp) + 1
+    ndown2 = iround((high - start)/dp) + 1
 
     return [linspace(start, low, ndown1)' linspace(low, high, nup)' linspace(high, start, ndown2)']
 end
@@ -82,6 +82,9 @@ for i=1:nframes
 end
 
 println("There are ", nframes, " frames to be generated.")
+println("Inclinations ", incls)
+println("Masses ", masses)
+println("Radiuses ", radiuses)
 
 # Return a normalized instance that is symmetric about 0
 # function scale(data)
