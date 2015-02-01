@@ -242,7 +242,7 @@ function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    dpc = cfg["parameters"]["dpc"] # [pc] distance
+    dpc = cfg["parameters"]["dpc"][1] # [pc] distance
 
     M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
 
