@@ -3,8 +3,8 @@ name: V4046Sgr
 out_base: output/V4046Sgr/
 
 grid:
-  nr: 64
-  ntheta: 32 # if mirror about the equator, total of 64
+  nr: 100
+  ntheta: 50 # if mirror about the equator, total of 64
   nphi: 1
   r_in: 0.5 # [AU] # Inner extent of disk
   r_out: 800 # [AU] # Outer extent of disk
@@ -43,4 +43,4 @@ data_file: data/V4046Sgr/V4046Sgr.hdf5
 npix: 256
 
 # MCMC setup
-samples: 2000
+samples: 4000
