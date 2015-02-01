@@ -31,7 +31,7 @@ println("Now in ", pwd())
 files = ["radmc3d.inp", "lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
 for file in files
     src = homedir * file
-    dst = scratchdir * file
+    dst = imgdir * file
     cp(src, dst)
 end
 
@@ -57,8 +57,8 @@ function make_image(pars, id::Int)
     dst = outdir * @sprintf("image%04d.out", id)
 
     println("Current directory is ", pwd())
-    println("And has files")
-    run(`ls`)
+    println("And has files ", readdir())
+    run(`ls` |> STDOUT)
 
     println("Copying from $src to $dst")
 
