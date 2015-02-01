@@ -53,7 +53,11 @@ function make_image(pars, id::Int)
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
     println("RADMC finished")
 
-    cp("image.out", outdir * @sprintf("image%04d.out", id))
+    src = "image.out"
+    dst = outdir * @sprintf("image%04d.out", id)
+    println("Copying from $src to $dst")
+
+    cp(src, dst)
     println("copied image to outdir")
 
 end
