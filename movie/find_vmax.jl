@@ -8,7 +8,7 @@ using image
 # Load all of the images into memory.
 # Determine which image*.out files are in this directory.
 imgfunc = x -> contains(x, "image") && contains(x, ".out")
-imglist = filter(imgfunc, readdir())
+imglist = filter(imgfunc, readdir(outdir))
 
 nimg = length(imglist)
 
@@ -24,7 +24,7 @@ images = Array(Float64, newshape)
 # Go through each one, read them into an array.
 # Determine the maximum and minimum of this array
 for (i,fname) in enumerate(imglist)
-    im = imread(fname)
+    im = imread(outdir * fname)
     skim = imToSky(im, 73.)
     images[:,:,:,i] = skim.data
 end
