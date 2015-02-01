@@ -30,7 +30,9 @@ println("Now in ", pwd())
 
 files = ["radmc3d.inp", "lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
 for file in files
-    cp("../../" * file, file)
+    src = "../../" * file
+    dst = scratchdir * file
+    cp(src, dst)
 end
 
 using constants
