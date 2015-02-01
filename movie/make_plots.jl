@@ -1,6 +1,21 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+using consonance
 
-#Make the movie!
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
+
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    # "--opt1"
+    # help = "an option with an argument"
+    "--run_index", "-r"
+    help = "Output run index"
+    arg_type = Int
+end
+
+parsed_args = parse_args(ARGS, s)
+run_index = parsed_args["run_index"]
 
 using constants
 using image
@@ -8,14 +23,8 @@ using image
 import PyPlot.plt
 using LaTeXStrings
 
-# Movie of V4046Sgr, showing 7 representative channels
 
-global const nchan = 7
-global const vels = linspace(-1.5, 1.5, nchan) # [km/s]
-# CO 2-1 rest frame
-lam0 = cc/230.538e9 * 1e4 # [microns]
-# convert velocities to wavelengths
-lams = lam0 * (vels/c_kms + 1)
+norm = plt.Normalize(vmin=vmax - 6, vmax=vmax, clip=false)
 
 # Plot the channel maps using sky convention
 function plot_chmaps(img::image.SkyImage, id::Int)
@@ -41,31 +50,39 @@ function plot_chmaps(img::image.SkyImage, id::Int)
         frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
         lframe = log10(frame)
         max = maximum(lframe)
-        ax[col][:imshow](lframe, extent=ext, vmin=max - 6, vmax=max, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
+        ax[col][:imshow](lframe, extent=ext, norm=norm, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
         ax[col][:annotate](@sprintf("%.1f", vels[col]), (0.1, 0.8), xycoords="axes fraction", size=8)
 
     end
 
+    # Annotate the parameters
+    p = pars[id]
+    mass = p.M_star
+    r_c = p.r_c
+    incl = p.incl
+    label = L"$M_\ast$: " * @sprintf("%.2f", mass) * L" $M_\odot$   $r_c$: " * @sprintf("%.0f", r_c) * L" AU   $i$: " * @sprintf("%.0f", incl) * L"${}^\circ$"
+    fig[:text](0.35, 0.1, label)
+
     fig[:subplots_adjust](wspace=0.08, top=0.95, bottom=0.26, left=0.1, right=0.9)
 
-    plt.savefig(@sprintf("%04d.png", id))
-    plt.close(fig)
+    plt.savefig(outdir * @sprintf("%04d.png", id))
+    plt.close("all")
 
 end
 
-# Determine which image*.out files are in this directory.
-imgfunc = x -> contains(x, "image") && contains(x, ".out")
-imglist = filter(imgfunc, readdir())
 
+# How many frames per process?
+start = run_index * nframes_per_proc + 1
 
+ids = Int[i for i=start:(start + nframes_per_proc)]
 
-# Go through each one, read them into an array.
-
-# Determine the maximum and minimum of this array
-
-
-# plot frames
-im = imread(file=fname)
-skim = imToSky(im, pars.dpc)
-
-plot_chmaps(skim, id)
+for id in ids
+    if id <= nframes
+        fname = outdir * @sprintf("image%04d.out", id)
+        im = imread(fname)
+        skim = imToSky(im, 73.)
+        plot_chmaps(skim, id)
+    else
+        break
+    end
+end
