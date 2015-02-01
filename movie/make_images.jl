@@ -55,6 +55,11 @@ function make_image(pars, id::Int)
 
     src = "image.out"
     dst = outdir * @sprintf("image%04d.out", id)
+
+    println("Current directory is ", pwd())
+    println("And has files")
+    run(`ls`)
+
     println("Copying from $src to $dst")
 
     cp(src, dst)
