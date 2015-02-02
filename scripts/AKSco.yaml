@@ -12,6 +12,9 @@ grid:
   r_in: 0.5 # [AU] # Inner extent of disk
   r_out: 300. # [AU] # Outer extent of disk
 
+# Which channels of the dataset to exclude.
+exclude: 17, 18, 43, 44
+
 parameters:
   M_star: [2.40, 0.005] # [M_sun] stellar mass
   r_c: [10.6, 0.05] # [AU] characteristic radius
