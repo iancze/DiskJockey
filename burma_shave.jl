@@ -65,6 +65,7 @@ else
     const global keylist = Int[i for i=1:nchan]
 end
 
+println("keylist is ", keylist)
 
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
