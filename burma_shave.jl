@@ -58,8 +58,13 @@ using visibilities
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
 
-const global keylist = Int[i for i=1:nchan] # which channels of the dset to fit
-# const global keylist = Int[i for i=1:2] # which channels of the dset to fit
+if haskey(config, "exclude")
+    exclude = config["exclude"]
+    const global keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan]) # which channels of the dset to fit
+else
+    const global keylist = Int[i for i=1:nchan]
+end
+
 
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})

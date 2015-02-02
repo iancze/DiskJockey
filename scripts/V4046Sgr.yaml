@@ -9,6 +9,9 @@ grid:
   r_in: 0.5 # [AU] # Inner extent of disk
   r_out: 800 # [AU] # Outer extent of disk
 
+# Which channels of the dataset to exclude.
+exclude: 17, 18, 43, 44
+
 # parameters and starting guess
 # format is parameter : [guess, jump]
 
