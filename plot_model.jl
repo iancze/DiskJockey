@@ -214,7 +214,7 @@ function plot_spectrum(img::image.SkyImage)
 
     ax[:plot](vels, spec[:,2], ls="steps-mid")
     ax[:set_ylabel](L"$f_\nu$ [Jy]")
-    ax[:set_xlabel](L"$v$ [$\textrm{km/s}$]")
+    ax[:set_xlabel](L"$v$ [km/s]")
 
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 

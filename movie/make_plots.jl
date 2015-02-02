@@ -40,8 +40,8 @@ function plot_chmaps(img::image.SkyImage, id::Int)
             ax[col][:xaxis][:set_ticklabels]([])
             ax[col][:yaxis][:set_ticklabels]([])
         else
-            ax[col][:set_xlabel](L"$\Delta \alpha$ ('')")
-            ax[col][:set_ylabel](L"$\Delta \delta$ ('')")
+            ax[col][:set_xlabel](L"$\Delta \alpha \textrm{('')}$")
+            ax[col][:set_ylabel](L"$\Delta \delta \textrm{('')}$")
             ax[col][:tick_params](axis="both", which="major", labelsize=8)
         end
 

@@ -3,8 +3,8 @@ name: V4046Sgr
 out_base: output/V4046Sgr/
 
 grid:
-  nr: 100
-  ntheta: 50 # if mirror about the equator, total of 64
+  nr: 64
+  ntheta: 32 # if mirror about the equator, total of 64
   nphi: 1
   r_in: 0.5 # [AU] # Inner extent of disk
   r_out: 800 # [AU] # Outer extent of disk
@@ -18,11 +18,11 @@ parameters:
   T_10: [115., 0.3] # [K] temperature at 10 AU
   q: [0.63, 0.002] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [0.2, 0.05] # [M_earth] disk mass of CO
+  logM_CO: [0.0, 0.05] # [M_earth] disk mass of CO
   ksi: [0.14, 0.005] # [km/s] microturbulence
   dpc: [73., 0.1] # [pc] distance
   incl: [147., 0.1] # [degrees] inclination
-  PA: [-17., 0.05] # [degrees] position angle
+  PA: [-15., 0.05] # [degrees] position angle
   vel: [-31.18, 0.002] # [km/s]
   mu_RA: [0.2, 0.005] # [arcsec] centroid location
   mu_DEC: [-0.6, 0.005] # [arcsec]
