@@ -213,6 +213,7 @@ function plot_spectrum(img::image.SkyImage)
     vels = c_kms * (img.lams .- lam0)/lam0 # [km/s]
 
     ax[:plot](vels, spec[:,2], ls="steps-mid")
+    # ax[:plot](vels, reverse(spec[:,2]), ls="steps-mid")
     ax[:set_ylabel](L"$f_\nu$ [Jy]")
     ax[:set_xlabel](L"$v$ [km/s]")
 
@@ -225,6 +226,7 @@ end
 fid = h5open(config["data_file"], "r")
 lams = read(fid["lams"]) # [μm]
 close(fid)
+
 
 pp = config["parameters"]
 params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
@@ -253,6 +255,14 @@ shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
 grd = config["grid"]
 grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
+# Comment out afterward
+# nchan = 251
+# global const vels = linspace(-10., 10, nchan) # [km/s]
+# # CO 2-1 rest frame
+# lam0 = cc/230.538e9 * 1e4 # [microns]
+# # convert velocities to wavelengths
+# shift_lams = lam0 * (vels/c_kms + 1)
+
 write_grid("", grid)
 write_model(pars, "", grid)
 write_lambda(shift_lams)
@@ -267,7 +277,7 @@ im = imread()
 
 skim = imToSky(im, pars.dpc)
 
-plot_chmaps(skim)
+# plot_chmaps(skim)
 # plot_chmaps_data(skim)
 
 plot_spectrum(skim)

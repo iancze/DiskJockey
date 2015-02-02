@@ -1,6 +1,6 @@
 module model
 
-export write_grid, write_model, write_lambda, Parameters, Grid
+export write_grid, write_model, write_lambda, write_dust, Parameters, Grid
 
 using constants
 
@@ -166,6 +166,21 @@ function n_CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float
 end
 n_CO(r::Float64, z::Float64, pars::Parameters) = n_CO(r, z, pars.r_c * AU, pars.M_CO * M_earth, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
 
+function rho_dust(r::Float64, z::Float64, pars::Parameters)
+    nCO = n_CO(r, z, pars) # number of CO molecules per cm^3
+
+    # Convert from nCO to nH2
+    nH2 = nCO / 7.e-5 # number density ratio
+
+    # Convert from nH2 (assuming nH2 ~ nGas ) to mGas
+    mGas = constants.m0 * nH2 # [g]
+
+    # Convert from mGas to mDust using Gas/Dust ratio of 100
+    mDust = mGas * 0.01 # [g]
+
+    return mDust
+end
+
 # Ksi is microturbulent broadining width in units of km/s. Output of this function
 # is in cm/s for RADMC (RADMC manual, eqn 7.12)
 function microturbulence(ksi::Float64)
@@ -220,6 +235,27 @@ function write_model(pars::Parameters, basedir::String, grid::Grid)
     close(ftemp)
     close(fmicro)
 
+end
+
+function write_dust(pars::Parameters, basedir::String, grid::Grid)
+    fdens = open(basedir * "dust_density.inp", "w")
+    @printf(fdens, "%d\n", 1) #iformat
+    @printf(fdens, "%d\n", grid.ncells)
+    @printf(fdens, "%d\n", 1) # number of dust species
+
+    for phi in grid.phis
+        for theta in grid.thetas
+            for r in grid.rs
+                #Convert from spherical to cylindrical coordinates
+                z = r * cos(theta)
+                r_cyl = r * sin(theta)
+
+                @printf(fdens, "%.9e\n", rho_dust(r_cyl, z, pars))
+            end
+        end
+    end
+
+    close(fdens)
 end
 
 

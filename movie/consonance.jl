@@ -81,10 +81,10 @@ for i=1:nframes
     end
 end
 
-println("There are ", nframes, " frames to be generated.")
-println("Inclinations ", incls)
-println("Masses ", masses)
-println("Radiuses ", radiuses)
+# println("There are ", nframes, " frames to be generated.")
+# println("Inclinations ", incls)
+# println("Masses ", masses)
+# println("Radiuses ", radiuses)
 
 # Return a normalized instance that is symmetric about 0
 # function scale(data)
