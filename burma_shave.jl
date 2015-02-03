@@ -190,11 +190,14 @@ end
     # FFT the appropriate image channel
     vis_fft = transform(skim)
 
+    # Apply the phase correction here, before we do the interpolation
+    phase_shift!(vis_fft, p.mu_RA, p.mu_DEC)
+
     # Interpolate the `vis_fft` to the same locations as the DataSet
     mvis = ModelVis(dv, vis_fft)
 
     # Apply the phase correction here, since there are fewer data points
-    phase_shift!(mvis, p.mu_RA, p.mu_DEC)
+    # phase_shift!(mvis, p.mu_RA, p.mu_DEC)
 
     # Calculate chi^2 between these two
     return lnprob(dv, mvis)
