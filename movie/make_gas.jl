@@ -32,7 +32,6 @@ files = ["lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
 for file in files
     src = homedir * file
     dst = imgdir * file
-    println("Copying $src to $dst")
     cp(src, dst)
 end
 

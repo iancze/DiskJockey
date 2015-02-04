@@ -55,7 +55,7 @@ function plot_dust(img::image.SkyImage, id::Int)
 
     fig[:subplots_adjust](top=0.95, bottom=0.26, left=0.25, right=0.75)
 
-    plt.savefig(outdir * @sprintf("d%04d.png", id))
+    plt.savefig(outdir * @sprintf("d%04d.png", id), dpi=300)
     plt.close("all")
 
 end

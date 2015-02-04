@@ -11,14 +11,14 @@ using constants
 using model
 
 # For odyssey use
-# homedir = "/n/home07/iczekala/JudithExcalibur/"
-# scratchdir = "/scratch/"
-# outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
+homedir = "/n/home07/iczekala/JudithExcalibur/"
+scratchdir = "/scratch/"
+outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
 
 # For local use
-homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
-scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
-outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+# homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
+# scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+# outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 
 # How many frames per process?
 nframes_per_proc = 50

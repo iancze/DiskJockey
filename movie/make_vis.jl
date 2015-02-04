@@ -24,16 +24,6 @@ using visibilities
 import PyPlot.plt
 using LaTeXStrings
 
-# matplotlib.colors.hsv_to_rgb(hsv)
-
-# Get uu,vv spacings
-# dv = DataVis("../data/V4046Sgr/V4046Sgr.hdf5", 12)
-# # spacings in klambda
-# uu = dv.uu
-# vv = dv.vv
-
-
-
 function scale(data)
     s = maximum(abs(data))
     return norm = plt.Normalize(vmin=-s, vmax=s, clip=false)
@@ -55,38 +45,68 @@ function complex_to_RGB(frame::Matrix{Complex128})
     return RGB
 end
 
+norm = plt.Normalize(vmin=vmax - 6, vmax=vmax, clip=false)
+
 function plot_vis(img::image.SkyImage, id::Int)
 
-    # Show the real and imaginary components
+    fig, ax = plt.subplots(ncols=nchan, nrows=2, figsize=(8, 3.0))
 
-    fig, ax = plt.subplots(ncols=nchan, figsize=(8, 1.6))
-    # Image needs to be flipped along uu dimension
+    ext_im = (img.ra[end], img.ra[1], img.dec[1], img.dec[end])
 
     for col=1:nchan
 
-        # Set all labels but the leftmost to blank
+        # Plot channel map on top row
         if col != 1
-            ax[col][:xaxis][:set_ticklabels]([])
-            ax[col][:yaxis][:set_ticklabels]([])
-            ax[col][:xaxis][:set_ticklabels]([])
-            ax[col][:yaxis][:set_ticklabels]([])
+            ax[1,col][:xaxis][:set_ticklabels]([])
+            ax[1,col][:yaxis][:set_ticklabels]([])
+            ax[1,col][:annotate](@sprintf("%.1f", vels[col]), (0.1, 0.8), xycoords="axes fraction", size=8)
         else
-            ax[col][:set_xlabel](L"uu [k$\lambda$]", size=8)
-            ax[col][:set_ylabel](L"vv [k$\lambda$]", size=8)
-            ax[col][:tick_params](axis="both", which="major", labelsize=8)
-            labels = ax[col][:get_xticklabels]()
+            ax[1,col][:set_xlabel](L"$\Delta \alpha$ ('')", size=8)
+            ax[1,col][:set_ylabel](L"$\Delta \delta$ ('')", size=8)
+            ax[1,col][:tick_params](axis="both", which="major", labelsize=8)
+            ax[1,col][:annotate](@sprintf("%.1f km/s", vels[col]), (0.1, 0.8), xycoords="axes fraction", size=8)
+        end
+
+        #Flip the frame for Sky convention
+        frame = fliplr(img.data[:,:,col])
+        frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
+        lframe = log10(frame)
+        max = maximum(lframe)
+        ax[1,col][:imshow](lframe, extent=ext_im, norm=norm, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
+
+
+
+        # Plot visibilities on bottom
+
+        # Set all labels but the leftmost to blank
+        ax[2,col][:tick_params](axis="both", colors="white")
+        if col != 1
+            ax[2,col][:xaxis][:set_ticklabels]([])
+            ax[2,col][:yaxis][:set_ticklabels]([])
+            ax[2,col][:xaxis][:set_ticklabels]([])
+            ax[2,col][:yaxis][:set_ticklabels]([])
+        else
+            ax[2,col][:set_xlabel](L"uu [k$\lambda$]", size=8)
+            ax[2,col][:set_ylabel](L"vv [k$\lambda$]", size=8)
+            ax[2,col][:tick_params](axis="both", which="major", labelsize=8)
+            labels = ax[2,col][:get_xticklabels]()
             for label in labels
                 label[:set_rotation](40)
+                label[:set_color]("black")
+            end
+            for label in ax[2,col][:get_yticklabels]()
+                label[:set_color]("black")
             end
         end
 
         vis_fft = transform(img, col) # Transform this channel
 
-        # Crop 128 on either side
+        # Crop 128 on either side to show more detail
         ncrop = 64
         ext = (vis_fft.uu[end - ncrop], vis_fft.uu[1 + ncrop], vis_fft.vv[1 + ncrop], vis_fft.vv[end - ncrop])
+        # Vis needs to be flipped along uu dimension
         frame = fliplr(vis_fft.VV)[1 + ncrop:end-ncrop, 1 + ncrop:end-ncrop]
-        ax[col][:imshow](complex_to_RGB(frame), interpolation="none", origin="lower", extent=ext)
+        ax[2,col][:imshow](complex_to_RGB(frame), interpolation="none", origin="lower", extent=ext)
 
     end
 
@@ -98,13 +118,12 @@ function plot_vis(img::image.SkyImage, id::Int)
     label = L"$M_\ast$: " * @sprintf("%.2f", mass) * L" $M_\odot$   $r_c$: " * @sprintf("%.0f", r_c) * L" AU   $i$: " * @sprintf("%.0f", incl) * L"${}^\circ$"
     fig[:text](0.35, 0.1, label)
 
-    fig[:subplots_adjust](wspace=0.08, top=0.95, bottom=0.26, left=0.1, right=0.9)
+    fig[:subplots_adjust](wspace=0.08, hspace=0.53, top=0.95, bottom=0.26, left=0.1, right=0.9)
 
-    plt.savefig(outdir * @sprintf("vis%04d.png", id))
+    plt.savefig(outdir * @sprintf("vis%04d.png", id), dpi=150)
     plt.close("all")
 
 end
-
 
 # How many frames per process?
 start = run_index * nframes_per_proc + 1

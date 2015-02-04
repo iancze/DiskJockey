@@ -65,7 +65,7 @@ function plot_chmaps(img::image.SkyImage, id::Int)
 
     fig[:subplots_adjust](wspace=0.08, top=0.95, bottom=0.26, left=0.1, right=0.9)
 
-    plt.savefig(outdir * @sprintf("g%04d.png", id))
+    plt.savefig(outdir * @sprintf("g%04d.png", id), dpi=150)
     plt.close("all")
 
 end
