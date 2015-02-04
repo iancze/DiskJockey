@@ -19,6 +19,19 @@
   <defs
      id="defs4">
     <marker
+       inkscape:stockid="Arrow2Mend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow2Mend"
+       style="overflow:visible;">
+      <path
+         id="path4047"
+         style="fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round;"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(0.6) rotate(180) translate(0,0)" />
+    </marker>
+    <marker
        inkscape:stockid="Arrow1Lstart"
        orient="auto"
        refY="0.0"
@@ -108,15 +121,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="264.07276"
-     inkscape:cy="209.63422"
+     inkscape:cx="193.49644"
+     inkscape:cy="154.49588"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      inkscape:window-width="1224"
-     inkscape:window-height="797"
-     inkscape:window-x="1345"
-     inkscape:window-y="55"
+     inkscape:window-height="738"
+     inkscape:window-x="50"
+     inkscape:window-y="0"
      inkscape:window-maximized="0">
     <inkscape:grid
        type="xygrid"
@@ -302,8 +315,8 @@
          x="248.75172"
          y="794.17767">i</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:none;marker-start:url(#Arrow1Lstart)"
-       d="m 35,165 c 10.172872,-7.62965 27.989166,-18.871 48.989847,-27.72716 20.286933,-8.55516 43.978783,-11.7856 56.262693,-14.24238"
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart);marker-end:none"
+       d="m 35,165 c 10.172872,-7.62965 27.989166,-18.871 48.989847,-27.72716 20.286933,-8.55516 43.621643,-10.5356 55.905553,-12.99238"
        id="path3021"
        inkscape:connector-curvature="0"
        transform="translate(0,702.36218)"

@@ -2,7 +2,8 @@
 .PHONY : clean
 clean:
 	-rm -rf img*
-	-rm image*.out
+	-rm *.out
+	-rm *.png
 	-rm microturbulence.inp
 	-rm numberdens_co.inp
 	-rm gas_temperature.inp
@@ -14,4 +15,3 @@ clean:
 	-rm radmc3d.out
 	-rm spectrum.out
 	-rm *.mem
-	-rm *.png

@@ -55,28 +55,30 @@ function smooth_vary(start, low, high, dp)
 end
 
 # Create a master parameter list
-# First, adjust in inclination
+# First, adjust in radius
+radiuses = smooth_vary(r_c, 25., 65., 1.)
+nradiuses = length(radiuses)
+
+# then, adjust in inclination
 incls = smooth_vary(incl, 0., 90., 1.)
 nincls = length(incls)
+
 # then, adjust in mass
 masses = smooth_vary(M_star, 1.0, 2.5, 0.05)
 nmasses = length(masses)
 
-radiuses = smooth_vary(r_c, 25., 65., 1.)
-nradiuses = length(radiuses)
-
-nframes = nincls + nmasses + nradiuses
+nframes = nradiuses + nincls + nmasses
 
 # Now create a giant array of Parameters objects
 pars = Array(Parameters, nframes)
 
 for i=1:nframes
-    if i <= nincls
-        pars[i] = Parameters(M_star, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incls[i], PA, vel, mu_RA, mu_DEC)
-    elseif i <= (nincls + nmasses)
-        pars[i] = Parameters(masses[i - nincls], r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    if i <= nradiuses
+        pars[i] = Parameters(M_star, radiuses[i], T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    elseif i <= (nincls + nradiuses)
+        pars[i] = Parameters(M_star, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incls[i - nradiuses], PA, vel, mu_RA, mu_DEC)
     else
-        pars[i] = Parameters(M_star, radiuses[i - (nincls + nmasses)], T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        pars[i] = Parameters(masses[i - (nradiuses + nincls)], r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
     end
 end
 
