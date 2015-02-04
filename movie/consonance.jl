@@ -21,7 +21,7 @@ scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 
 # How many frames per process?
-nframes_per_proc = 4
+nframes_per_proc = 50
 
 global const nchan = 7
 global const vels = linspace(-1.5, 1.5, nchan) # [km/s]
@@ -56,7 +56,7 @@ end
 
 # Create a master parameter list
 # First, adjust in radius
-radiuses = smooth_vary(r_c, 25., 65., 1.)
+radiuses = smooth_vary(r_c, 25., 65., 0.5)
 nradiuses = length(radiuses)
 
 # then, adjust in inclination
@@ -64,7 +64,7 @@ incls = smooth_vary(incl, 0., 90., 1.)
 nincls = length(incls)
 
 # then, adjust in mass
-masses = smooth_vary(M_star, 1.0, 2.5, 0.05)
+masses = smooth_vary(M_star, 1.0, 2.5, 0.02)
 nmasses = length(masses)
 
 nframes = nradiuses + nincls + nmasses
