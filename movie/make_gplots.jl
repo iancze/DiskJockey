@@ -40,8 +40,8 @@ function plot_chmaps(img::image.SkyImage, id::Int)
             ax[col][:xaxis][:set_ticklabels]([])
             ax[col][:yaxis][:set_ticklabels]([])
         else
-            ax[col][:set_xlabel](L"$\Delta \alpha$ ('')")
-            ax[col][:set_ylabel](L"$\Delta \delta$ ('')")
+            ax[col][:set_xlabel](L"$\Delta \alpha$ ('')", size=8)
+            ax[col][:set_ylabel](L"$\Delta \delta$ ('')", size=8)
             ax[col][:tick_params](axis="both", which="major", labelsize=8)
         end
 
@@ -65,7 +65,7 @@ function plot_chmaps(img::image.SkyImage, id::Int)
 
     fig[:subplots_adjust](wspace=0.08, top=0.95, bottom=0.26, left=0.1, right=0.9)
 
-    plt.savefig(outdir * @sprintf("%04d.png", id))
+    plt.savefig(outdir * @sprintf("g%04d.png", id))
     plt.close("all")
 
 end
@@ -78,7 +78,7 @@ ids = Int[i for i=start:(start + nframes_per_proc)]
 
 for id in ids
     if id <= nframes
-        fname = outdir * @sprintf("image%04d.out", id)
+        fname = outdir * @sprintf("gimage%04d.out", id)
         im = imread(fname)
         skim = imToSky(im, 73.)
         plot_chmaps(skim, id)

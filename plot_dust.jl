@@ -72,7 +72,7 @@ write_lambda(shift_lams)
 cp("radmc3d.inp.dust", "radmc3d.inp")
 
 if !parsed_args["norad"]
-    # run(`radmc3d mctherm`) # next command will do this automatically
+    run(`radmc3d mctherm`) # next command will do this automatically
     run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0`)
 end
 

@@ -36,25 +36,7 @@ real = vis[:, :, 0].T
 imag = vis[:, :, 1].T
 weight = vis[:, :, 2].T
 
-# Now, stuff each of these into an HDF5 file.
-fid = h5py.File("../data/V4046Sgr/V4046Sgr.hdf5", "w")
-# fid = h5py.File("data/V4046Sgr_model_read.hdf5", "w")
-
-# Convert the frequencies from Hz to micron.
-fid.create_dataset("lams", (nfreq,), dtype="float64")[:] = cc/freqs*1e4 #[microns]
-
-fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu
-fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv
-
-fid.create_dataset("real", shape, dtype="float64")[:,:] = real
-fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag
-
-fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)
-
-fid.close()
-
-
-
+f.close()
 #Try plotting the locations of the UV points
 #
 import matplotlib.pyplot as plt
@@ -65,13 +47,23 @@ import matplotlib.pyplot as plt
 
 #plt.hist(np.abs(imag[12] * np.sqrt(weight[12])))
 #plt.show()
-fig = plt.figure(figsize=(6,6))
+chan = 12
+
+fig = plt.figure(figsize=(3,3))
 ax = fig.add_subplot(111)
-ax.plot(uu[10], vv[10], ".")
-ax.set_xlabel(r"UU [k$\lambda$]")
-ax.set_ylabel(r"VV [k$\lambda$]")
-ax.set_xlim(max(uu[10]), min(uu[10]))
-#ax.set_ylim(-75, 75)
-fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
+ax.plot(uu[chan], vv[chan], "k.", ms=0.5)
+ax.set_xlabel(r"uu [k$\lambda$]", size=8)
+ax.set_ylabel(r"vv [k$\lambda$]", size=8)
+lim = 400
+ax.set_xlim(lim, -lim)
+ax.set_ylim(-lim, lim)
+
+labels = ax.get_xticklabels()
+for label in labels:
+    label.set_rotation(40)
+ax.tick_params(axis="both", which="major", labelsize=8)
+
+fig.subplots_adjust(left=0.2, right=0.8, bottom=0.2, top=0.8)
 
 plt.savefig("../plots/V4046Sgr/uv_spacings.svg")
+plt.savefig("../plots/V4046Sgr/uv_spacings.png")

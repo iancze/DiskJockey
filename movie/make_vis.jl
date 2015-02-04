@@ -24,52 +24,69 @@ using visibilities
 import PyPlot.plt
 using LaTeXStrings
 
+# matplotlib.colors.hsv_to_rgb(hsv)
+
+# Get uu,vv spacings
+# dv = DataVis("../data/V4046Sgr/V4046Sgr.hdf5", 12)
+# # spacings in klambda
+# uu = dv.uu
+# vv = dv.vv
+
+
+
 function scale(data)
     s = maximum(abs(data))
     return norm = plt.Normalize(vmin=-s, vmax=s, clip=false)
 end
 
+# Given a 2D matrix, determine the appropriate color scaling
+function complex_to_RGB(frame::Matrix{Complex128})
+    ny, nx = size(frame)
+    HSV = Array(Float64, (ny, nx, 3))
+    minv = minimum(abs(frame))
+    maxv = maximum(abs(frame))
+    delta = maxv - minv
+    for j=1:ny
+        for i=1:nx
+            HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, (abs(frame[j, i]) - minv)/delta]
+        end
+    end
+    RGB = PyPlot.matplotlib[:colors][:hsv_to_rgb](HSV)
+    return RGB
+end
 
 function plot_vis(img::image.SkyImage, id::Int)
 
     # Show the real and imaginary components
 
-    fig, ax = plt.subplots(ncols=nchan, nrows=2, figsize=(8, 3.2))
+    fig, ax = plt.subplots(ncols=nchan, figsize=(8, 1.6))
     # Image needs to be flipped along uu dimension
 
     for col=1:nchan
 
         # Set all labels but the leftmost to blank
         if col != 1
-            ax[1,col][:xaxis][:set_ticklabels]([])
-            ax[1,col][:yaxis][:set_ticklabels]([])
-            ax[2,col][:xaxis][:set_ticklabels]([])
-            ax[2,col][:yaxis][:set_ticklabels]([])
+            ax[col][:xaxis][:set_ticklabels]([])
+            ax[col][:yaxis][:set_ticklabels]([])
+            ax[col][:xaxis][:set_ticklabels]([])
+            ax[col][:yaxis][:set_ticklabels]([])
         else
-            ax[1,col][:set_xlabel](L"uu [k$\lambda$]")
-            ax[1,col][:set_ylabel](L"vv [k$\lambda$]")
-            ax[1,col][:tick_params](axis="both", which="major", labelsize=8)
-            ax[2,col][:set_xlabel](L"uu [k$\lambda$]")
-            ax[2,col][:set_ylabel](L"vv [k$\lambda$]")
-            ax[2,col][:tick_params](axis="both", which="major", labelsize=8)
+            ax[col][:set_xlabel](L"uu [k$\lambda$]", size=8)
+            ax[col][:set_ylabel](L"vv [k$\lambda$]", size=8)
+            ax[col][:tick_params](axis="both", which="major", labelsize=8)
+            labels = ax[col][:get_xticklabels]()
+            for label in labels
+                label[:set_rotation](40)
+            end
         end
 
         vis_fft = transform(img, col) # Transform this channel
-        ext = (vis_fft.uu[end], vis_fft.uu[1], vis_fft.vv[1], vis_fft.vv[end])
 
-        frame = fliplr(vis_fft.VV)
-
-
-        ax[1,col][:imshow](real(frame), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(frame)))
-        ax[1][:set_title]("Real FFT")
-        ax[1][:set_xlabel](L"uu [k$\lambda$]")
-        ax[1][:set_ylabel](L"vv [k$\lambda$]")
-
-        ax[2,col][:imshow](imag(frame), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(frame)))
-
-        ax[2][:set_title]("Imag FFT")
-        ax[2][:set_xlabel](L"uu [k$\lambda$]")
-        ax[2][:set_ylabel](L"vv [k$\lambda$]")
+        # Crop 128 on either side
+        ncrop = 64
+        ext = (vis_fft.uu[end - ncrop], vis_fft.uu[1 + ncrop], vis_fft.vv[1 + ncrop], vis_fft.vv[end - ncrop])
+        frame = fliplr(vis_fft.VV)[1 + ncrop:end-ncrop, 1 + ncrop:end-ncrop]
+        ax[col][:imshow](complex_to_RGB(frame), interpolation="none", origin="lower", extent=ext)
 
     end
 
@@ -96,10 +113,10 @@ ids = Int[i for i=start:(start + nframes_per_proc)]
 
 for id in ids
     if id <= nframes
-        fname = outdir * @sprintf("image%04d.out", id)
+        fname = outdir * @sprintf("gimage%04d.out", id)
         im = imread(fname)
         skim = imToSky(im, 73.)
-        plot_chmaps(skim, id)
+        plot_vis(skim, id)
     else
         break
     end

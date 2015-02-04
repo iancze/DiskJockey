@@ -21,10 +21,10 @@ close(fid)
 nchan = length(lams)
 
 # Peak of best-fitting parameters
-M_star = 2.4 # [M_sun] stellar mass
-r_c =  11.11 # [AU] characteristic radius
-T_10 =  86.16 # [K] temperature at 10 AU
-q = 0.53 # temperature gradient exponent
+M_star = 2.42 # [M_sun] stellar mass
+r_c =  11.2 # [AU] characteristic radius
+T_10 =  88.16 # [K] temperature at 10 AU
+q = 0.54 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
 logM_CO = 0.23 # [M_earth] disk mass of CO
 ksi = 0.29 # [km/s] microturbulence
@@ -32,8 +32,10 @@ dpc = 141.0
 incl = 108. # [degrees] inclination
 PA = 141.23
 vel = -26.03 # [km/s]
-mu_RA = 0.057 # [arcsec]
+mu_RA = 0.055 # [arcsec]
 mu_DEC = 0.0489# [arcsec]
+
+const global grid = Grid(64, 32, 0.5, 300, true)
 
 M_CO = 10.^logM_CO
 
@@ -49,9 +51,17 @@ npix = 256 # number of pixels, can alternatively specify x and y separately
 beta = vel/c_kms # relativistic Doppler formula
 shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
 
-write_grid("")
-write_model(pars, "")
+write_grid("", grid)
+write_model(pars, "", grid)
 write_lambda(shift_lams)
+
+files = ["lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
+for file in files
+    cp("../" * file, file)
+end
+
+cp("../radmc3d.inp.gas", "radmc3d.inp")
+
 
 run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
 
@@ -67,10 +77,10 @@ for i=1:nchan
     # FFT the appropriate image channel
     vis_fft = transform(skim, i)
 
+    # Apply the phase correction here, since there are fewer data points
+    phase_shift!(vis_fft, pars.mu_RA, pars.mu_DEC)
     # Interpolate the `vis_fft` to the same locations as the DataSet
     mvis = ModelVis(dvarr[i], vis_fft)
-    # Apply the phase correction here, since there are fewer data points
-    phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
 
     dvis = visibilities.ModelVis2DataVis(mvis)
 

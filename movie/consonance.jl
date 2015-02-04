@@ -11,18 +11,17 @@ using constants
 using model
 
 # For odyssey use
-homedir = "/n/home07/iczekala/JudithExcalibur/"
-scratchdir = "/scratch/"
-outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
+# homedir = "/n/home07/iczekala/JudithExcalibur/"
+# scratchdir = "/scratch/"
+# outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
 
 # For local use
-# homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
-# scratchdir = ""
-# outdir = ""
+homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
+scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 
 # How many frames per process?
-# let's say 10 for now.
-nframes_per_proc = 50
+nframes_per_proc = 4
 
 global const nchan = 7
 global const vels = linspace(-1.5, 1.5, nchan) # [km/s]
@@ -81,7 +80,7 @@ for i=1:nframes
     end
 end
 
-# println("There are ", nframes, " frames to be generated.")
+println("There are ", nframes, " frames to be generated.")
 # println("Inclinations ", incls)
 # println("Masses ", masses)
 # println("Radiuses ", radiuses)
