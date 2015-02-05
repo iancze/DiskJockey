@@ -27,7 +27,7 @@ scratchdir = "/pool/cf/iczekala/scratch/"
 outdir = "/pool/scout0/JudithExcalibur/output/movie/"
 
 # How many frames per process?
-nframes_per_proc = 4
+nframes_per_proc = 50
 
 global const nchan = 7
 global const vels = linspace(-1.5, 1.5, nchan) # [km/s]

@@ -55,7 +55,7 @@ function make_image(pars, id::Int)
     lam0 = cc/230.538e9 * 1e4 # [microns]
 
     run(`radmc3d mctherm`) # next command will do this automatically
-    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0`) # |> DevNull)
+    run(`radmc3d image incl $incl posang $PA npix $npix lambda $lam0` |> DevNull)
 
     src = "image.out"
     dst = outdir * @sprintf("dimage%04d.out", id)
