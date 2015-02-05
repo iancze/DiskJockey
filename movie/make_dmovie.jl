@@ -4,6 +4,6 @@
 using consonance
 
 ins = "scratch/d%04d.png"
-outs = "scratch/dust_out.mp4"
+outs = "dust_out.mp4"
 run(`ffmpeg -framerate 20.0 -i $ins -c:v libx264 -r 30 -pix_fmt yuv420p $outs`)
 # run(`ffmpeg -framerate 3.0 -i %04d.png -c:v libx264 -r 30 -pix_fmt yuv420p out.mp4`)
