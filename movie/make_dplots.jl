@@ -24,8 +24,6 @@ import PyPlot.plt
 using LaTeXStrings
 
 
-
-
 # Plot the channel maps using sky convention
 function plot_dust(img::image.SkyImage, id::Int)
 
