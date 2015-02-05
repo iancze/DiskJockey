@@ -2,6 +2,7 @@ using consonance
 
 push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
 push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
+push!(LOAD_PATH, "/pool/scout0/JudithExcalibur/")
 
 using ArgParse
 
