@@ -35,16 +35,18 @@ function scale(data::Complex128, maxv::Float64, decades::Float64=0.4)
     end
 end
 
+
+global const delta = vmax_v
+
 # Given a 2D matrix, determine the appropriate color scaling
 function complex_to_RGB(frame::Matrix{Complex128})
     ny, nx = size(frame)
     HSV = Array(Float64, (ny, nx, 3))
-    minv = minimum(abs(frame))
-    maxv = maximum(abs(frame))
-    delta = maxv - minv
+    # min, max = extrema(abs(frame))
+    # delta = max - min
     for j=1:ny
         for i=1:nx
-            HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, (abs(frame[j, i]) - minv)/delta]
+            HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, abs(frame[j, i])/delta]
             # HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, scale(frame[j, i], minv, maxv)]
         end
     end
@@ -52,7 +54,7 @@ function complex_to_RGB(frame::Matrix{Complex128})
     return RGB
 end
 
-norm = plt.Normalize(vmin=vmax - 6, vmax=vmax, clip=false)
+global norm = plt.Normalize(vmin=log10(vmax_g) - 6, vmax=log10(vmax_g), clip=false)
 
 function plot_vis(img::image.SkyImage, id::Int)
 
@@ -78,7 +80,6 @@ function plot_vis(img::image.SkyImage, id::Int)
         frame = fliplr(img.data[:,:,col])
         frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
         lframe = log10(frame)
-        max = maximum(lframe)
         ax[1,col][:imshow](lframe, extent=ext_im, norm=norm, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
 
 

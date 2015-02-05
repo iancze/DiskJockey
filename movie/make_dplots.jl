@@ -25,6 +25,8 @@ import PyPlot.plt
 using LaTeXStrings
 
 
+global norm = plt.Normalize(vmin=vmax_d - 10, vmax=vmax_d-2, clip=false)
+
 # Plot the channel maps using sky convention
 function plot_dust(img::image.SkyImage, id::Int)
 
@@ -41,7 +43,7 @@ function plot_dust(img::image.SkyImage, id::Int)
     frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
     lframe = log10(frame)
     vax = maximum(lframe)
-    norm = plt.Normalize(vmin=vmax - 10, vmax=vmax-2, clip=false)
+
     ax[:imshow](lframe, extent=ext, interpolation="none", origin="lower", norm=norm, cmap=plt.get_cmap("Greys"))
 
     # Annotate the parameters

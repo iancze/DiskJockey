@@ -7,6 +7,8 @@ push!(LOAD_PATH, "/pool/scout0/JudithExcalibur/")
 module consonance
 
 export pars, nframes, nframes_per_proc, nchan, vels, lams, vmax, homedir, scratchdir, outdir
+export vmax_d, vmax_g, vmax_v
+
 
 using constants
 using model
@@ -99,7 +101,18 @@ println("There are ", nframes, " frames to be generated.")
 #     return norm = plt.Normalize(vmin=-s, vmax=s, clip=false)
 # end
 
-# used as arg to imshow like: norm = scale(real(vis_analytic)))
-vmax = 11.482251454475813
+# used as arg to imshow
+
+vmin_d = 0.0
+vmax_d = 6.415994694015499e9
+
+vmin_g = 0.0
+vmax_g = 3.0409871804761e11
+
+vmin_v = 0.0
+vmax_v = 45.0193854891226
+
+
+
 
 end # module
