@@ -17,17 +17,17 @@ using model
 # outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
 
 # For local use
-homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
-scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
-outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+# homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
+# scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+# outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 
 # For cfa0 use
-# homedir = "/pool/scout0/JudithExcalibur/"
-# scratchdir = "/pool/cf/iczekala/scratch/"
-# outdir = "/pool/scout0/JudithExcalibur/output/movie/"
+homedir = "/pool/scout0/JudithExcalibur/"
+scratchdir = "/pool/cf/iczekala/scratch/"
+outdir = "/pool/scout0/JudithExcalibur/output/movie/"
 
 # How many frames per process?
-nframes_per_proc = 4
+nframes_per_proc = 50
 
 global const nchan = 7
 global const vels = linspace(-1.5, 1.5, nchan) # [km/s]
