@@ -13,10 +13,10 @@ grid:
   r_out: 300. # [AU] # Outer extent of disk
 
 # Which channels of the dataset to exclude.
-# exclude: [17, 18, 43, 44]
+exclude: [17, 18]
 
 parameters:
-  M_star: [2.40, 0.005] # [M_sun] stellar mass
+  M_star: [2.42, 0.005] # [M_sun] stellar mass
   r_c: [10.6, 0.05] # [AU] characteristic radius
   T_10: [91.5, 0.1] # [K] temperature at 10 AU
   q: [0.54, 0.001] # temperature gradient exponent

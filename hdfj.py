@@ -142,6 +142,21 @@ def plot(flatchain, base=args.outdir, format=".png"):
         plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True)
     figure.savefig(base + "triangle" + format)
 
+def paper_plot(flatchain, base=args.outdir, format=".png"):
+    '''
+    Make a triangle plot
+    '''
+
+    import triangle
+
+    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
+    r"$q$", r"$i_d \quad [{}^\circ]$"]
+    inds = np.array([0, 1, 2, 6])
+    figure = triangle.corner(flatchain[:, inds], quantiles=[0.16, 0.5, 0.84],
+        plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True)
+    figure.savefig(base + "ptriangle" + format)
+
+
 
 def plot_walkers(flatchain, base=args.outdir, start=0, end=-1, labels=None):
     import matplotlib.pyplot as plt
@@ -267,6 +282,10 @@ if args.chain:
 if args.triangle:
     assert len(flatchainList) == 1, "If making Triangle, only specify one flatchain"
     plot(flatchainList[0])
+
+if args.paper:
+    assert len(flatchainList) == 1, "If making Triangle, only specify one flatchain"
+    paper_plot(flatchainList[0])
 
 if args.cov:
     assert len(flatchainList) == 1, "If estimating covariance, only specify one flatchain"
