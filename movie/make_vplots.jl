@@ -27,16 +27,13 @@ using LaTeXStrings
 
 # Log scale the visibility data in intensity
 # minv, maxv are passed in true value
-function scale(data::Complex128, maxv::Float64, decades::Float64=0.4)
-    if log10(abs(data)) > (log10(maxv) - decades)
-        return (log10(abs(data)) - (log10(maxv) - decades)) / decades
+function scale(data::Complex128, maxv::Float64)
+    if abs(data) > maxv
+        return 1.0
     else
-        return 0.0
+        return abs(data)/maxv
     end
 end
-
-
-global const delta = vmax_v
 
 # Given a 2D matrix, determine the appropriate color scaling
 function complex_to_RGB(frame::Matrix{Complex128})
@@ -46,8 +43,8 @@ function complex_to_RGB(frame::Matrix{Complex128})
     # delta = max - min
     for j=1:ny
         for i=1:nx
-            HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, abs(frame[j, i])/delta]
-            # HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, scale(frame[j, i], minv, maxv)]
+            # HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, abs(frame[j, i])/delta]
+            HSV[j,i,:] = Float64[(angle(frame[j, i]) + pi)/(2pi), 1.0, scale(frame[j, i], 0.1 * vmax_v)]
         end
     end
     RGB = PyPlot.matplotlib[:colors][:hsv_to_rgb](HSV)
