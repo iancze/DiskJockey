@@ -25,7 +25,7 @@ import PyPlot.plt
 using LaTeXStrings
 
 
-global norm = plt.Normalize(vmin=vmax_d - 10, vmax=vmax_d-2, clip=false)
+global norm = plt.Normalize(vmin=log10(vmax_d) - 10, vmax=log10(vmax_d)-2, clip=false)
 
 # Plot the channel maps using sky convention
 function plot_dust(img::image.SkyImage, id::Int)
