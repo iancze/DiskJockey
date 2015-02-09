@@ -46,5 +46,18 @@ function fftspace(width::Real, N::Int)
     return xx
 end
 
+# Convert result from MCMC to M_sun
+function logCO_to_M_sun(logCO::Float64)
+    # Convert to Earth mass
+    CO_earth = 10^logCO
+
+    # Convert from Earth to M_sun
+    CO_sun = CO_earth * M_earth/M_sun
+
+    # Convert from CO to H2 mass using the number ratio of C12/H2 = 7e-5
+    mass = CO_sun * 1/(7e-5)
+    return mass
+end
+
 
 end

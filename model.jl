@@ -5,8 +5,8 @@ export write_grid, write_model, write_lambda, write_dust, Parameters, Grid
 using constants
 
 # Write the wavelength sampling file. Only run on setup
-function write_lambda(lams::Array{Float64, 1})
-    fcam = open("camera_wavelength_micron.inp", "w")
+function write_lambda(lams::Array{Float64, 1}, basedir::String)
+    fcam = open(basedir * "camera_wavelength_micron.inp", "w")
     nlam = length(lams)
     @printf(fcam, "%d\n", nlam)
     for lam in lams

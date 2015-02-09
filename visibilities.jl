@@ -63,6 +63,16 @@ function DataVis(fname::ASCIIString, index::Int)
     return DataVis(lam, uu, vv, VV, invsig)
 end
 
+# Read just a subset of channels from the HDF5 file and return an array of DataVis
+function DataVis(fname::ASCIIString, indices::Vector{Int})
+    nchan = length(indices)
+    out = Array(DataVis, nchan)
+    for i=1:nchan
+        out[i] = DataVis(fname, indices[i])
+    end
+    return out
+end
+
 # Import the complex conjugate function from Base, and extend it to work
 # on a DataVis.
 # I think this is necessary because the SMA conventions are different from

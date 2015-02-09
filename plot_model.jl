@@ -265,7 +265,7 @@ grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
 write_grid("", grid)
 write_model(pars, "", grid)
-write_lambda(shift_lams)
+write_lambda(shift_lams, "")
 
 if !parsed_args["norad"]
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)

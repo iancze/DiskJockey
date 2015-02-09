@@ -55,7 +55,8 @@ end
 # back to waiting for more information.
 # initfunc is designed to return the dataset, or any object that gets passed
 # to f, specific to this process
-function brain(pipe::Pipe, key::Int, initfunc::Function, f::Function)
+# Key can be either a single integer, or a list of integers
+function brain(pipe::Pipe, key, initfunc::Function, f::Function)
     id = myid()
     println("Initialized process (worker): $id with key: $key")
 
@@ -90,8 +91,8 @@ end
 # All of the following functions are run ONLY the master process
 
 # Set up nchild child processes and pipes and return an array of the pipes
-# function takes three arguments: the dataset, integer key, and vector of parameters
-function initialize(nchild::Int, keylist::Vector{Int}, initfunc::Function, f::Function)
+# function takes three arguments: the dataset, keylist, and vector of parameters
+function initialize(nchild::Int, keylist::Vector{Any}, initfunc::Function, f::Function)
 
     pipes = Array(Pipe, nchild)
 
