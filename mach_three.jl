@@ -58,12 +58,11 @@ else
     const global keylist = Int[i for i=1:nchan]
 end
 
-println("keylist is ", keylist)
-
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
     println("Removing old directories")
-    for key in keylist
+    for keys in keylist
+        key = keys[1]
         keydir = basedir * "jud$key"
         run(`rm -rf $keydir`)
     end
@@ -83,7 +82,6 @@ chunk_keylist = Array(Any, nchild)
 start_key = 1
 end_key = start_key + (max_keys_per_process - 1)
 for i=1:full_proc
-    println("Choosing from $start_key to $end_key")
     chunk_keylist[i] = keylist[start_key:end_key]
     start_key += max_keys_per_process
     end_key += max_keys_per_process
@@ -93,7 +91,6 @@ end
 end_key -= 1
 # Now fill the partial_proc
 for i=(full_proc+1):nchild
-    println("Choosing from $start_key to $end_key")
     chunk_keylist[i] = keylist[start_key:end_key]
     start_key += (max_keys_per_process - 1)
     end_key += (max_keys_per_process - 1)
@@ -151,7 +148,10 @@ debug("Created logfile.")
     end
 
     # Create a directory where all RADMC files will reside and be driven from
+    # using the first key as the directory index
+    key = keys[1]
     keydir = basedir * "jud$key"
+    println("Creating $keydir")
     mkdir(keydir)
 
     # Copy all relevant configuration scripts to this subdirectory
@@ -199,7 +199,10 @@ end
         lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
     end
 
-    write_lambda(lams, basedir)
+    # key = keys[1]
+    # keydir = basedir * "jud$key/"
+    # println("Writing cameralambda into $keydir")
+    write_lambda(lams, "") # write into current directory
 
     # Run RADMC3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
@@ -312,7 +315,8 @@ function fprob(p::Vector{Float64})
     mt = basedir * "microturbulence.inp"
 
     # Copy new parameter files to all subdirectories
-    for key in keylist
+    for keys in keylist
+        key = keys[1]
         keydir = basedir * "jud$key"
         run(`cp $nd $keydir`)
         run(`cp $gv $keydir`)
