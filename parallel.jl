@@ -92,7 +92,7 @@ end
 
 # Set up nchild child processes and pipes and return an array of the pipes
 # function takes three arguments: the dataset, keylist, and vector of parameters
-function initialize(nchild::Int, keylist::Vector{Any}, initfunc::Function, f::Function)
+function initialize{T}(nchild::Int, keylist::Vector{T}, initfunc::Function, f::Function)
 
     pipes = Array(Pipe, nchild)
 
