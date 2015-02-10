@@ -11,6 +11,12 @@ numberdens_co.inp
 
 log.log
 
+# Movie intermediate files
+movie/*png
+movie/*mp4
+movie/*inp
+io/*inp
+
 # Reference files
 C/
 

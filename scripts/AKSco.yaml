@@ -16,7 +16,7 @@ grid:
 exclude: [17, 18]
 
 parameters:
-  M_star: [2.46, 0.005] # [M_sun] stellar mass
+  M_star: [2.80, 0.005] # [M_sun] stellar mass
   r_c: [15.0, 0.05] # [AU] characteristic radius
   T_10: [94., 0.1] # [K] temperature at 10 AU
   q: [0.54, 0.001] # temperature gradient exponent
@@ -32,7 +32,7 @@ parameters:
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-opt_jump: data/AKSco/opt_jump.npy
+# opt_jump: data/AKSco/opt_jump.npy
 # Factor by which to scale the jumps (ie covariance matrix is multiplied by
 # this *squared*)
 jump_scale : 0.4
@@ -48,4 +48,4 @@ data_file: data/AKSco/AKSco.hdf5
 npix: 256
 
 # MCMC setup
-samples: 5000
+samples: 2000
