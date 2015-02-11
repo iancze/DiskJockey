@@ -142,20 +142,42 @@ def plot(flatchain, base=args.outdir, format=".png"):
         plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True)
     figure.savefig(base + "triangle" + format)
 
-def paper_plot(flatchain, base=args.outdir, format=".png"):
+def paper_plot(flatchain, base=args.outdir, format=".pdf"):
     '''
     Make a triangle plot
     '''
 
+    import matplotlib
+    matplotlib.rc("font", size=8)
+    matplotlib.rc("lines", linewidth=0.5)
+    matplotlib.rc("axes", linewidth=0.8)
+    matplotlib.rc("patch", linewidth=0.7)
+    import matplotlib.pyplot as plt
+    #matplotlib.rc("axes", labelpad=10)
+    from matplotlib.ticker import FormatStrFormatter as FSF
+    from matplotlib.ticker import MaxNLocator
     import triangle
 
-    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
-    r"$q$", r"$i_d \quad [{}^\circ]$"]
-    inds = np.array([0, 1, 2, 6])
-    figure = triangle.corner(flatchain[:, inds], quantiles=[0.16, 0.5, 0.84],
-        plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True)
-    figure.savefig(base + "ptriangle" + format)
+    labels = [r"$M_\ast\enskip [M_\odot]$", r"$i_d \enskip [{}^\circ]$",
+    r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{CO} \enskip [\log M_\oplus]$",
+    r"$\xi$ [km/s]"]
+    inds = np.array([0, 6, 1, 2, 3, 4, 5])
 
+    K = len(labels)
+    fig, axes = plt.subplots(K, K, figsize=(6.5, 6.5))
+
+    figure = triangle.corner(flatchain[:, inds], plot_contours=True,
+    plot_datapoints=False, labels=labels, show_titles=False,
+        fig=fig)
+
+    for ax in axes[:, 0]:
+        ax.yaxis.set_label_coords(-0.5, 0.5)
+    for ax in axes[-1, :]:
+        ax.xaxis.set_label_coords(0.5, -0.5)
+
+    figure.subplots_adjust(left=0.1, right=0.9, top=0.95, bottom=0.15)
+
+    figure.savefig(base + "ptriangle" + format)
 
 
 def plot_walkers(flatchain, base=args.outdir, start=0, end=-1, labels=None):
