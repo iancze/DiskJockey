@@ -17,16 +17,16 @@ exclude: [17, 18]
 
 parameters:
   M_star: [2.80, 0.005] # [M_sun] stellar mass
-  r_c: [12.0, 0.05] # [AU] characteristic radius
-  T_10: [91.5, 0.1] # [K] temperature at 10 AU
-  q: [0.57, 0.001] # temperature gradient exponent
+  r_c: [10.4, 0.05] # [AU] characteristic radius
+  T_10: [84.0, 0.1] # [K] temperature at 10 AU
+  q: [0.54, 0.001] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [0.25, 0.01] # [M_earth] disk mass of CO
-  ksi: [0.21, 0.003] # [km/s] microturbulence
+  logM_CO: [1.0, 0.01] # [M_earth] disk mass of CO
+  ksi: [0.18, 0.003] # [km/s] microturbulence
   dpc: [141.7, 0.1] # [pc] distance
-  incl: [111.4, 0.1] # [degrees] inclination
-  PA: [141.7, 0.05] # [degrees] position angle
-  vel: [-26.06, 0.002] # [km/s]
+  incl: [110., 0.1] # [degrees] inclination
+  PA: [142.0, 0.05] # [degrees] position angle
+  vel: [-26.05, 0.002] # [km/s]
   mu_RA: [0.056, 0.002] # [arcsec] centroid location
   mu_DEC: [0.047, 0.002] # [arcsec]
 
@@ -48,4 +48,4 @@ data_file: data/AKSco/AKSco.hdf5
 npix: 256
 
 # MCMC setup
-samples: 5000
+samples: 7000
