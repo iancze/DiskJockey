@@ -21,12 +21,12 @@ close(fid)
 nchan = length(lams)
 
 # Peak of best-fitting parameters
-M_star = 2.42 # [M_sun] stellar mass
-r_c =  11.2 # [AU] characteristic radius
-T_10 =  88.16 # [K] temperature at 10 AU
-q = 0.54 # temperature gradient exponent
+M_star = 2.80 # [M_sun] stellar mass
+r_c =  10.0 # [AU] characteristic radius
+T_10 =  86.0 # [K] temperature at 10 AU
+q = 0.58 # temperature gradient exponent
 gamma = 1.0 # surface temperature gradient exponent
-logM_CO = 0.23 # [M_earth] disk mass of CO
+logM_CO = 1.0 # [M_earth] disk mass of CO
 ksi = 0.29 # [km/s] microturbulence
 dpc = 141.0
 incl = 108. # [degrees] inclination
