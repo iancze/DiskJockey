@@ -14,7 +14,7 @@
    height="350"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.5 r10040"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="disk.svg">
   <defs
      id="defs4">
@@ -121,7 +121,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="193.49644"
+     inkscape:cx="215.4701"
      inkscape:cy="154.49588"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -147,7 +147,23 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by/3.0/" />
       </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
     </rdf:RDF>
   </metadata>
   <g
@@ -168,7 +184,7 @@
        sodipodi:cy="100"
        sodipodi:rx="10"
        sodipodi:ry="10"
-       d="m 120,100 c 0,5.52285 -4.47715,10 -10,10 -5.52285,0 -10,-4.47715 -10,-10 0,-5.522847 4.47715,-10 10,-10 5.52285,0 10,4.477153 10,10 z"
+       d="m 120,100 a 10,10 0 0 1 -10,10 10,10 0 0 1 -10,-10 10,10 0 0 1 10,-10 10,10 0 0 1 10,10 z"
        transform="matrix(1.448984,0,0,1.448984,28.299146,771.42056)" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1.44898403px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
@@ -206,7 +222,7 @@
        sodipodi:nodetypes="cc" />
     <text
        xml:space="preserve"
-       style="font-size:23.18374443px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LauraJacksonv11;-inkscape-font-specification:LauraJacksonv11"
+       style="font-size:25px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';"
        x="106.95827"
        y="1033.26"
        id="text4848"
@@ -217,7 +233,7 @@
          y="1033.26">x</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:23.18374443px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LauraJacksonv11;-inkscape-font-specification:LauraJacksonv11"
+       style="font-size:25px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';"
        x="404"
        y="924.58624"
        id="text4848-7"
@@ -228,7 +244,7 @@
          y="924.58624">y</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:23.18374443px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LauraJacksonv11;-inkscape-font-specification:LauraJacksonv11"
+       style="font-size:25px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';"
        x="157.67271"
        y="750.70813"
        id="text4848-7-3"
@@ -288,7 +304,7 @@
            sodipodi:cy="49.5"
            sodipodi:rx="1"
            sodipodi:ry="4.5"
-           d="m 243,49.5 c 0,2.485281 -0.44772,4.5 -1,4.5 -0.55228,0 -1,-2.014719 -1,-4.5 0,-2.485281 0.44772,-4.5 1,-4.5 0.55228,0 1,2.014719 1,4.5 z"
+           d="m 243,49.5 a 1,4.5 0 0 1 -1,4.5 1,4.5 0 0 1 -1,-4.5 1,4.5 0 0 1 1,-4.5 1,4.5 0 0 1 1,4.5 z"
            transform="translate(5.4821429,552.89789)" />
       </g>
     </g>
@@ -305,7 +321,7 @@
        sodipodi:nodetypes="cc" />
     <text
        xml:space="preserve"
-       style="font-size:23.18374443px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LauraJacksonv11;-inkscape-font-specification:LauraJacksonv11"
+       style="font-size:25px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';"
        x="248.75172"
        y="794.17767"
        id="text4848-7-3-9"
@@ -323,13 +339,13 @@
        sodipodi:nodetypes="csc" />
     <text
        xml:space="preserve"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LauraJacksonv11;-inkscape-font-specification:LauraJacksonv11"
+       style="font-size:13.75px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';"
        id="text3995"
        sodipodi:linespacing="125%"
        transform="translate(0,-2)"><textPath
          xlink:href="#path3021"
          id="textPath3999"><tspan
-   style="font-size:18px"
+   style="font-size:13.75px;-inkscape-font-specification:'sans-serif, Normal';font-family:sans-serif;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;line-height:125%;"
    id="tspan3997"
    dx="29.999987">rotation</tspan></textPath></text>
     <path
@@ -354,7 +370,7 @@
        sodipodi:nodetypes="cc" />
     <text
        xml:space="preserve"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LauraJacksonv11;-inkscape-font-specification:LauraJacksonv11"
+       style="font-size:12.5px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';"
        x="192.32944"
        y="1011.5123"
        id="text5398"
@@ -363,10 +379,10 @@
          id="tspan5400"
          x="192.32944"
          y="1011.5123"
-         style="font-size:14px">v tangential</tspan></text>
+         style="font-size:12.5px;-inkscape-font-specification:'sans-serif, Normal';font-family:sans-serif;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;line-height:125%;">v tangential</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:LauraJacksonv11;-inkscape-font-specification:LauraJacksonv11"
+       style="font-size:12.50000005px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';"
        x="-477.18616"
        y="870.69208"
        id="text5402"
@@ -376,6 +392,6 @@
          id="tspan5404"
          x="-477.18616"
          y="870.69208"
-         style="font-size:14px">v observer</tspan></text>
+         style="font-size:12.50000005px;-inkscape-font-specification:'sans-serif, Normal';font-family:sans-serif;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;text-anchor:start;text-align:start;writing-mode:lr;line-height:125%;">v observer</tspan></text>
   </g>
 </svg>
