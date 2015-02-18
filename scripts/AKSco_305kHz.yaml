@@ -21,8 +21,8 @@ parameters:
   T_10: [85.0, 0.2] # [K] temperature at 10 AU
   q: [0.52, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [0.2, 0.03] # [M_earth] disk mass of CO
-  ksi: [0.25, 0.003] # [km/s] microturbulence
+  logM_CO: [0.5, 0.03] # [M_earth] disk mass of CO
+  ksi: [0.23, 0.003] # [km/s] microturbulence
   dpc: [141.7, 0.1] # [pc] distance
   incl: [110., 0.1] # [degrees] inclination
   PA: [142.0, 0.05] # [degrees] position angle
@@ -48,4 +48,4 @@ data_file: data/AKSco/AKSco_305kHz.hdf5
 npix: 256
 
 # MCMC setup
-samples: 100
+samples: 2000
