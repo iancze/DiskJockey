@@ -3,7 +3,14 @@ import numpy as np
 
 cc = 2.99792458e10 # [cm s^-1]
 
-data = np.load("../data/AKSco/AKSco.vis.npz")
+# Original 50 channel dataset
+# data = np.load("../data/AKSco/AKSco.vis.npz")
+
+# Original dataset with 82 channels
+data = np.load("../data/AKSco/AKSco.12CO.305kHz.vis.npz")
+
+# Finer dataset with 210 channels
+# data = np.load("../data/AKSco/AKSco.12CO.122kHz.vis.npz")
 
 # This file has categories
 # ['Re', 'Wt', 'u', 'Im', 'v']
@@ -19,10 +26,31 @@ data = np.load("../data/AKSco/AKSco.vis.npz")
 # There are 50 channels
 nchan, nvis = data["Re"].shape
 
-# The index 0 channel has a frequency of 230.550055 GHz.
+#####################################
+# # For AKSco.vis.npz
+# # The index 0 channel has a frequency of 230.550055 GHz.
+# # Each channel has a width of 305.176 kHz
+# nu0 = 230.550055e9 # [Hz]
+# dnu = 305.176e3 # [Hz]
+#####################################
+
+#####################################
+# For AKSco.12CO.305kHz.vis.npz
+# The index 0 channel has a frequency of 230.546088 GHz.
 # Each channel has a width of 305.176 kHz
-nu0 = 230.550055e9 # [Hz]
+nu0 = 230.546088e9 # [Hz]
 dnu = 305.176e3 # [Hz]
+#####################################
+
+#####################################
+# # For AKSco.12CO.122kHz.vis.npz
+# # The index 0 channel has a frequnecy of 230.545996 GHz
+# nu0 = 230.545996e9 # [Hz]
+# dnu = 122.070e3 # [Hz]
+#####################################
+
+
+
 freqs = nu0 + np.arange(nchan) * dnu # [Hz]
 lams = cc/freqs * 1e4 # [microns]
 
@@ -34,6 +62,33 @@ lams = cc/freqs * 1e4 # [microns]
 # convert these to kilo-lambda
 uu = 1e-3 * (np.tile(data["u"] * 1e6, (nchan, 1)).T / lams).T
 vv = 1e-3 * (np.tile(data["v"] * 1e6, (nchan, 1)).T / lams).T
+
+# uu, vv are now (nchan, nvis) shape arrays
+shape = uu.shape
+
+# Convert these to (nchan, nvis) arrays
+real = data["Re"]
+imag = data["Im"]
+weight = data["Wt"]
+
+# Now, stuff each of these into an HDF5 file.
+# fid = h5py.File("../data/AKSco/AKSco.hdf5", "w")
+fid = h5py.File("../data/AKSco/AKSco_305kHz.hdf5", "w")
+# fid = h5py.File("../data/AKSco/AKSco_122kHz.hdf5", "w")
+
+
+#Currently, everything is stored in decreasing wavelength order, lets flip this.
+fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams[::-1]
+
+fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu[::-1, :]
+fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv[::-1, :]
+
+fid.create_dataset("real", shape, dtype="float64")[:,:] = real[::-1, :]
+fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag[::-1, :]
+
+fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)[::-1, :]
+
+fid.close()
 
 # Plot the UV samples for a given channel
 import matplotlib.pyplot as plt
@@ -48,27 +103,3 @@ ax.set_xlim(max(uu[25]), min(uu[25]))
 fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
 
 plt.savefig("../plots/uv_spacings_ALMA.png")
-
-# uu, vv are now (nchan, nvis) shape arrays
-shape = uu.shape
-
-# Convert these to (nchan, nvis) arrays
-real = data["Re"]
-imag = data["Im"]
-weight = data["Wt"]
-
-# Now, stuff each of these into an HDF5 file.
-fid = h5py.File("../data/AKSco/AKSco.hdf5", "w")
-
-#Currently, everything is stored in decreasing wavelength order, lets flip this.
-fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams[::-1]
-
-fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu[::-1, :]
-fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv[::-1, :]
-
-fid.create_dataset("real", shape, dtype="float64")[:,:] = real[::-1, :]
-fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag[::-1, :]
-
-fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)[::-1, :]
-
-fid.close()
