@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, fftspace
+export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, fftspace, MCO
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -47,7 +47,7 @@ function fftspace(width::Real, N::Int)
 end
 
 # Convert result from MCMC to M_sun
-function logCO_to_M_sun(logCO::Float64)
+function MCO(logCO::Float64)
     # Convert to Earth mass
     CO_earth = 10^logCO
 
