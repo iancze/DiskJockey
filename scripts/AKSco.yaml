@@ -17,11 +17,11 @@ exclude: [17, 18]
 
 parameters:
   M_star: [2.80, 0.005] # [M_sun] stellar mass
-  r_c: [7.5, 0.1] # [AU] characteristic radius
+  r_c: [6.4, 0.1] # [AU] characteristic radius
   T_10: [72.0, 0.2] # [K] temperature at 10 AU
   q: [0.52, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [3.2, 0.03] # [M_earth] disk mass of CO
+  logM_CO: [4.0, 0.03] # [M_earth] disk mass of CO
   ksi: [0.19, 0.003] # [km/s] microturbulence
   dpc: [141.7, 0.1] # [pc] distance
   incl: [110., 0.1] # [degrees] inclination
