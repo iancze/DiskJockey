@@ -268,8 +268,8 @@ clear_malloc_data()
 f(data, keys, pars)
 
 
-# @profile f(dvarr, keys, pars)
-# Profile.print()
+@profile f(data, keys, pars)
+Profile.print()
 
 
 println("f Timing")

@@ -13,7 +13,7 @@ grid:
   r_out: 300. # [AU] # Outer extent of disk
 
 # Which channels of the dataset to exclude.
-exclude: [35, 36, 37, 38]
+# exclude: [35, 36, 37, 38]
 
 parameters:
   M_star: [2.47, 0.005] # [M_sun] stellar mass
@@ -43,7 +43,7 @@ base_dir: /pool/cf/iczekala/scratch/
 # base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
-data_file: data/AKSco/AKSco_305kHz.hdf5
+data_file: data/AKSco/AKSco_305kHz_updated.hdf5
 
 # Image setup
 npix: 256

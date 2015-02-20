@@ -274,7 +274,9 @@ function fillModelVis(vis::RawModelVis)
     return FullModelVis(vis.lam, uu, vv, vcat(top, bottom))
 end
 
-# Return a closure that is used to interpolate the visibilities.
+# Return a function that is used to interpolate the visibilities, in the
+# spirit of interpolate_uv but *much* faster.
+# Closures save time and money!
 function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64})
 
     nvis = length(dvis.VV)
@@ -350,7 +352,6 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
 
     function interpolate(data::DataVis, fmvis::FullModelVis)
         # Assert that we calculated the same UU and VV spacings, otherwise we did something wrong!
-
         @test_approx_eq uu fmvis.uu
         @test_approx_eq vv fmvis.vv
 

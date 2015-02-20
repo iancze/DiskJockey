@@ -7,7 +7,10 @@ cc = 2.99792458e10 # [cm s^-1]
 # data = np.load("../data/AKSco/AKSco.vis.npz")
 
 # Original dataset with 82 channels
-data = np.load("../data/AKSco/AKSco.12CO.305kHz.vis.npz")
+# data = np.load("../data/AKSco/AKSco.12CO.305kHz.vis.npz")
+
+# Recalibrated original dataset
+data = np.load("../data/AKSco/AKSco.12CO.305kHz.updated.vis.npz")
 
 # Finer dataset with 210 channels
 # data = np.load("../data/AKSco/AKSco.12CO.122kHz.vis.npz")
@@ -73,7 +76,8 @@ weight = data["Wt"]
 
 # Now, stuff each of these into an HDF5 file.
 # fid = h5py.File("../data/AKSco/AKSco.hdf5", "w")
-fid = h5py.File("../data/AKSco/AKSco_305kHz.hdf5", "w")
+# fid = h5py.File("../data/AKSco/AKSco_305kHz.hdf5", "w")
+fid = h5py.File("../data/AKSco/AKSco_305kHz_updated.hdf5", "w")
 # fid = h5py.File("../data/AKSco/AKSco_122kHz.hdf5", "w")
 
 
