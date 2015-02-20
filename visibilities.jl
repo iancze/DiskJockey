@@ -10,9 +10,11 @@ using constants
 import Base.conj! # extend this later
 
 export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis
-export interpolate_uv
+export plan_interpolate, interpolate_uv
 export transform, rfftfreq, fftfreq, phase_shift!
 export lnprob
+
+using Base.Test
 
 # Stores the data visibilities for a single channel
 type DataVis
@@ -159,7 +161,7 @@ function ModelVis2DataVis(mvis::ModelVis)
 end
 
 function lnprob(dvis::DataVis, mvis::ModelVis)
-    @assert dvis == mvis.dvis # Using the wrong ModelVis, otherwise!
+    @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
 
     return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
@@ -239,8 +241,9 @@ function transform(img::SkyImage, index::Int=1)
 end
 
 
-# This function is designed to copy the partial arrays in RawModelVis into a full image for easy plotting
-# This means that the u axis can remain the same but we'll need to make the complex conjugate of the v axis.
+# This function is designed to copy the partial arrays in RawModelVis into a
+# full image for easy plotting. This means that the u axis can remain the same
+# but we'll need to make the complex conjugate of the v axis.
 function fillModelVis(vis::RawModelVis)
 
     # The full image will stretch from -(n/2 - 1) to (n/2 -1) and
@@ -269,6 +272,111 @@ function fillModelVis(vis::RawModelVis)
     vv = vcat(vv_top, vv_bottom)
 
     return FullModelVis(vis.lam, uu, vv, vcat(top, bottom))
+end
+
+# Return a closure that is used to interpolate the visibilities.
+function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64})
+
+    nvis = length(dvis.VV)
+    uinds = Array(UnitRange{Int64}, nvis)
+    vinds = Array(UnitRange{Int64}, nvis)
+    uws = Array(Float64, (6, nvis)) #stored along columns
+    vws = Array(Float64, (6, nvis))
+
+    for i=1:nvis
+        u = dvis.uu[i]
+        v = dvis.vv[i]
+        iu0 = indmin(abs(u - uu))
+        iv0 = indmin(abs(v - vv))
+
+        # now find the relative distance to this nearest grid point (not absolute)
+        u0 = u - uu[iu0]
+        v0 = v - vv[iv0]
+
+        # determine the uu and vv distance for 3 grid points (could be later taken out)
+        du = abs(uu[4] - uu[1])
+        dv = abs(vv[4] - vv[1])
+
+        # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels
+        # (3 on either side)
+
+        # Are u0 and v0 to the left or the right of the index?
+        # we want to index three to the left, three to the right
+
+        # First check that we are still in bounds of the array
+        # Check to make sure that at least three grid points exist in all directions
+        lenu = length(uu)
+        lenv = length(vv)
+        @assert iu0 >= 4
+        @assert iv0 >= 4
+        @assert lenu - iu0 >= 4
+        @assert lenv - iv0 >= 4
+
+        if u0 >= 0.0
+            # To the right of the index
+            uind = iu0-2:iu0+3
+        else
+            # To the left of the index
+            uind = iu0-3:iu0+2
+        end
+
+        if v0 >= 0.0
+            # To the right of the index
+            vind = iv0-2:iv0+3
+        else
+            # To the left of the index
+            vind = iv0-3:iv0+2
+        end
+
+        # Store these slices so we can later index into the visibility array
+        uinds[i] = uind
+        vinds[i] = vind
+
+        # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
+        etau = (uu[uind] .- u)/du
+        etav = (vv[vind] .- v)/dv
+
+        uw = gcffun(etau)
+        vw = gcffun(etav)
+
+        # 4. Normalization such that it has an area of 1. Divide by w later.
+        uw = uw/sum(uw)
+        vw = vw/sum(vw)
+
+        uws[:,i] = uw
+        vws[:,i] = vw
+    end
+
+
+    function interpolate(data::DataVis, fmvis::FullModelVis)
+        # Assert that we calculated the same UU and VV spacings, otherwise we did something wrong!
+
+        @test_approx_eq uu fmvis.uu
+        @test_approx_eq vv fmvis.vv
+
+        # output array
+        Vmodel = Array(Complex128, nvis)
+
+        for i=1:nvis
+
+            Vdata = fmvis.VV[vinds[i], uinds[i]] # Array is packed like the image
+
+            # 5. Loop over all 36 grid indices and sum to find the interpolation.
+            cum::Complex128 = 0.0 + 0.0im
+            for k=1:6
+                for l=1:6
+                    cum += uws[k,i] * vws[l,i] * Vdata[l,k] # Array is packed like the image
+                end
+            end
+
+            Vmodel[i] = cum
+
+        end
+
+        return ModelVis(data, Vmodel)
+    end
+
+    return interpolate
 end
 
 # called ModGrid in gridding.c (KR code) and in Model.for (MIRIAD)
@@ -328,8 +436,8 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
 
     # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
     # TODO: Explore using something other than alpha=1.0
-    uw = gcffun(etau, 1.0)
-    vw = gcffun(etav, 1.0)
+    uw = gcffun(etau)
+    vw = gcffun(etav)
 
     # 4. Normalization such that it has an area of 1. Divide by w later.
     w = sum(uw) * sum(vw)

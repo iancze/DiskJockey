@@ -167,12 +167,31 @@ debug("Created logfile.")
     # where it will drive its own independent RADMC3D process
     cd(keydir)
 
+    # For each channel, also calculate the interpolation closures
+    npix = cfg["npix"]
+    pixsize = cfg["pixsize"] # [cm]
+    pix_AU = pixsize/AU # [AU]
+
+    dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
+
+    uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+    vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+
+    int_arr = Array(Function, length(keys))
+    for (i, dset) in enumerate(dvarr)
+        int_arr[i] = plan_interpolate(dset, uu, vv)
+    end
+
+
     # return the array of datasets
-    return dvarr
+    return (dvarr, int_arr)
+
 end
 
 # This is the likelihood function called by each individual process
-@everywhere function f(dvarr::Vector{DataVis}, keys::Vector{Int}, p::Parameters)
+@everywhere function f(data, keys::Vector{Int}, p::Parameters)
+
+    dvarr, int_arr = data
 
     nkeys = length(keys)
 
@@ -215,7 +234,7 @@ end
 
     # Apply the gridding correction function before doing the FFT
     # shifts necessary as if the image were already offset
-    corrfun!(skim, 1.0, p.mu_RA, p.mu_DEC) # alpha = 1.0
+    corrfun!(skim, p.mu_RA, p.mu_DEC) # alpha = 1.0
 
     lnprobs = Array(Float64, nkeys)
     # Do the Fourier domain stuff per channel
@@ -228,7 +247,7 @@ end
         phase_shift!(vis_fft, p.mu_RA, p.mu_DEC)
 
         # Interpolate the `vis_fft` to the same locations as the DataSet
-        mvis = ModelVis(dv, vis_fft)
+        mvis = int_arr[i](dv, vis_fft)
 
         # Calculate chi^2 between these two
         lnprobs[i] = lnprob(dv, mvis)

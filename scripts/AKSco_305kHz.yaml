@@ -38,14 +38,16 @@ parameters:
 jump_scale : 0.4
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-base_dir: /scratch/
-# base_dir: /pool/cf/iczekala/scratch/
+# base_dir: /scratch/
+base_dir: /pool/cf/iczekala/scratch/
+# base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
 data_file: data/AKSco/AKSco_305kHz.hdf5
 
 # Image setup
 npix: 256
+pixsize : 38568201867193.242 # [cm]
 
 # MCMC setup
-samples: 2000
+samples: 10

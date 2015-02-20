@@ -8,8 +8,39 @@ import Base.Math.@horner
 
 export spheroid, corrfun, corrfun!, gcffun
 
-# TODO: This whole thing may be faster if we break it up into spheroid_0, spheroid_05,
-# spheroid_1, spheroid_1_5 and spheroid_2. But it also may not be necessary.
+# This function assumes alpha = 1.0, m=6
+# built for speed
+function spheroid(eta::Float64)
+
+    # Since the function is symmetric, overwrite eta
+    eta = abs(eta)
+
+    if eta <= 0.75
+        nn = eta^2 - 0.75^2
+
+        return @horner(nn, 8.203343E-2, -3.644705E-1, 6.278660E-1, -5.335581E-1, 2.312756E-1)/
+            @horner(nn, 1., 8.212018E-1, 2.078043E-1)
+
+    elseif eta <= 1.0
+        nn = eta^2 - 1.0
+
+        return @horner(nn, 4.028559E-3, -3.697768E-2, 1.021332E-1, -1.201436E-1, 6.412774E-2)/
+            @horner(nn, 1., 9.599102E-1, 2.918724E-1)
+
+    elseif eta <= 1.0 + 1e-7
+        # case to allow some floating point error
+        return 0.0
+
+    else
+        # Now you're really outside of the bounds
+        println("The spheroid is only defined on the domain -1.0 <= eta <= 1.0. (modulo machine precision.)")
+        throw(DomainError())
+    end
+end
+
+# Make this function available to call with a vector of etas as well
+spheroid(etas::Vector{Float64}) = Float64[spheroid(eta) for eta in etas]
+
 
 # Assumes we are using m = 6.
 # Allows arguments for eta < 1.0 + 1e-7, but returns 0.0 (ie, spheroid window truncated)
@@ -92,13 +123,12 @@ function spheroid(eta::Float64, alpha::Float64)
     end
 end
 
-# Make this function available to call with a vector of etas as well
-spheroid(etas::Vector{Float64}, alpha::Float64) = Float64[spheroid(eta, alpha) for eta in etas]
 
-#TODO: available with a Matrix{Float64} as well, for corrfun.
-
-# These type parameterizations for `corrfun` and `gcffun` mean that we can pass them either individual
-# floating point numbers or vectors of Float64.
+# These type parameterizations for `corrfun` and `gcffun` mean that we can pass
+# them either individual floating point numbers or vectors of Float64.
+function corrfun{T}(eta::T)
+    return spheroid(eta)
+end
 
 # The gridding *correction* function, used to pre-divide the image to correct for the effect
 # of the `gcffun`. This function is also the Fourier transform of `gcffun`.
@@ -107,7 +137,7 @@ function corrfun{T}(eta::T, alpha::Float64)
 end
 
 # Apply the correction function to the image.
-function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
+function corrfun!(img::SkyImage, mu_RA, mu_DEC)
     ny, nx, nlam = size(img.data)
 
     # The size of one half-of the image.
@@ -130,7 +160,7 @@ function corrfun!(img::SkyImage, alpha::Float64, mu_RA, mu_DEC)
                     # bounds, so set this emission to 0.0
                     img.data[j, i, k] = 0.0
                 else
-                    img.data[j, i, k] = img.data[j, i, k] / (corrfun(etax, alpha) * corrfun(etay, alpha))
+                    img.data[j, i, k] = img.data[j, i, k] / (corrfun(etax) * corrfun(etay))
                 end
             end
         end
@@ -139,10 +169,14 @@ end
 
 # The gridding *convolution* function, used to do the convolution and interpolation of the visibilities in
 # the Fourier domain. This is also the Fourier transform of `corrfun`.
+function gcffun{T}(eta::T)
+    return abs(1 - eta.^2) .* spheroid(eta)
+end
+
+
 function gcffun{T}(eta::T, alpha::Float64)
     return abs(1 - eta.^2).^alpha .* spheroid(eta, alpha)
 end
-
 
 
 end #Module
