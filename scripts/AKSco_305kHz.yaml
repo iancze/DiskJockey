@@ -50,4 +50,4 @@ npix: 256
 pixsize : 38568201867193.242 # [cm]
 
 # MCMC setup
-samples: 10
+samples: 300
