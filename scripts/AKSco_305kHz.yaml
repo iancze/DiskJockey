@@ -17,16 +17,16 @@ grid:
 
 parameters:
   M_star: [2.69, 0.002] # [M_sun] stellar mass
-  r_c: [11.64, 0.03] # [AU] characteristic radius
-  T_10: [36.9, 0.05] # [K] temperature at 10 AU
+  r_c: [11.64, 0.02] # [AU] characteristic radius
+  T_10: [36.9, 0.02] # [K] temperature at 10 AU
   q: [0.24, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
   logM_CO: [0.02, 0.03] # [M_earth] disk mass of CO
   ksi: [0.19, 0.003] # [km/s] microturbulence
   dpc: [141.7, 0.1] # [pc] distance
-  incl: [108.6, 0.1] # [degrees] inclination
+  incl: [108.6, 0.03] # [degrees] inclination
   PA: [141.8, 0.05] # [degrees] position angle
-  vel: [-26.075, 0.002] # [km/s]
+  vel: [-26.075, 0.001] # [km/s]
   mu_RA: [0.056, 0.002] # [arcsec] centroid location
   mu_DEC: [0.047, 0.002] # [arcsec]
 
