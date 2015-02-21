@@ -131,7 +131,6 @@ function plot_chmaps(img::image.SkyImage)
                 # ax[row, col][:plot](img.ra[end - ix], img.dec[iy], "k.")
                 # ax[row, col][:plot](ix, iy, "k.")
 
-
                 ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
             end
 

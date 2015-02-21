@@ -349,7 +349,7 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         vws[:,i] = vw
     end
 
-
+    # This function inherits all of the variables just defined in this scope (uu, vv)
     function interpolate(data::DataVis, fmvis::FullModelVis)
         # Assert that we calculated the same UU and VV spacings, otherwise we did something wrong!
         @test_approx_eq uu fmvis.uu
