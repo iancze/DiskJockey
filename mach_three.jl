@@ -13,6 +13,9 @@ s = ArgParseSettings()
     "--chain"
     help = "Write the chain to ~/web/ directory?"
     action = :store_true
+    "--opt"
+    help = "Use NLOpt instead of LittleMC"
+    action = :store_true
     "config"
     help = "a YAML configuration file"
     required = true
@@ -376,61 +379,69 @@ for i=1:nparam
     starting_param[i], jumps[i] = pp[params[i]]
 end
 
-jump_param = PDiagMat(jumps.^2)
-jump_param = full(jump_param)
 
-# Perturb the starting parameters
-proposal = MvNormal(jump_param)
-starting_param = starting_param .+ 7. * rand(proposal)
+if parsed_args["opt"]
 
-# If we've provided an empirically measured covariance matrix for the MCMC
-# jump proposals, use that instead of our jumps without covariance
-if haskey(config, "opt_jump")
-    using NPZ
-    jump_param = config["jump_scale"]^2 * npzread(config["opt_jump"])
-end
+    # Now try optimizing the function using NLopt
+    using NLopt
 
+    nparam = length(starting_param)
+    opt = Opt(:LN_COBYLA, nparam)
 
-# Now try optimizing the function using NLopt
-# using NLopt
-#
-# nparam = length(starting_param)
-# opt = Opt(:LN_COBYLA, nparam)
-#
-# max_objective!(opt, fgrad)
-# ftol_abs!(opt, 0.05) # the precision we want lnprob to
-#
-# lower_bounds!(opt, lower)
-# upper_bounds!(opt, upper)
-#
-# (optf,optx,ret) = optimize(opt, starting_param)
-# println(optf, " ", optx, " ", ret)
+    max_objective!(opt, fgrad)
+    ftol_abs!(opt, 0.05) # the precision we want lnprob to
 
-using LittleMC
+    lower_bounds!(opt, lower)
+    upper_bounds!(opt, upper)
 
-# Code to hook into the chain.js plot generator
-if parsed_args["chain"]
-    csv = open("/n/home07/iczekala/web/chain.js/mc.csv", "w")
+    (optf,optx,ret) = optimize(opt, starting_param)
+    println(optf, " ", optx, " ", ret)
+
 else
-    csv = open(outdir * "mc.csv", "w")
+
+    # Use LittleMC to do the optimization
+
+    jump_param = PDiagMat(jumps.^2)
+    jump_param = full(jump_param)
+
+    # Perturb the starting parameters
+    proposal = MvNormal(jump_param)
+    starting_param = starting_param .+ 7. * rand(proposal)
+
+    # If we've provided an empirically measured covariance matrix for the MCMC
+    # jump proposals, use that instead of our jumps without covariance
+    if haskey(config, "opt_jump")
+        using NPZ
+        jump_param = config["jump_scale"]^2 * npzread(config["opt_jump"])
+    end
+
+    using LittleMC
+
+    # Code to hook into the chain.js plot generator
+    if parsed_args["chain"]
+        csv = open("/n/home07/iczekala/web/chain.js/mc.csv", "w")
+    else
+        csv = open(outdir * "mc.csv", "w")
+    end
+
+    #Write the parameter header
+    writecsv(csv, params')
+
+    mc = MC(fp, config["samples"], starting_param, jump_param, csv)
+    debug("Initialized MCMC")
+
+    start(mc)
+
+    println(mean(mc.samples, 2))
+    println(std(mc.samples, 2))
+
+    runstats(mc)
+
+    debug("Acceptance: ", LittleMC.acceptance(mc))
+
+    LittleMC.write(mc, outdir * "mc.hdf5")
+    close(csv)
+
 end
-
-#Write the parameter header
-writecsv(csv, params')
-
-mc = MC(fp, config["samples"], starting_param, jump_param, csv)
-debug("Initialized MCMC")
-
-start(mc)
-
-println(mean(mc.samples, 2))
-println(std(mc.samples, 2))
-
-runstats(mc)
-
-debug("Acceptance: ", LittleMC.acceptance(mc))
-
-LittleMC.write(mc, outdir * "mc.hdf5")
-close(csv)
 
 quit!(pipes)
