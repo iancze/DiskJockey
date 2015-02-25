@@ -391,6 +391,9 @@ if parsed_args["opt"]
     max_objective!(opt, fgrad)
     ftol_abs!(opt, 0.05) # the precision we want lnprob to
 
+    lower = Float64[1.0, 1.0, 1.0, 0.01, -5.0, 0.01, 0.0, 0.0, -30., -1.0, -1.0]
+    upper = Float64[3.5, 100., 100., 1.0, 1.0, 1.0, 180., 360., 30., 1.0, 1.0]
+
     lower_bounds!(opt, lower)
     upper_bounds!(opt, upper)
 
