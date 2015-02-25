@@ -162,7 +162,6 @@ end
 
 function lnprob(dvis::DataVis, mvis::ModelVis)
     @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
-
     return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 

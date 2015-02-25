@@ -10,7 +10,10 @@ cc = 2.99792458e10 # [cm s^-1]
 # data = np.load("../data/AKSco/AKSco.12CO.305kHz.vis.npz")
 
 # Recalibrated original dataset
-data = np.load("../data/AKSco/AKSco.12CO.305kHz.updated.vis.npz")
+# data = np.load("../data/AKSco/AKSco.12CO.305kHz.updated.vis.npz")
+
+# Feb 24th dataset
+data = np.load("../data/AKSco/AKSco.12CO.305kHz.2015Feb24.vis.npz")
 
 # Finer dataset with 210 channels
 # data = np.load("../data/AKSco/AKSco.12CO.122kHz.vis.npz")
@@ -77,8 +80,10 @@ weight = data["Wt"]
 # Now, stuff each of these into an HDF5 file.
 # fid = h5py.File("../data/AKSco/AKSco.hdf5", "w")
 # fid = h5py.File("../data/AKSco/AKSco_305kHz.hdf5", "w")
-fid = h5py.File("../data/AKSco/AKSco_305kHz_updated.hdf5", "w")
+# fid = h5py.File("../data/AKSco/AKSco_305kHz_updated.hdf5", "w")
 # fid = h5py.File("../data/AKSco/AKSco_122kHz.hdf5", "w")
+
+fid = h5py.File("../data/AKSco/AKSco_305kHz_2015-2-24.hdf5", "w")
 
 
 #Currently, everything is stored in decreasing wavelength order, lets flip this.

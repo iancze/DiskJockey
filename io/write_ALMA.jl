@@ -14,32 +14,46 @@ using HDF5
 using visibilities
 using gridding
 
-# read the wavelengths for all 25 channels
-fid = h5open("../data/AKSco/AKSco.hdf5", "r")
+using ArgParse
+
+s = ArgParseSettings()
+@add_arg_table s begin
+    "--run_index", "-r"
+    help = "Output run index"
+    arg_type = Int
+    "config"
+    help = "a YAML configuration file"
+    required = true
+end
+
+parsed_args = parse_args(ARGS, s)
+
+import YAML
+config = YAML.load(open(parsed_args["config"]))
+
+# read the wavelengths for all channels
+fid = h5open(config["data_file"], "r")
 lams = read(fid["lams"]) # [μm]
 close(fid)
 nchan = length(lams)
 
-# Peak of best-fitting parameters
-M_star = 2.80 # [M_sun] stellar mass
-r_c =  10.0 # [AU] characteristic radius
-T_10 =  86.0 # [K] temperature at 10 AU
-q = 0.58 # temperature gradient exponent
-gamma = 1.0 # surface temperature gradient exponent
-logM_CO = 1.0 # [M_earth] disk mass of CO
-ksi = 0.29 # [km/s] microturbulence
-dpc = 141.0
-incl = 108. # [degrees] inclination
-PA = 141.23
-vel = -26.03 # [km/s]
-mu_RA = 0.055 # [arcsec]
-mu_DEC = 0.0489# [arcsec]
+# Read the parameters from the config file
+pp = config["parameters"]
 
-const global grid = Grid(64, 32, 0.5, 300, true)
+a = (st)->pp[st][1]
 
-M_CO = 10.^logM_CO
+# The parameters we'll be using
+pars = Parameters(a("M_star"), a("r_c"), a("T_10"), a("q"), a("gamma"), 10.^a("logM_CO"), a("ksi"), a("dpc"), a("incl"), a("PA"), a("vel"), a("mu_RA"), a("mu_DEC"))
 
-pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+# Create the model grid
+grd = config["grid"]
+global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+
+
+global const basedir = ""
+# Regenerate all of the static files (e.g., amr_grid.inp)
+# so that they may be later copied
+write_grid(basedir, grid)
 
 vel = pars.vel # [km/s]
 # RADMC conventions
@@ -51,25 +65,24 @@ npix = 256 # number of pixels, can alternatively specify x and y separately
 beta = vel/c_kms # relativistic Doppler formula
 shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
 
-write_grid("", grid)
-write_model(pars, "", grid)
-write_lambda(shift_lams)
+write_model(pars, basedir, grid)
+write_lambda(shift_lams, basedir)
 
-files = ["lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
-for file in files
-    cp("../" * file, file)
-end
+# files = ["lines.inp", "molecule_co.inp", "wavelength_micron.inp"]
+# for file in files
+#     cp("../" * file, file)
+# end
 
-cp("../radmc3d.inp.gas", "radmc3d.inp")
+cp("radmc3d.inp.gas", "radmc3d.inp")
 
 
 run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
 
 im = imread()
 skim = imToSky(im, pars.dpc)
-corrfun!(skim, 1.0, pars.mu_RA, pars.mu_DEC) # alpha = 1.0
+corrfun!(skim, pars.mu_RA, pars.mu_DEC) # alpha = 1.0
 
-dvarr = DataVis("../data/AKSco/AKSco.hdf5")
+dvarr = DataVis(config["data_file"])
 mvarr = Array(DataVis, nchan)
 
 for i=1:nchan
@@ -89,4 +102,4 @@ for i=1:nchan
     mvarr[i] = dvis
 end
 
-visibilities.write(mvarr, "../data/AKSco/AKSco_model.hdf5")
+visibilities.write(mvarr, "data/AKSco/AKSco_model.hdf5")

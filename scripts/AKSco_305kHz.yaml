@@ -18,8 +18,8 @@ grid:
 parameters:
   M_star: [2.69, 0.002] # [M_sun] stellar mass
   r_c: [11.64, 0.02] # [AU] characteristic radius
-  T_10: [36.9, 0.02] # [K] temperature at 10 AU
-  q: [0.24, 0.003] # temperature gradient exponent
+  T_10: [50.9, 0.02] # [K] temperature at 10 AU
+  q: [0.40, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
   logM_CO: [0.02, 0.03] # [M_earth] disk mass of CO
   ksi: [0.19, 0.003] # [km/s] microturbulence
@@ -43,11 +43,12 @@ base_dir: /pool/cf/iczekala/scratch/
 # base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
-data_file: data/AKSco/AKSco_305kHz_updated.hdf5
+data_file: data/AKSco/AKSco_305kHz_2015-2-24.hdf5
+
 
 # Image setup
 npix: 256
 pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 
 # MCMC setup
-samples: 3000
+samples: 50
