@@ -433,7 +433,7 @@ else
     mc = MC(fp, config["samples"], starting_param, jump_param, csv)
     debug("Initialized MCMC")
 
-    start(mc)
+    LittleMC.start(mc)
 
     println(mean(mc.samples, 2))
     println(std(mc.samples, 2))
