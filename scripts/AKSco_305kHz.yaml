@@ -35,7 +35,7 @@ parameters:
 opt_jump: data/AKSco/opt_jump.npy
 # Factor by which to scale the jumps (ie covariance matrix is multiplied by
 # this *squared*)
-jump_scale : 0.4
+jump_scale : 0.8
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 # base_dir: /scratch/
@@ -51,4 +51,4 @@ npix: 256
 pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 
 # MCMC setup
-samples: 500
+samples: 100
