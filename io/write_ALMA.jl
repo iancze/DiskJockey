@@ -1,5 +1,3 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
-
 # Generate a set of model visibilities and write them to HDF5
 # Rather than run everything in parallel, like `burma_shave.jl`, do this
 # all in serial, here.
