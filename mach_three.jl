@@ -409,7 +409,7 @@ else
 
     # Perturb the starting parameters
     proposal = MvNormal(jump_param)
-    starting_param = starting_param .+ 7. * rand(proposal)
+    starting_param = starting_param .+ 5. * rand(proposal)
 
     # If we've provided an empirically measured covariance matrix for the MCMC
     # jump proposals, use that instead of our jumps without covariance
