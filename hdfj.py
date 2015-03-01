@@ -10,7 +10,7 @@ parser.add_argument("--glob", help="Do something on this glob. Must be given as 
 parser.add_argument("--outdir", default="mcmcplot", help="Output directory to contain all plots.")
 parser.add_argument("--output", default="combined.hdf5", help="Output HDF5 file.")
 
-parser.add_argument("--files", nargs="+", help="The HDF5 files containing the MCMC samples, separated by whitespace.")
+parser.add_argument("--files", nargs="+", help="The HDF5 or CSV files containing the MCMC samples, separated by whitespace.")
 
 parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain "
                                                         "for burn in.")
@@ -39,6 +39,7 @@ import h5py
 from astropy.table import Table
 from astropy.io import ascii
 import sys
+import csv
 
 #Check to see if outdir exists.
 if not os.path.exists(args.outdir):
@@ -49,13 +50,23 @@ args.outdir += "/"
 
 
 def h5read(fname, burn=0, thin=1):
-    '''Read the flatchain from the HDF5 file and return it.'''
+    '''
+    Read the flatchain from the HDF5 file and return it.
+    '''
     fid = h5py.File(fname, "r")
     assert burn < fid["samples"].shape[0]
     print("{} burning by {} and thinning by {}".format(fname, burn, thin))
     flatchain = fid["samples"][burn::thin]
 
     fid.close()
+
+    return flatchain
+
+def csvread(fname, burn=0, thin=1):
+    '''
+    Read the flatchain from a CSV file and return it.
+    '''
+    flatchain = np.genfromtxt(fname, skip_header=1, dtype=float, delimiter=",")[burn::thin]
 
     return flatchain
 
@@ -285,7 +296,13 @@ else:
 flatchainList = []
 for file in files:
     try:
-        flatchainList.append(h5read(file, args.burn, args.thin))
+        # If we've specified HDF5, use h5read
+        # If we've specified csv, use csvread
+        root, ext = os.path.splitext(file)
+        if ext == ".hdf5":
+            flatchainList.append(h5read(file, args.burn, args.thin))
+        elif ext == ".csv":
+            flatchainList.append(csvread(file, args.burn, args.thin))
     except OSError as e:
         print("{} does not exist, skipping. Or error {}".format(file, e))
 
