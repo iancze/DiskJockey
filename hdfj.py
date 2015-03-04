@@ -155,7 +155,7 @@ def plot(flatchain, base=args.outdir, format=".png"):
 
 def paper_plot(flatchain, base=args.outdir, format=".pdf"):
     '''
-    Make a triangle plot
+    Make a triangle plot of just M vs i
     '''
 
     import matplotlib
@@ -169,24 +169,24 @@ def paper_plot(flatchain, base=args.outdir, format=".pdf"):
     from matplotlib.ticker import MaxNLocator
     import triangle
 
-    labels = [r"$M_\ast\enskip [M_\odot]$", r"$i_d \enskip [{}^\circ]$",
-    r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{CO} \enskip [\log M_\oplus]$",
-    r"$\xi$ [km/s]"]
-    inds = np.array([0, 6, 1, 2, 3, 4, 5])
+    labels = [r"$M_\ast\enskip [M_\odot]$", r"$i_d \enskip [{}^\circ]$"]
+    #r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{CO} \enskip [\log M_\oplus]$",
+    #r"$\xi$ [km/s]"]
+    inds = np.array([0, 6, ]) #1, 2, 3, 4, 5])
 
     K = len(labels)
-    fig, axes = plt.subplots(K, K, figsize=(6.5, 6.5))
+    fig, axes = plt.subplots(K, K, figsize=(3., 2.5))
 
     figure = triangle.corner(flatchain[:, inds], plot_contours=True,
     plot_datapoints=False, labels=labels, show_titles=False,
         fig=fig)
 
     for ax in axes[:, 0]:
-        ax.yaxis.set_label_coords(-0.5, 0.5)
+        ax.yaxis.set_label_coords(-0.4, 0.5)
     for ax in axes[-1, :]:
-        ax.xaxis.set_label_coords(0.5, -0.5)
+        ax.xaxis.set_label_coords(0.5, -0.4)
 
-    figure.subplots_adjust(left=0.1, right=0.9, top=0.95, bottom=0.15)
+    figure.subplots_adjust(left=0.2, right=0.8, top=0.95, bottom=0.2)
 
     figure.savefig(base + "ptriangle" + format)
 
