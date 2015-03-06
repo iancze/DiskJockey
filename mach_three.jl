@@ -171,30 +171,30 @@ debug("Created logfile.")
     cd(keydir)
 
     # For each channel, also calculate the interpolation closures
-    npix = cfg["npix"]
-    pixsize = cfg["pixsize"] # [cm]
-    pix_AU = pixsize/AU # [AU]
-
-    dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
-
-    uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-    vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-
-    int_arr = Array(Function, length(keys))
-    for (i, dset) in enumerate(dvarr)
-        int_arr[i] = plan_interpolate(dset, uu, vv)
-    end
+    # npix = cfg["npix"]
+    # pixsize = cfg["pixsize"] # [cm]
+    # pix_AU = pixsize/AU # [AU]
+    #
+    # dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
+    #
+    # uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+    # vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+    #
+    # int_arr = Array(Function, length(keys))
+    # for (i, dset) in enumerate(dvarr)
+    #     int_arr[i] = plan_interpolate(dset, uu, vv)
+    # end
 
 
     # return the array of datasets
-    return (dvarr, int_arr)
+    return dvarr
 
 end
 
 # This is the likelihood function called by each individual process
-@everywhere function f(data, keys::Vector{Int}, p::Parameters)
+@everywhere function f(dvarr, keys::Vector{Int}, p::Parameters)
 
-    dvarr, int_arr = data
+    # dvarr, int_arr = data
 
     nkeys = length(keys)
 
@@ -250,7 +250,8 @@ end
         phase_shift!(vis_fft, p.mu_RA, p.mu_DEC)
 
         # Interpolate the `vis_fft` to the same locations as the DataSet
-        mvis = int_arr[i](dv, vis_fft)
+        # mvis = int_arr[i](dv, vis_fft)
+        mvis = ModelVis(dvis, vis_fft)
 
         # Calculate chi^2 between these two
         lnprobs[i] = lnprob(dv, mvis)
@@ -309,9 +310,9 @@ function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    dpc = cfg["parameters"]["dpc"][1] # [pc] distance
+    # dpc = cfg["parameters"]["dpc"][1] # [pc] distance
 
-    M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+    M_star, r_c, T_10, q, logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
@@ -347,7 +348,7 @@ function fprob(p::Vector{Float64})
     end
 
     distribute!(pipes, pars)
-    return gather!(pipes) # the summed lnprob
+    return gather!(pipes) + lnprior(pars)# the summed lnprob
 end
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -370,7 +371,7 @@ using PDMats
 
 pp = config["parameters"]
 # The parameters we'll be using
-params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 jumps = Array(Float64, nparam)
@@ -409,7 +410,7 @@ else
 
     # Perturb the starting parameters
     proposal = MvNormal(jump_param)
-    starting_param = starting_param .+ 5. * rand(proposal)
+    starting_param = starting_param .+ 3. * rand(proposal)
 
     # If we've provided an empirically measured covariance matrix for the MCMC
     # jump proposals, use that instead of our jumps without covariance

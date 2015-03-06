@@ -23,7 +23,7 @@ parameters:
   gamma: [1.0, 0.0] # surface density gradient
   logM_CO: [0.60, 0.05] # [M_earth] disk mass of CO
   ksi: [0.33, 0.003] # [km/s] microturbulence
-  dpc: [141., 0.1] # [pc] distance
+  dpc: [141., 0.02] # [pc] distance
   incl: [109.5, 0.03] # [degrees] inclination
   PA: [141.4, 0.05] # [degrees] position angle
   vel: [-26.095, 0.001] # [km/s]
@@ -32,14 +32,14 @@ parameters:
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-opt_jump: data/AKSco/opt_jump.npy
+# opt_jump: data/AKSco/opt_jump.npy
 # Factor by which to scale the jumps (ie covariance matrix is multiplied by
 # this *squared*)
 jump_scale : 0.4
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-base_dir: /scratch/
-# base_dir: /pool/cf/iczekala/scratch/
+# base_dir: /scratch/
+base_dir: /pool/cf/iczekala/scratch/
 # base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
@@ -53,4 +53,4 @@ pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # using the same grid settings.
 
 # MCMC setup
-samples: 18000
+samples: 10
