@@ -226,6 +226,8 @@ def plot_walkers(flatchain, base=args.outdir, start=0, end=-1, labels=None):
 
 def estimate_covariance(flatchain):
 
+    import matplotlib.pyplot as plt
+
     #print("Parameters {}".format(flatchain.param_tuple))
     #samples = flatchain.samples
     cov = np.cov(flatchain, rowvar=0)
@@ -234,6 +236,11 @@ def estimate_covariance(flatchain):
     cor = np.corrcoef(flatchain, rowvar=0)
     print("Correlation coefficient")
     print(cor)
+
+    # Make a plot of correlation coefficient.
+    fig, ax = plt.subplots(figsize=(8,8), nrows=1, ncols=1)
+    ax.imshow(cor, origin="upper", vmin=-1, vmax=1, cmap="bwr", interpolation="none")
+    fig.savefig("cor_coefficient.png")
 
     print("'Optimal' jumps with covariance (units squared)")
     if args.ndim:
