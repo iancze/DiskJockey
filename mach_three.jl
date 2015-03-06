@@ -251,7 +251,7 @@ end
 
         # Interpolate the `vis_fft` to the same locations as the DataSet
         # mvis = int_arr[i](dv, vis_fft)
-        mvis = ModelVis(dvis, vis_fft)
+        mvis = ModelVis(dv, vis_fft)
 
         # Calculate chi^2 between these two
         lnprobs[i] = lnprob(dv, mvis)
