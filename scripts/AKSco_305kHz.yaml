@@ -23,7 +23,7 @@ parameters:
   gamma: [1.0, 0.0] # surface density gradient
   logM_CO: [0.60, 0.05] # [M_earth] disk mass of CO
   ksi: [0.33, 0.003] # [km/s] microturbulence
-  dpc: [141., 0.02] # [pc] distance
+  dpc: [141., 0.08] # [pc] distance
   incl: [109.5, 0.03] # [degrees] inclination
   PA: [141.4, 0.05] # [degrees] position angle
   vel: [-26.095, 0.001] # [km/s]
@@ -53,4 +53,4 @@ pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # using the same grid settings.
 
 # MCMC setup
-samples: 10
+samples: 200
