@@ -16,14 +16,14 @@ grid:
 # exclude: [35, 36, 37, 38]
 
 parameters:
-  M_star: [2.44, 0.002] # [M_sun] stellar mass
-  r_c: [14.2, 0.003] # [AU] characteristic radius
+  M_star: [2.44, 0.004] # [M_sun] stellar mass
+  r_c: [14.2, 0.004] # [AU] characteristic radius
   T_10: [91.2, 0.03] # [K] temperature at 10 AU
   q: [0.51, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [-0.69, 0.01] # [M_earth] disk mass of CO
+  logM_CO: [-0.69, 0.008] # [M_earth] disk mass of CO
   ksi: [0.31, 0.003] # [km/s] microturbulence
-  dpc: [141., 0.01] # [pc] distance
+  dpc: [141., 0.003] # [pc] distance
   incl: [109.32, 0.03] # [degrees] inclination
   PA: [141.09, 0.05] # [degrees] position angle
   vel: [-26.08, 0.001] # [km/s]
@@ -38,8 +38,8 @@ parameters:
 jump_scale : 0.4
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-# base_dir: /scratch/
-base_dir: /pool/cf/iczekala/scratch/
+base_dir: /scratch/
+# base_dir: /pool/cf/iczekala/scratch/
 # base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
@@ -53,4 +53,4 @@ pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # using the same grid settings.
 
 # MCMC setup
-samples: 200
+samples: 2000
