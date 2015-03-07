@@ -16,14 +16,14 @@ grid:
 # exclude: [35, 36, 37, 38]
 
 parameters:
-  M_star: [2.44, 0.007] # [M_sun] stellar mass
-  r_c: [14.2, 0.008] # [AU] characteristic radius
+  M_star: [2.44, 0.008] # [M_sun] stellar mass
+  r_c: [14.2, 0.01] # [AU] characteristic radius
   T_10: [91.2, 0.03] # [K] temperature at 10 AU
   q: [0.51, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
   logM_CO: [-0.69, 0.01] # [M_earth] disk mass of CO
   ksi: [0.31, 0.003] # [km/s] microturbulence
-  dpc: [141., 0.006] # [pc] distance
+  dpc: [141., 0.05] # [pc] distance
   incl: [109.32, 0.03] # [degrees] inclination
   PA: [141.09, 0.05] # [degrees] position angle
   vel: [-26.08, 0.001] # [km/s]
@@ -32,10 +32,10 @@ parameters:
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-# opt_jump: data/AKSco/opt_jump.npy
+opt_jump: data/AKSco/opt_jump.npy
 # Factor by which to scale the jumps (ie covariance matrix is multiplied by
 # this *squared*)
-jump_scale : 0.4
+jump_scale : 1.0
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 base_dir: /scratch/

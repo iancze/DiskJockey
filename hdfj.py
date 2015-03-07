@@ -146,7 +146,7 @@ def plot(flatchain, base=args.outdir, format=".png"):
 
     labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
     r"$q$", r"$\log M_\textrm{CO} \quad \log [M_\oplus]$",  r"$\xi$ [km/s]",
-    # r"$d$ [pc]",
+    r"$d$ [pc]",
     r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
     r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     figure = triangle.corner(flatchain, quantiles=[0.16, 0.5, 0.84],
@@ -226,6 +226,11 @@ def plot_walkers(flatchain, base=args.outdir, start=0, end=-1, labels=None):
 
 def estimate_covariance(flatchain):
 
+    if args.ndim:
+        d = args.ndim
+    else:
+        d = flatchain.shape[1]
+
     import matplotlib.pyplot as plt
 
     #print("Parameters {}".format(flatchain.param_tuple))
@@ -238,15 +243,14 @@ def estimate_covariance(flatchain):
     print(cor)
 
     # Make a plot of correlation coefficient.
-    fig, ax = plt.subplots(figsize=(8,8), nrows=1, ncols=1)
-    ax.imshow(cor, origin="upper", vmin=-1, vmax=1, cmap="bwr", interpolation="none")
+
+    fig, ax = plt.subplots(figsize=(0.5 * d, 0.5 * d), nrows=1, ncols=1)
+    ext = (0.5, d + 0.5, 0.5, d + 0.5)
+    ax.imshow(cor, origin="upper", vmin=-1, vmax=1, cmap="bwr", interpolation="none", extent=ext)
     fig.savefig("cor_coefficient.png")
 
     print("'Optimal' jumps with covariance (units squared)")
-    if args.ndim:
-        d = args.ndim
-    else:
-        d = flatchain.shape[1]
+
     opt_jump = 2.38**2/d * cov
     # opt_jump = 1.7**2/d * cov # gives about ??
     print(opt_jump)
