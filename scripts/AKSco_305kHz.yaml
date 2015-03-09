@@ -38,8 +38,8 @@ parameters:
 jump_scale : 1.0
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-# base_dir: /scratch/
-base_dir: /pool/cf/iczekala/scratch/
+base_dir: /scratch/
+# base_dir: /pool/cf/iczekala/scratch/
 # base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
@@ -53,4 +53,4 @@ pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # using the same grid settings.
 
 # MCMC setup
-samples: 600
+samples: 4000
