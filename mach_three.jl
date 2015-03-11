@@ -279,8 +279,8 @@ debug("Initialized processes")
 
 # Calculate the lnprior based upon the current parameter values
 function lnprior(pars::Parameters)
-    mu_d = 141. # [pc]
-    sig_d = 7. # [pc]
+    mu_d = 142. # [pc]
+    sig_d = 14. # [pc]
     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
 end
 

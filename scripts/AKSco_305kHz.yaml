@@ -45,12 +45,12 @@ base_dir: /pool/cf/iczekala/scratch/
 # The HDF5 file containing the visibilities
 data_file: data/AKSco/AKSco_305kHz_2015-2-24.hdf5
 
-
 # Image setup
 npix: 256
 pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # Calculate this number by using plot_model.jl to make a test run
 # using the same grid settings.
+# This is only relevant if we fix the distance, however.
 
 # MCMC setup
-samples: 1400
+samples: 4000
