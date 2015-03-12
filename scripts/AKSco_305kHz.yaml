@@ -35,11 +35,11 @@ parameters:
 opt_jump: data/AKSco/opt_jump.npy
 # Factor by which to scale the jumps (ie covariance matrix is multiplied by
 # this *squared*)
-jump_scale : 1.0
+jump_scale : 0.9
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-# base_dir: /scratch/
-base_dir: /pool/cf/iczekala/scratch/
+base_dir: /scratch/
+# base_dir: /pool/cf/iczekala/scratch/
 # base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
@@ -53,4 +53,4 @@ pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # This is only relevant if we fix the distance, however.
 
 # MCMC setup
-samples: 4000
+samples: 18000

@@ -4,7 +4,7 @@ module LittleMC
 # a simple Metropolis-Hastings sampler to just get things done.
 # inspired by github.com/dfm/emcee/mh.py
 
-export MC, sample, start, write, runstats
+export MC, sample, start, runstats
 
 using Distributions
 using PDMats
