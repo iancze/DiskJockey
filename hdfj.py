@@ -30,6 +30,7 @@ parser.add_argument("--acor-window", type=int, default=50, help="window to compu
 parser.add_argument("--cov", action="store_true", help="Estimate the covariance between two parameters.")
 parser.add_argument("--ndim", type=int, help="How many dimensions to use for estimating the 'optimal jump'.")
 parser.add_argument("--paper", action="store_true", help="Change the figure plotting options appropriate for the paper.")
+parser.add_argument("--save_npy", action="store_true", help="Save only (Mass, distance, inclination) parameters to a separate numpy file.")
 
 args = parser.parse_args()
 
@@ -344,3 +345,9 @@ if args.cov:
 if args.gelman:
     assert len(flatchainList) > 1, "If running Gelman-Rubin test, must provide more than one flatchain"
     gelman_rubin(flatchainList)
+
+if args.save_npy:
+    assert len(flatchainList) == 1, "If plotting Markov Chain, only specify one flatchain"
+    flatchain = flatchainList[0]
+
+    np.save("mdi.npy", flatchain[:,np.array([0, 6, 7])])

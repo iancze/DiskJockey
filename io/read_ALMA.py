@@ -13,10 +13,11 @@ cc = 2.99792458e10 # [cm s^-1]
 # data = np.load("../data/AKSco/AKSco.12CO.305kHz.updated.vis.npz")
 
 # Feb 24th dataset
-data = np.load("../data/AKSco/AKSco.12CO.305kHz.2015Feb24.vis.npz")
+# data = np.load("../data/AKSco/AKSco.12CO.305kHz.2015Feb24.vis.npz")
 
 # Finer dataset with 210 channels
-# data = np.load("../data/AKSco/AKSco.12CO.122kHz.vis.npz")
+data = np.load("../data/AKSco/AKSco.12CO.122kHz.2015Mar20.vis.npz")
+
 
 # This file has categories
 # ['Re', 'Wt', 'u', 'Im', 'v']
@@ -44,15 +45,15 @@ nchan, nvis = data["Re"].shape
 # For AKSco.12CO.305kHz.vis.npz
 # The index 0 channel has a frequency of 230.546088 GHz.
 # Each channel has a width of 305.176 kHz
-nu0 = 230.546088e9 # [Hz]
-dnu = 305.176e3 # [Hz]
+# nu0 = 230.546088e9 # [Hz]
+# dnu = 305.176e3 # [Hz]
 #####################################
 
 #####################################
 # # For AKSco.12CO.122kHz.vis.npz
 # # The index 0 channel has a frequnecy of 230.545996 GHz
-# nu0 = 230.545996e9 # [Hz]
-# dnu = 122.070e3 # [Hz]
+nu0 = 230.545996e9 # [Hz]
+dnu = 122.070e3 # [Hz]
 #####################################
 
 
@@ -81,9 +82,9 @@ weight = data["Wt"]
 # fid = h5py.File("../data/AKSco/AKSco.hdf5", "w")
 # fid = h5py.File("../data/AKSco/AKSco_305kHz.hdf5", "w")
 # fid = h5py.File("../data/AKSco/AKSco_305kHz_updated.hdf5", "w")
-# fid = h5py.File("../data/AKSco/AKSco_122kHz.hdf5", "w")
+fid = h5py.File("../data/AKSco/AKSco_122kHz.hdf5", "w")
 
-fid = h5py.File("../data/AKSco/AKSco_305kHz_2015-2-24.hdf5", "w")
+# fid = h5py.File("../data/AKSco/AKSco_305kHz_2015-2-24.hdf5", "w")
 
 
 #Currently, everything is stored in decreasing wavelength order, lets flip this.
