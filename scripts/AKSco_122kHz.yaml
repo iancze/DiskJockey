@@ -53,4 +53,4 @@ pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # This is only relevant if we fix the distance, however.
 
 # MCMC setup
-samples: 10
+samples: 1000
