@@ -266,13 +266,13 @@ end
 end
 
 # Create the model grid
-@everywhere global const grd = config["grid"]
+@everywhere global const grd = cfg["grid"]
 @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["nphi"], grd["r_in"], grd["r_out"], grd["na"], true)
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
-debug("Writing grid")
-write_grid(basedir, grid)
-debug("Wrote grid")
+# debug("Writing grid")
+# write_grid(basedir, grid)
+# debug("Wrote grid")
 
 debug("Initializing processes")
 pipes = initialize(nchild, chunk_keylist, initfunc, f)
