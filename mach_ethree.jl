@@ -227,7 +227,10 @@ end
     write_lambda(lams, "") # write into current directory
 
     # Run RADMC3D, redirect output to /dev/null
+    tic()
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
+    println("RADMC")
+    toc()
 
     # Read the RADMC3D images from disk (we should already be in sub-directory)
     im = imread()
@@ -241,6 +244,7 @@ end
 
     lnprobs = Array(Float64, nkeys)
     # Do the Fourier domain stuff per channel
+    tic()
     for i=1:nkeys
         dv = dvarr[i]
         # FFT the appropriate image channel
@@ -255,8 +259,10 @@ end
 
         # Calculate chi^2 between these two
         lnprobs[i] = lnprob(dv, mvis)
-    end
 
+    end
+    println("Interpolate all channels")
+    toc()
     # Sum them all together and feed back to the master process
     return sum(lnprobs)
 
@@ -334,10 +340,7 @@ function fprob(p::Vector{Float64})
     pars = Parameters(M_star, a_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, e, w, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
-    println("Model writing time")
-    tic()
     write_model(pars, basedir, grid)
-    toc()
 
     nd = basedir * "numberdens_co.inp"
     gv = basedir * "gas_velocity.inp"
