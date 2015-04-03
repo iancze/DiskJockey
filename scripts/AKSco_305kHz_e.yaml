@@ -44,8 +44,8 @@ jump_scale : 0.9
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
 # base_dir: /scratch/
-# base_dir: /pool/cf/iczekala/scratch/
-base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
+base_dir: /pool/cf/iczekala/scratch/
+# base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
 data_file: data/AKSco/AKSco_305kHz_2015-2-24.hdf5
