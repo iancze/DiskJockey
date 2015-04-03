@@ -336,8 +336,12 @@ function fprob(p::Vector{Float64})
     pars = Parameters(M_star, a_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, e, w, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
+    tic()
     write_model(pars, basedir, grid)
+    println("fprob: write model")
+    toc()
 
+    tic()
     nd = basedir * "numberdens_co.inp"
     gv = basedir * "gas_velocity.inp"
     gt = basedir * "gas_temperature.inp"
@@ -352,6 +356,9 @@ function fprob(p::Vector{Float64})
         run(`cp $gt $keydir`)
         run(`cp $mt $keydir`)
     end
+    println("fprob: copy files")
+    toc()
+
     println("fprob: first half")
     toc()
 
