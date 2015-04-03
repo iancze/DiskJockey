@@ -258,7 +258,7 @@ end
 
     end
     # Sum them all together and feed back to the master process
-    println("Subfunction f")
+    println("f: subfunction")
     toc()
     return sum(lnprobs)
 
@@ -290,7 +290,7 @@ end
 # to this function, and farms out the likelihood evaluation to all of the child
 # processes
 function fprob(p::Vector{Float64})
-
+    tic()
     # Here is where we make the distinction between a proposed vector of floats
     # (i.e., the parameters), and the object which defines all of the disk parameters
     # which every single subprocess will use
@@ -352,10 +352,13 @@ function fprob(p::Vector{Float64})
         run(`cp $gt $keydir`)
         run(`cp $mt $keydir`)
     end
+    println("fprob: first half")
+    toc()
+
     tic()
     distribute!(pipes, pars)
     lnp = gather!(pipes) + lnprior(pars)# the summed lnprob
-    println("Distribute and Gather")
+    println("fprob: Distribute and Gather")
     toc()
     return lnp
 end
