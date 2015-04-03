@@ -193,7 +193,6 @@ end
 
 # This is the likelihood function called by each individual process
 @everywhere function f(dvarr, keys::Vector{Int}, p::Parameters)
-    tic()
     # dvarr, int_arr = data
 
     nkeys = length(keys)
@@ -259,8 +258,6 @@ end
 
     end
     # Sum them all together and feed back to the master process
-    println("f: subfunction")
-    toc()
     return sum(lnprobs)
 
 end
@@ -290,25 +287,11 @@ end
 # to this function, and farms out the likelihood evaluation to all of the child
 # processes
 function fprob(p::Vector{Float64})
-    tic()
     # Here is where we make the distinction between a proposed vector of floats
     # (i.e., the parameters), and the object which defines all of the disk parameters
     # which every single subprocess will use
 
-    # Parameters has the following definition (in model.jl)
-    # M_star::Float64 # [g] stellar mass
-    # r_c::Float64 # [cm] characteristic radius
-    # T_10::Float64 # [K] temperature at 10 AU
-    # q::Float64 # temperature gradient exponent
-    # gamma::Float64 # surface temperature gradient exponent
-    # M_CO::Float64 # [g] disk mass of CO
-    # ksi::Float64 # [cm s^{-1}] microturbulence
-    # dpc::Float64 # [pc] distance to system
-    # incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
-    # PA::Float64 # [degrees] position angle (East of North)
-    # vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
-    # mu_RA::Float64 # [arcsec] central offset in RA
-    # mu_DEC::Float64 # [arcsec] central offset in DEC
+    # Parameters is a composite type defined in model.jl or emodel.jl.
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
@@ -335,35 +318,8 @@ function fprob(p::Vector{Float64})
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, a_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, e, w, vel, mu_RA, mu_DEC)
 
-    # Compute parameter file using model.jl, write to disk
-
-    # tic()
-    # nd = basedir * "numberdens_co.inp"
-    # gv = basedir * "gas_velocity.inp"
-    # gt = basedir * "gas_temperature.inp"
-    # mt = basedir * "microturbulence.inp"
-    #
-    # # Copy new parameter files to all subdirectories
-    # for keys in keylist
-    #     key = keys[1]
-    #     keydir = basedir * "jud$key"
-    #     run(`cp $nd $keydir`)
-    #     run(`cp $gv $keydir`)
-    #     run(`cp $gt $keydir`)
-    #     run(`cp $mt $keydir`)
-    # end
-    # println("fprob: copy files")
-    # toc()
-
-    println("fprob: first half")
-    toc()
-
-    tic()
     distribute!(pipes, pars)
-    lnp = gather!(pipes) + lnprior(pars)# the summed lnprob
-    println("fprob: Distribute and Gather")
-    toc()
-    return lnp
+    return gather!(pipes) + lnprior(pars)# the summed lnprob
 end
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
@@ -374,14 +330,10 @@ function fgrad(p::Vector, grad::Vector)
 end
 
 function fp(p::Vector)
-    tic()
     val = fprob(p)
     debug(p, " : ", val)
-    println("fp eval")
-    toc()
     return val
 end
-
 
 debug("Initializing MCMC")
 using Distributions

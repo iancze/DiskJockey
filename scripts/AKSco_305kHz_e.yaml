@@ -58,4 +58,4 @@ npix: 256
 # This is only relevant if we fix the distance, however.
 
 # MCMC setup
-samples: 10
+samples: 1000
