@@ -227,11 +227,8 @@ end
     write_lambda(lams, "") # write into current directory
 
     # Run RADMC3D, redirect output to /dev/null
-    tic()
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
-    println("RADMC")
-    toc()
-
+    
     # Read the RADMC3D images from disk (we should already be in sub-directory)
     im = imread()
 
@@ -244,7 +241,6 @@ end
 
     lnprobs = Array(Float64, nkeys)
     # Do the Fourier domain stuff per channel
-    tic()
     for i=1:nkeys
         dv = dvarr[i]
         # FFT the appropriate image channel
@@ -262,7 +258,6 @@ end
 
     end
     println("Interpolate all channels")
-    toc()
     # Sum them all together and feed back to the master process
     return sum(lnprobs)
 
@@ -369,8 +364,11 @@ function fgrad(p::Vector, grad::Vector)
 end
 
 function fp(p::Vector)
+    tic()
     val = fprob(p)
     debug(p, " : ", val)
+    println("fp eval")
+    toc()
     return val
 end
 
