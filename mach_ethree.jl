@@ -225,6 +225,8 @@ end
     # keydir = basedir * "jud$key/"
     # println("Writing cameralambda into $keydir")
     write_lambda(lams, "") # write into current directory
+    write_model(p, "", grid)
+
 
     # Run RADMC3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
@@ -266,8 +268,7 @@ end
 
 # Create the model grid
 grd = config["grid"]
-global const grid = Grid(grd["nr"], grd["ntheta"], grd["nphi"], grd["r_in"], grd["r_out"], grd["na"], true)
-
+@everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["nphi"], grd["r_in"], grd["r_out"], grd["na"], true)
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
 debug("Writing grid")
@@ -336,28 +337,24 @@ function fprob(p::Vector{Float64})
     pars = Parameters(M_star, a_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, e, w, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
-    tic()
-    write_model(pars, basedir, grid)
-    println("fprob: write model")
-    toc()
 
-    tic()
-    nd = basedir * "numberdens_co.inp"
-    gv = basedir * "gas_velocity.inp"
-    gt = basedir * "gas_temperature.inp"
-    mt = basedir * "microturbulence.inp"
-
-    # Copy new parameter files to all subdirectories
-    for keys in keylist
-        key = keys[1]
-        keydir = basedir * "jud$key"
-        run(`cp $nd $keydir`)
-        run(`cp $gv $keydir`)
-        run(`cp $gt $keydir`)
-        run(`cp $mt $keydir`)
-    end
-    println("fprob: copy files")
-    toc()
+    # tic()
+    # nd = basedir * "numberdens_co.inp"
+    # gv = basedir * "gas_velocity.inp"
+    # gt = basedir * "gas_temperature.inp"
+    # mt = basedir * "microturbulence.inp"
+    #
+    # # Copy new parameter files to all subdirectories
+    # for keys in keylist
+    #     key = keys[1]
+    #     keydir = basedir * "jud$key"
+    #     run(`cp $nd $keydir`)
+    #     run(`cp $gv $keydir`)
+    #     run(`cp $gt $keydir`)
+    #     run(`cp $mt $keydir`)
+    # end
+    # println("fprob: copy files")
+    # toc()
 
     println("fprob: first half")
     toc()
