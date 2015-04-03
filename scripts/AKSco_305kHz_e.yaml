@@ -30,7 +30,7 @@ parameters:
   PA: [141.09, 0.05] # [degrees] position angle
   # PA: [0.0, 0.0]
   e: [0.05, 0.01] # eccentricity
-  w: [120.0, 0.05] # [degrees] argument of periapse
+  w: [120.0, 1.0] # [degrees] argument of periapse
   vel: [-26.08, 0.001] # [km/s]
   mu_RA: [0.054, 0.002] # [arcsec] centroid location
   mu_DEC: [0.044, 0.002] # [arcsec]
@@ -52,10 +52,6 @@ data_file: data/AKSco/AKSco_305kHz_2015-2-24.hdf5
 
 # Image setup
 npix: 256
-# pixsize : 38568201867193.242 # [cm], copied from a previous image.out
-# Calculate this number by using plot_model.jl to make a test run
-# using the same grid settings.
-# This is only relevant if we fix the distance, however.
 
 # MCMC setup
 samples: 1000
