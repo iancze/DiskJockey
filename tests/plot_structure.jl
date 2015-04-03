@@ -8,7 +8,7 @@ s = ArgParseSettings()
     # help = "an option with an argument"
     # default = 0
     "--norad"
-    help = "Use the image alread here."
+    help = "Use the image already here."
     action = :store_true
     "config"
     help = "a YAML configuration file"
