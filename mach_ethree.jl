@@ -227,7 +227,6 @@ end
     write_lambda(lams, "") # write into current directory
     write_model(p, "", grid)
 
-
     # Run RADMC3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
 
@@ -267,7 +266,7 @@ end
 end
 
 # Create the model grid
-grd = config["grid"]
+@everywhere global const grd = config["grid"]
 @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["nphi"], grd["r_in"], grd["r_out"], grd["na"], true)
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
