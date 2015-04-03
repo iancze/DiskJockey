@@ -334,7 +334,10 @@ function fprob(p::Vector{Float64})
     pars = Parameters(M_star, a_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, e, w, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
+    println("Model writing time")
+    tic()
     write_model(pars, basedir, grid)
+    toc()
 
     nd = basedir * "numberdens_co.inp"
     gv = basedir * "gas_velocity.inp"
