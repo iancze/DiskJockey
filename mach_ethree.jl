@@ -309,6 +309,10 @@ function fprob(p::Vector{Float64})
         return -Inf
     end
 
+    if e < 0.0 || e > 1.0
+        return -Inf
+    end
+
     if w < 0. || w > 360.
         return -Inf
     end
