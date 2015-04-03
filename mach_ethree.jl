@@ -312,7 +312,7 @@ function fprob(p::Vector{Float64})
     gamma = 1.0 # surface temperature gradient exponent
     dpc = cfg["parameters"]["dpc"][1] # [pc] distance
 
-    M_star, a_c, T_10, q, logM_CO, ksi, dpc, incl, PA, e, w, vel, mu_RA, mu_DEC = p
+    M_star, a_c, T_10, q, logM_CO, ksi, incl, PA, e, w, vel, mu_RA, mu_DEC = p
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
@@ -331,7 +331,7 @@ function fprob(p::Vector{Float64})
     M_CO = 10^logM_CO
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    pars = Parameters(M_star, a_c, T_10, q, gamma, M_CO, ksi, incl, PA, e, w, vel, mu_RA, mu_DEC)
+    pars = Parameters(M_star, a_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, e, w, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk
     write_model(pars, basedir, grid)
