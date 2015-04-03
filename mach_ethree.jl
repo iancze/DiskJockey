@@ -193,7 +193,7 @@ end
 
 # This is the likelihood function called by each individual process
 @everywhere function f(dvarr, keys::Vector{Int}, p::Parameters)
-
+    tic()
     # dvarr, int_arr = data
 
     nkeys = length(keys)
@@ -228,7 +228,7 @@ end
 
     # Run RADMC3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
-    
+
     # Read the RADMC3D images from disk (we should already be in sub-directory)
     im = imread()
 
@@ -257,8 +257,9 @@ end
         lnprobs[i] = lnprob(dv, mvis)
 
     end
-    println("Interpolate all channels")
     # Sum them all together and feed back to the master process
+    println("Subfunction f")
+    toc()
     return sum(lnprobs)
 
 end
@@ -351,9 +352,12 @@ function fprob(p::Vector{Float64})
         run(`cp $gt $keydir`)
         run(`cp $mt $keydir`)
     end
-
+    tic()
     distribute!(pipes, pars)
-    return gather!(pipes) + lnprior(pars)# the summed lnprob
+    lnp = gather!(pipes) + lnprior(pars)# the summed lnprob
+    println("Distribute and Gather")
+    toc()
+    return lnp
 end
 
 # wrapper for NLopt requires gradient as an argument (even if it's not used)
