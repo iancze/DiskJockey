@@ -165,6 +165,11 @@ function lnprob(dvis::DataVis, mvis::ModelVis)
     return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
+function chi2(dvis::DataVis, mvis::ModelVis)
+    @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
+    return sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
+end
+
 # Given a new model centroid in the image plane (in arcseconds), shift the
 # visibilities by corresponding amount
 function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)

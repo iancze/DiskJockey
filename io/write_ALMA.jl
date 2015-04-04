@@ -82,8 +82,11 @@ corrfun!(skim, pars.mu_RA, pars.mu_DEC) # alpha = 1.0
 
 dvarr = DataVis(config["data_file"])
 mvarr = Array(DataVis, nchan)
+chi2s = Array(Float64, nchan)
 
 for i=1:nchan
+
+    dv = dvarr[i]
 
     # FFT the appropriate image channel
     vis_fft = transform(skim, i)
@@ -91,13 +94,19 @@ for i=1:nchan
     # Apply the phase correction here, since there are fewer data points
     phase_shift!(vis_fft, pars.mu_RA, pars.mu_DEC)
     # Interpolate the `vis_fft` to the same locations as the DataSet
-    mvis = ModelVis(dvarr[i], vis_fft)
+    mvis = ModelVis(dv, vis_fft)
 
     dvis = visibilities.ModelVis2DataVis(mvis)
 
     # Complex conjugate for SMA convention
     visibilities.conj!(dvis)
     mvarr[i] = dvis
+
+    chi2s[i] = visibilities.chi2(dv, mvis)
 end
+
+println("Chi2s", chi2s)
+N = nchan * 2 * length(dvarr[1].VV)
+println("Chi_R", sum(chi2s)/N)
 
 visibilities.write(mvarr, "data/AKSco/AKSco_model.hdf5")
