@@ -309,7 +309,7 @@ function fprob(p::Vector{Float64})
         return -Inf
     end
 
-    if e < 0.0 || e > 1.0
+    if e < 0.0 || e > 0.7
         return -Inf
     end
 
