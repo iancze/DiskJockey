@@ -227,6 +227,9 @@ def plot_walkers(flatchain, base=args.outdir, start=0, end=-1, labels=None):
 
 def estimate_covariance(flatchain):
 
+    print("mean", np.average(flatchain, axis=0))
+    print("std", np.std(flatchain, axis=0))
+
     if args.ndim:
         d = args.ndim
     else:
