@@ -29,8 +29,8 @@ parameters:
   # incl: [0.0, 0.0]
   PA: [141.09, 0.05] # [degrees] position angle
   # PA: [0.0, 0.0]
-  e: [0.02, 0.004] # eccentricity
-  w: [90.0, 10.] # [degrees] argument of periapse
+  e: [0.02, 0.006] # eccentricity
+  w: [250.0, 10.] # [degrees] argument of periapse
   vel: [-26.08, 0.001] # [km/s]
   mu_RA: [0.054, 0.002] # [arcsec] centroid location
   mu_DEC: [0.044, 0.002] # [arcsec]
