@@ -57,7 +57,7 @@ vel = pars.vel # [km/s]
 # RADMC conventions
 incl = pars.incl # [deg]
 PA = pars.PA # [deg] Position angle runs counter clockwise, due to looking at sky.
-npix = 256 # number of pixels, can alternatively specify x and y separately
+npix = config["npix"] # number of pixels
 
 # Doppler shift the dataset wavelength to rest-frame wavelength
 beta = vel/c_kms # relativistic Doppler formula

@@ -226,9 +226,12 @@ def plot_walkers(flatchain, base=args.outdir, start=0, end=-1, labels=None):
     plt.close(fig)
 
 def estimate_covariance(flatchain):
-
-    print("mean", np.average(flatchain, axis=0))
-    print("std", np.std(flatchain, axis=0))
+    print(flatchain.shape)
+    print(np.average(flatchain.astype("f8"), axis=0)[-3])
+    print(np.mean(flatchain, axis=0, dtype=np.float64)[-3])
+    for var in flatchain.T:
+        fmtstr = "Median: {:.4f}; Std: {:.4f}; 16th:{:.4f}; 84th:{:.4f}"
+        print(fmtstr.format(np.median(var), np.std(var), np.percentile(var, 16), np.percentile(var, 84)))
 
     if args.ndim:
         d = args.ndim
