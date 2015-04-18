@@ -8,7 +8,7 @@ import numpy as np
 mdi_samples = np.load("mdi.npy")
 
 # Functon lifted from triangle.py: https://github.com/dfm/triangle.py/
-def hist2d(ax, x, y, *args, **kwargs):
+def hist2d(ax, x, y, nxbins=50, nybins=50, *args, **kwargs):
     """
     Plot a 2-D histogram of samples.
     """
@@ -23,8 +23,8 @@ def hist2d(ax, x, y, *args, **kwargs):
     cmap._lut[:-3, :-1] = 0.
     cmap._lut[:-3, -1] = np.linspace(1, 0, cmap.N)
 
-    X = np.linspace(extent[0][0], extent[0][1], bins + 1)
-    Y = np.linspace(extent[1][0], extent[1][1], bins + 1)
+    X = np.linspace(extent[0][0], extent[0][1], nxbins + 1)
+    Y = np.linspace(extent[1][0], extent[1][1], nybins + 1)
     try:
         H, X, Y = np.histogram2d(x.flatten(), y.flatten(), bins=(X, Y))
     except ValueError:
@@ -87,24 +87,28 @@ anth = {"Mstar":[2.8, 0.11], "i":[115., 3.], "d":[141., 7.]}
 
 fig,ax = plt.subplots(nrows=2, figsize=(3.5, 5.5), sharex=True)
 
-hist2d(ax[0], mdi_samples[:,0], mdi_samples[:,2])
+hist2d(ax[0], mdi_samples[:,0], mdi_samples[:,2], nxbins=50, nybins=30)
 
 C_incl_disk = czek["Mstar"][0] * np.sin(czek["i"][0] * deg)**2
 M_star_disks = C_incl_disk / np.sin(incls * deg)**2
 
-C_incl_RV = anth["Mstar"][0] * np.sin(anth["i"][0] * deg)**3
+C_incl_RV = 2.114 # +/- 0.01 Alencar 03
 M_star_RVs = C_incl_RV / np.sin(incls * deg)**3
+
+M_star_RVs_upper = (C_incl_RV + 0.01)/ np.sin(incls * deg)**3
+M_star_RVs_lower = (C_incl_RV - 0.01)/ np.sin(incls * deg)**3
 
 C_incl_ast = anth["Mstar"][0] * np.cos(-anth["i"][0] * deg)**3
 M_star_asts = C_incl_ast / np.cos(-incls * deg)**3
 
 
+ax[0].fill_betweenx(incls, M_star_RVs_lower, M_star_RVs_upper, color="0.6")
 
 ax[0].plot(M_star_disks, incls, "k:")
 ax[0].annotate("disk", (2.8, 119.1), rotation=60, size=8)
 
 ax[0].plot(M_star_RVs, incls, "k-.")
-ax[0].annotate("RV", (3.0, 118.9), rotation=42, size=8)
+ax[0].annotate("RV", (3.0, 118.7), rotation=42, size=8)
 
 ax[0].plot(M_star_asts, incls, "k--")
 ax[0].annotate("astrometry", (2.2, 117.5), rotation=-19, size=8)
@@ -117,9 +121,9 @@ m, m_err = anth["Mstar"]
 incl, incl_err = anth["i"]
 ax[0].errorbar(m, incl, xerr=m_err, yerr=incl_err, color="0.2", fmt="o", ecolor="0.2")
 
-ax[0].annotate("Anthonioz+15", (2.805, 113), size=7)
+ax[0].annotate("Anthonioz+15", (2.83, 113), size=7)
 
-ax[0].set_ylabel(r"$i_d$ [degrees]")
+ax[0].set_ylabel("inclination [degrees]", fontsize=10)
 ax[0].set_ylim(105, 120)
 
 
@@ -135,7 +139,7 @@ d_dist_ast = (M_stars/C_disk_ast)**(1/3.)
 hist2d(ax[1], mdi_samples[:,0], mdi_samples[:,1])
 
 ax[1].plot(M_stars, d_dist_disks, "k:")
-ax[1].annotate("disk", (2.72, 163), rotation=60, size=8)
+ax[1].annotate("disk", (2.755, 164.5), rotation=60, size=8)
 
 ax[1].plot(M_stars, d_dist_ast, "k--")
 ax[1].annotate("astrometry", (2.9, 148), rotation=25, size=8)
@@ -149,12 +153,12 @@ m, m_err = anth["Mstar"]
 d, d_err = anth["d"]
 ax[1].errorbar(m, d, xerr=m_err, yerr=d_err, color="0.2", fmt="o", ecolor="0.2")
 
-ax[1].set_xlabel(r"$M_\ast$ [$M_\odot$]")
-ax[1].set_ylabel(r"$d$ [pc]")
+ax[1].set_xlabel(r"$M_\ast$ [$M_\odot$]", fontsize=10)
+ax[1].set_ylabel(r"$d$ [pc]", fontsize=10)
 
 ax[1].set_xlim(2.0, 3.2)
-ax[1].set_ylim(120, 165)
+ax[1].set_ylim(120, 167)
 
 
-fig.subplots_adjust(left=0.19, right=0.81, hspace=0.07, top=0.97)
+fig.subplots_adjust(left=0.15, right=0.85, hspace=0.07, top=0.97, bottom=0.07)
 fig.savefig("plots/AKSco/mdi.pdf")
