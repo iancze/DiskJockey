@@ -17,14 +17,14 @@ grid:
 
 parameters:
   M_star: [2.8, 0.007] # [M_sun] stellar mass
-  r_c: [14.308, 0.1] # [AU] characteristic radius
-  T_10: [91.85, 0.3] # [K] temperature at 10 AU
-  q: [0.513, 0.003] # temperature gradient exponent
+  r_c: [14.0, 0.1] # [AU] characteristic radius
+  T_10: [88.85, 0.3] # [K] temperature at 10 AU
+  q: [0.5, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
-  logM_CO: [-0.65, 0.02] # [M_earth] disk mass of CO
-  ksi: [0.313, 0.003] # [km/s] microturbulence
+  logM_CO: [-0.3, 0.02] # [M_earth] disk mass of CO
+  ksi: [0.24, 0.003] # [km/s] microturbulence
   dpc: [143.63, 0.6] # [pc] distance
-  incl: [109.35, 0.05] # [degrees] inclination
+  incl: [110.35, 0.05] # [degrees] inclination
   PA: [141.09, 0.05] # [degrees] position angle
   vel: [-26.083, 0.001] # [km/s]
   mu_RA: [0.0528, 0.002] # [arcsec] centroid location
@@ -53,4 +53,4 @@ pixsize : 38568201867193.242 # [cm], copied from a previous image.out
 # This is only relevant if we fix the distance, however.
 
 # MCMC setup
-samples: 1000
+samples: 6000
