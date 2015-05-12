@@ -122,7 +122,7 @@ type Parameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
-#From Rosenfeld et al. 2012, Table 1
+# Typical values, from Rosenfeld et al. 2012, Table 1 for V4046 Sgr
 M_star = 1.75 # [M_sun] stellar mass
 r_c =  45. # [AU] characteristic radius
 T_10 =  115. # [K] temperature at 10 AU
