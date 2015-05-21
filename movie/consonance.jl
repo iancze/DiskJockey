@@ -23,7 +23,7 @@ using model
 # scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 # outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 
-# For cfa0 use
+# For cfa CF use
 homedir = "/pool/scout0/JudithExcalibur/"
 scratchdir = "/pool/cf/iczekala/scratch/"
 outdir = "/pool/scout0/JudithExcalibur/output/movie/"
@@ -31,7 +31,7 @@ outdir = "/pool/scout0/JudithExcalibur/output/movie/"
 # How many frames per process?
 nframes_per_proc = 50
 
-global const nchan = 7
+global const nchan = 5
 global const vels = linspace(-1.5, 1.5, nchan) # [km/s]
 # CO 2-1 rest frame
 lam0 = cc/230.538e9 * 1e4 # [microns]
@@ -64,10 +64,10 @@ end
 
 # Create a master parameter list
 # First, adjust in radius
-radiuses = smooth_vary(r_c, 25., 65., 0.5)
-nradiuses = length(radiuses)
+# radiuses = smooth_vary(r_c, 25., 65., 0.5)
+# nradiuses = length(radiuses)
 
-# then, adjust in inclination
+# First, adjust in inclination
 incls = smooth_vary(incl, 0., 90., 1.)
 nincls = length(incls)
 
@@ -75,18 +75,16 @@ nincls = length(incls)
 masses = smooth_vary(M_star, 1.0, 2.5, 0.02)
 nmasses = length(masses)
 
-nframes = nradiuses + nincls + nmasses
+nframes = nincls + nmasses
 
 # Now create a giant array of Parameters objects
 pars = Array(Parameters, nframes)
 
 for i=1:nframes
-    if i <= nradiuses
-        pars[i] = Parameters(M_star, radiuses[i], T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-    elseif i <= (nincls + nradiuses)
-        pars[i] = Parameters(M_star, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incls[i - nradiuses], PA, vel, mu_RA, mu_DEC)
+    if i <= nincls
+        pars[i] = Parameters(M_star, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incls[i], PA, vel, mu_RA, mu_DEC)
     else
-        pars[i] = Parameters(masses[i - (nradiuses + nincls)], r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        pars[i] = Parameters(masses[i - nincls], r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
     end
 end
 
@@ -111,7 +109,6 @@ vmax_g = 3.0409871804761e11
 
 vmin_v = 0.0
 vmax_v = 45.0193854891226
-
 
 
 
