@@ -63,7 +63,7 @@ end
 const global npix = 256 # number of pixels
 const global grid = Grid(100, 32, 0.5, 800, true)
 write_grid("", grid)
-write_lambda(lams)
+write_lambda(lams, "")
 
 start = run_index * nframes_per_proc + 1
 ids = Int[i for i=start:(start + nframes_per_proc)]
