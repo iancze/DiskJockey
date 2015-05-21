@@ -30,7 +30,7 @@ global norm = plt.Normalize(vmin=log10(vmax_g) - 6, vmax=log10(vmax_g), clip=fal
 # Plot the channel maps using sky convention
 function plot_chmaps(img::image.SkyImage, id::Int)
 
-    fig, ax = plt.subplots(ncols=nchan, figsize=(8, 1.9))
+    fig, ax = plt.subplots(ncols=nchan, figsize=(6.4, 1.6))
     # Image needs to be flipped along RA dimension
     ext = (img.ra[end], img.ra[1], img.dec[1], img.dec[end])
 
@@ -43,7 +43,7 @@ function plot_chmaps(img::image.SkyImage, id::Int)
         else
             ax[col][:set_xlabel](L"$\Delta \alpha$ ('')", size=12)
             ax[col][:set_ylabel](L"$\Delta \delta$ ('')", size=12)
-            ax[col][:tick_params](axis="both", which="major", labelsize=12)
+            ax[col][:tick_params](axis="both", which="major", labelsize=10)
         end
 
         #Flip the frame for Sky convention
@@ -52,7 +52,11 @@ function plot_chmaps(img::image.SkyImage, id::Int)
         lframe = log10(frame)
         max = maximum(lframe)
         ax[col][:imshow](lframe, extent=ext, norm=norm, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"))
-        ax[col][:annotate](@sprintf("%.1f", vels[col]), (0.1, 0.82), xycoords="axes fraction", size=12)
+        if col==1
+            ax[col][:annotate](@sprintf("%.1f km/s", vels[col]), (0.1, 0.78), xycoords="axes fraction", size=12)
+        else
+            ax[col][:annotate](@sprintf("%.1f", vels[col]), (0.1, 0.78), xycoords="axes fraction", size=12)
+        end
 
     end
 
@@ -62,9 +66,9 @@ function plot_chmaps(img::image.SkyImage, id::Int)
     r_c = p.r_c
     incl = p.incl
     label = L"$i$: " * @sprintf("%.0f", incl) * L"${}^\circ \quad \quad M_\ast$: " * @sprintf("%.2f", mass) * L" $M_\odot$"
-    fig[:text](0.4, 0.1, label, size=16)
+    fig[:text](0.35, 0.1, label, size=16)
 
-    fig[:subplots_adjust](wspace=0.08, top=0.95, bottom=0.26, left=0.1, right=0.9)
+    fig[:subplots_adjust](wspace=0.08, top=0.97, bottom=0.26, left=0.1, right=0.9)
 
     plt.savefig(outdir * @sprintf("g%04d.png", id), dpi=150)
     plt.close("all")
