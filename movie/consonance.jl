@@ -54,12 +54,14 @@ mu_DEC = 0.0 # [arcsec]
 
 # Given a starting parameter, vary it by steps dp to the low bound, then high
 # bound, then back to where we started
-function smooth_vary(start, low, high, dp)
+
+# In the new edition, keep it at the top and bottom values for some period
+function smooth_vary(start, low, high, dp, npause)
     ndown1 = iround((start - low)/dp) + 1
     nup = iround((high - low)/dp) + 1
     ndown2 = iround((high - start)/dp) + 1
 
-    return [linspace(start, low, ndown1)' linspace(low, high, nup)' linspace(high, start, ndown2)']
+    return [linspace(start, low, ndown1)' low * ones(npause)' linspace(low, high, nup)' high * ones(npause)' linspace(high, start, ndown2)' start * ones(npause)']
 end
 
 # Create a master parameter list
@@ -68,11 +70,11 @@ end
 # nradiuses = length(radiuses)
 
 # First, adjust in inclination
-incls = smooth_vary(incl, 0., 90., 1.)
+incls = smooth_vary(incl, 0., 90., 1., 15)
 nincls = length(incls)
 
 # then, adjust in mass
-masses = smooth_vary(M_star, 1.0, 2.5, 0.02)
+masses = smooth_vary(M_star, 1.0, 2.5, 0.02, 15)
 nmasses = length(masses)
 
 nframes = nincls + nmasses

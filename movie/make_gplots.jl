@@ -65,8 +65,10 @@ function plot_chmaps(img::image.SkyImage, id::Int)
     mass = p.M_star
     r_c = p.r_c
     incl = p.incl
-    label = L"$i$: " * @sprintf("%.0f", incl) * L"${}^\circ \quad \quad M_\ast$: " * @sprintf("%.2f", mass) * L" $M_\odot$"
-    fig[:text](0.35, 0.1, label, size=16)
+    label_incl = L"$i$: " * @sprintf("%.0f", incl) * L"${}^\circ$"
+    label_mass = L"$M_\ast$: " * @sprintf("%.2f", mass) * L" $M_\odot$"
+    fig[:text](0.35, 0.1, label_incl, size=16)
+    fig[:text](0.55, 0.1, label_mass, size=16)
 
     fig[:subplots_adjust](wspace=0.08, top=0.97, bottom=0.26, left=0.1, right=0.9)
 
