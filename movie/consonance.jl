@@ -19,14 +19,14 @@ using model
 # outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
 
 # For local use
-# homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
-# scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
-# outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+homedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/"
+scratchdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+outdir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
 
 # For cfa CF use
-homedir = "/pool/scout0/JudithExcalibur/"
-scratchdir = "/pool/cf/iczekala/scratch/"
-outdir = "/pool/scout0/JudithExcalibur/output/movie/"
+# homedir = "/pool/scout0/JudithExcalibur/"
+# scratchdir = "/pool/cf/iczekala/scratch/"
+# outdir = "/pool/scout0/JudithExcalibur/output/movie/"
 
 # How many frames per process?
 nframes_per_proc = 50
@@ -102,6 +102,15 @@ println("There are ", nframes, " frames to be generated.")
 # end
 
 # used as arg to imshow
+
+# Poster plot material
+nframes = 5
+pars = [Parameters(1.0, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC),
+Parameters(1.75, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC),
+Parameters(2.50, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC),
+Parameters(1.75, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, 0.0, PA, vel, mu_RA, mu_DEC),
+Parameters(1.75, r_c, T_10, q, gamma, 10^logM_CO, ksi, dpc, 90.0, PA, vel, mu_RA, mu_DEC)
+]
 
 vmin_d = 0.0
 vmax_d = 6.415994694015499e9

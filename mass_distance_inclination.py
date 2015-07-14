@@ -162,3 +162,4 @@ ax[1].set_ylim(120, 167)
 
 fig.subplots_adjust(left=0.15, right=0.85, hspace=0.07, top=0.97, bottom=0.07)
 fig.savefig("plots/AKSco/mdi.pdf")
+fig.savefig("plots/AKSco/mdi.svg")
