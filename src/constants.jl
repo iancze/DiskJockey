@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, deg, fftspace, MCO
+export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -26,6 +26,11 @@ amu = 1.6605402e-24 # [g]
 
 #CO
 m_CO = 28.01 * amu #molecular weight of CO in g
+
+# Rest frame wavelengths
+lam0_12CO = cc/230.538e9 * 1e4 # [microns]
+lam0_13CO = cc/220.39868e9 * 1e4
+lam0_C18O = cc/219.56036e9 * 1e4
 
 #Disk specific
 m0 = mu_gas * amu #mean molecular weight of gas

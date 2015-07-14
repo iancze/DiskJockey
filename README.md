@@ -40,8 +40,54 @@ The following is a description of the most important files in the package
 
 **mach_three.jl**: The driver script for performing MCMC with a disk model. The main disk-related functions are `fprob` and `f`. The organization of this file is designed so that the likelihood call can be parallelized using the framework written in `parallel.jl`.
 
-Parameter files are specified using YAML. Some example parameter files are located in the `scripts/` directory.
+Recently, I have organized this code into a proper Julia package.
+
+## Installation
+
+First, make sure you have installed RADMC-3D and you can successfully run one of the example scripts.
+
+Because `JuditheExcalibur` isn't yet an official Julia package (nor will it likely be), for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
+
+    julia> Pkg.clone("https://github.com/iancze/JudithExcalibur.git")
+
+Lastly, I have written several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your PATH. To figure out where the package is installed
+
+    julia> Pkg.dir("JudithExcalibur")
+    "/home/ian/.julia/JudithExcalibur"
+
+Your PATH will vary. The scripts are located inside of a `scripts` directory, so if you are using Z-shell, you will want to add the PATH that looks something like
+
+    export PATH="/home/ian/.julia/JudithExcalibur/scripts:$PATH"
+
+inside of your `.zshrc` file. Finally,
+
+    $ source ~/.zshrc
+
+To check that you have properly added the scripts, you can try
+
+    $ JudithInitialize.jl --test
+    Your JudithExcalibur scripts are successfully linked.
+    Exiting
+
+## Use
+
+Now, the `JuditheExcalibur` package should be installed globally on your system. Because it is likely that you will want to fit more than just one disk, or use different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. For example,
+
+    $ mkdir ExcitingDisk
+    $ cd ExcitingDisk
+
+Once you've created a working directory for your project, then you'll want to initialize this directory with a config file
+
+    $ JudithInitialize.jl --new-config
+    Copied default config.yaml file to current working directory.
+    Exiting
+
+Now, open up `config.yaml` with your favorite text editor and change the fields as you see fit. Next, we'll need to initialize the directory with the appropriate RADMC-3D files specific to your dataset.
+
+    $ JudithInitialize.jl
 
 To run this code on a new dataset using 4 cores, you would run
 
-    mach_three.jl -p 3 scripts/my_data.yaml
+    mach_three.jl -p 3
+
+where the `-p` flag specifies how many additional processes to spawn, therefore the total number of processes used is `p + 1`. For maximal performance, set `p = ncores - 1` where `ncores` is the number of cores on your machine.
