@@ -2,7 +2,7 @@
 
 module gridding
 
-using image
+using ..image
 
 import Base.Math.@horner
 

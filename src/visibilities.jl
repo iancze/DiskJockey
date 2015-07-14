@@ -3,9 +3,9 @@
 module visibilities
 
 using HDF5
-using image
-using gridding
-using constants
+using ..image
+using ..gridding
+using ..constants
 
 import Base.conj! # extend this later
 

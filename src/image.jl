@@ -14,7 +14,7 @@ module image
 
 export imread, imToSky, imToSpec, SkyImage
 
-using constants
+using ..constants
 
 # Define an image type, which can store the data as well as pixel spacing
 

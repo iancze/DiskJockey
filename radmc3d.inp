@@ -1,9 +1,0 @@
-incl_dust = 0
-incl_lines = 1
-incl_freefree = 0
-scattering_mode_max = 0
-rto_style = 1
-camera_nrrefine = 100
-lines_mode = 1
-lines_show_pictograms = 1
-tgas_eq_tdust = 0
