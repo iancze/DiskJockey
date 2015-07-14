@@ -1,0 +1,10 @@
+julia 0.3 0.4-
+YAML
+PyPlot
+LaTeXStrings
+Distributions
+PDMats
+HDF5
+ArgParse
+NPZ
+Logging
