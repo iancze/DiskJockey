@@ -34,13 +34,16 @@ using HDF5
 import PyPlot.plt
 using LaTeXStrings
 
+species = config["species"]
+lam0 = lam0s[species]
+
 # Plot the raw channel maps directly from RADMC
 function plot_chmaps(img::image.RawImage)
 
     (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
 
     # CO 2-1 rest frame
-    lam0 = cc/230.538e9 * 1e4 # [microns]
+    # lam0 = cc/230.538e9 * 1e4 # [microns]
     nlam = length(img.lams)
 
     # convert wavelengths to velocities
@@ -94,7 +97,7 @@ function plot_chmaps(img::image.SkyImage)
     ext = (img.ra[end], img.ra[1], img.dec[1], img.dec[end])
 
     # CO 2-1 rest frame
-    lam0 = cc/230.538e9 * 1e4 # [microns]
+    # lam0 = cc/230.538e9 * 1e4 # [microns]
     nlam = length(img.lams)
 
     # convert wavelengths to velocities
@@ -157,8 +160,7 @@ function plot_chmaps_data(img::image.SkyImage)
     mm = sin(img.dec .* arcsec)
     ext = (ll[1], ll[end], mm[1], mm[end])
 
-    # CO 2-1 rest frame
-    lam0 = cc/230.538e9 * 1e4 # [microns]
+    # Transition rest frame
     nlam = length(img.lams)
 
     # convert wavelengths to velocities
@@ -210,8 +212,8 @@ function plot_spectrum(img::image.SkyImage)
 
     spec = imToSpec(img)
 
-    # CO 2-1 rest frame
-    lam0 = cc/230.538e9 * 1e4 # [microns]
+    # Rest frame transition
+    # lam0 = lam0s[species]
 
     # convert wavelengths to velocities
     vels = c_kms * (img.lams .- lam0)/lam0 # [km/s]

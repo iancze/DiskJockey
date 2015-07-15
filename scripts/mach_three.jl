@@ -39,6 +39,8 @@ end
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
+species = config["species"]
+
 outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
 
 # This code is necessary for multiple simultaneous runs on odyssey
@@ -175,9 +177,17 @@ debug("Created logfile.")
     run(`cp radmc3d.inp $keydir`)
     ag = basedir * "amr_grid.inp"
     run(`cp $ag $keydir`)
-    run(`cp lines.inp $keydir`)
-    run(`cp molecule_co.inp $keydir`)
     run(`cp wavelength_micron.inp $keydir`)
+
+    # run(`cp lines.inp $keydir`)
+    # run(`cp molecule_co.inp $keydir`)
+
+    ls = "lines_" * molnames[species] * ".inp"
+    lf = keydir * "/lines.inp"
+    run(`cp $ls $lf`)
+
+    mf = "molecule_" * molnames[species] * ".inp"
+    run(`cp $mf $keydir`)
 
     # change the subprocess to reside in this directory for the remainder of the run
     # where it will drive its own independent RADMC3D process for a subset of channels
@@ -344,9 +354,10 @@ function fprob(p::Vector{Float64})
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk in base directory
-    write_model(pars, basedir, grid)
+    write_model(pars, basedir, grid, species)
 
-    nd = basedir * "numberdens_co.inp"
+    # nd = basedir * "numberdens_co.inp"
+    nd = basedir * "numberdens_" * molnames[species] * ".inp"
     gv = basedir * "gas_velocity.inp"
     gt = basedir * "gas_temperature.inp"
     mt = basedir * "microturbulence.inp"

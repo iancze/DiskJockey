@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O
+export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -27,10 +27,18 @@ amu = 1.6605402e-24 # [g]
 #CO
 m_CO = 28.01 * amu #molecular weight of CO in g
 
+m_12CO = 27.9949 * amu # [g]
+m_13CO = 28.9983 * amu # [g]
+m_C18O = 29.9992 * amu # [g]
+
+molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
+
 # Rest frame wavelengths
 lam0_12CO = cc/230.538e9 * 1e4 # [microns]
 lam0_13CO = cc/220.39868e9 * 1e4
 lam0_C18O = cc/219.56036e9 * 1e4
+
+lam0s = Dict([("12CO", lam0_12CO), ("13CO", lam0_13CO), ("C18O", lam0_C18O)])
 
 #Disk specific
 m0 = mu_gas * amu #mean molecular weight of gas

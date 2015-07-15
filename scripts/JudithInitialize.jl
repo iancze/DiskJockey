@@ -18,13 +18,13 @@ s = ArgParseSettings()
     help = "a YAML configuration file"
     default = "config.yaml"
     # Options for specifying only model velocities.
-    "--vstart"
+    "--vstart", "-s"
     help = "Starting velocity in km/s."
     arg_type = Float64
-    "--vend"
+    "--vend", "-e"
     help = "Ending velocity in km/s."
     arg_type = Float64
-    "--nvel"
+    "--nvel", "-n"
     help = "Number of velocity channels."
     arg_type = Int
 end
@@ -132,13 +132,7 @@ if config["gas"]
         # and create an evenly spaced array of velocities
         vels = linspace(vstart, vend, nvel) # [km/s]
 
-        if species == "12CO"
-            lam0 = lam0_12CO
-        elseif species ==  "13CO"
-            lam0 = lam0_13CO
-        elseif species == "C18O"
-            lam0 = lam0_C18O
-        end
+        lam0 = lam0s[species]
 
         # convert velocities to wavelengths
         shift_lams = lam0 * (vels/c_kms + 1)
@@ -158,7 +152,7 @@ if config["gas"]
 
     # Write everything to the current working directory
     write_grid("", grid)
-    write_model(pars, "", grid)
+    write_model(pars, "", grid, species)
     write_lambda(shift_lams, "")
 
     println("Wrote gas model input files for RADMC-3D.")

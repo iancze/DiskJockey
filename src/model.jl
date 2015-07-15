@@ -162,11 +162,27 @@ end
 Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 
 # No parametric type for number density, because it is a 2D function.
-function n_CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
+
+function n_12CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
     H = Hp(r, M_star, T_10, q)
-    (2. - gamma) * M_CO/(m_CO * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
+    (2. - gamma) * M_CO/(m_12CO * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
 end
-n_CO(r::Float64, z::Float64, pars::Parameters) = n_CO(r, z, pars.r_c * AU, pars.M_CO * M_earth, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
+
+function n_13CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
+    H = Hp(r, M_star, T_10, q)
+    (2. - gamma) * M_CO/(m_13CO * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
+end
+
+function n_C18O(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
+    H = Hp(r, M_star, T_10, q)
+    (2. - gamma) * M_CO/(m_C18O * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
+end
+
+n_12CO(r::Float64, z::Float64, pars::Parameters) = n_12CO(r, z, pars.r_c * AU, pars.M_CO * M_earth, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
+
+n_13CO(r::Float64, z::Float64, pars::Parameters) = n_13CO(r, z, pars.r_c * AU, pars.M_CO * M_earth, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
+
+n_C18O(r::Float64, z::Float64, pars::Parameters) = n_C18O(r, z, pars.r_c * AU, pars.M_CO * M_earth, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
 
 function rho_dust(r::Float64, z::Float64, pars::Parameters)
     nCO = n_CO(r, z, pars) # number of CO molecules per cm^3
@@ -191,9 +207,13 @@ end
 
 microturbulence(pars::Parameters) = microturbulence(pars.ksi)
 
-function write_model(pars::Parameters, basedir::String, grid::Grid)
+function write_model(pars::Parameters, basedir::String, grid::Grid, species::ASCIIString)
+
+    funcs = Dict([("12CO", n_12CO), ("13CO", n_13CO), ("C18O", n_C18O)])
+    n_CO = funcs[species]
+
     # numberdens_co.inp
-    fdens = open(basedir * "numberdens_co.inp", "w")
+    fdens = open(basedir * "numberdens_" * molnames[species] * ".inp", "w")
     @printf(fdens, "%d\n", 1) #iformat
     @printf(fdens, "%d\n", grid.ncells)
 
