@@ -7,6 +7,7 @@ out_base: output/AKSco/
 
 gas: true
 species : 12CO # Possible choices: 12CO, 13CO, C18O HCN
+transition: 3-2
 
 grid:
   nr: 64
@@ -17,6 +18,8 @@ grid:
 
 # Which channels of the dataset to exclude.
 # exclude: [35, 36, 37, 38]
+
+fix_d : false
 
 parameters:
   M_star: [2.487, 0.007] # [M_sun] stellar mass

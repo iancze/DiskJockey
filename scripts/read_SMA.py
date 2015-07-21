@@ -1,6 +1,15 @@
-# Because I haven't been able to use CFITSIO to read the visibilities, use
-# astropy.io.fits to read the visibilities and convert them to HDF5
+#!/usr/bin/env python
 
+import argparse
+
+parser = argparse.ArgumentParser(description="Convert SMA FITS files into an HDF5 file for JudithExcalibur.")
+parser.add_argument("FITS", help="The SMA FITS file.")
+parser.add_argument("--out", default="data.hdf5", help="The output file.")
+parser.add_argument("--plot", action="store_true", help="Make a plot of the UV coverage.")
+args = parser.parse_args()
+
+# Because I haven't been able to use Julia's CFITSIO to read the visibilities, use
+# astropy.io.fits to read the visibilities and convert them to HDF5
 from astropy.io import fits
 import h5py
 import numpy as np
@@ -8,8 +17,7 @@ import numpy as np
 cc = 2.99792458e10 # [cm s^-1]
 
 # Reading SMA dataset
-fname = "../data/V4046Sgr/V4046Sgr.12CO21.final.vis.fits"
-# fname = "data/V4046Sgr.12CO21.model.vis.fits"
+fname = args.FITS
 
 f = fits.open(fname)
 
@@ -37,8 +45,7 @@ imag = vis[:, :, 1].T
 weight = vis[:, :, 2].T
 
 # Now, stuff each of these into an HDF5 file.
-fid = h5py.File("../data/V4046Sgr/V4046Sgr.hdf5", "w")
-# fid = h5py.File("data/V4046Sgr_model_read.hdf5", "w")
+fid = h5py.File(args.out, "w")
 
 # Convert the frequencies from Hz to micron.
 fid.create_dataset("lams", (nfreq,), dtype="float64")[:] = cc/freqs*1e4 #[microns]
@@ -54,24 +61,24 @@ fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)
 fid.close()
 
 
+if args.plot:
 
-#Try plotting the locations of the UV points
-#
-import matplotlib.pyplot as plt
+    #Try plotting the locations of the UV points
+    import matplotlib.pyplot as plt
 
-#plt.errorbar(np.sqrt(uu[12,:100]**2 + vv[12,:100]**2), real[12,:100], yerr=1./np.sqrt(weight[12,:100]), ls="", fmt="o")
-#plt.show()
-#
+    #plt.errorbar(np.sqrt(uu[12,:100]**2 + vv[12,:100]**2), real[12,:100], yerr=1./np.sqrt(weight[12,:100]), ls="", fmt="o")
+    #plt.show()
+    #
 
-#plt.hist(np.abs(imag[12] * np.sqrt(weight[12])))
-#plt.show()
-fig = plt.figure(figsize=(6,6))
-ax = fig.add_subplot(111)
-ax.plot(uu[10], vv[10], ".")
-ax.set_xlabel(r"UU [k$\lambda$]")
-ax.set_ylabel(r"VV [k$\lambda$]")
-ax.set_xlim(max(uu[10]), min(uu[10]))
-#ax.set_ylim(-75, 75)
-fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
+    #plt.hist(np.abs(imag[12] * np.sqrt(weight[12])))
+    #plt.show()
+    fig = plt.figure(figsize=(6,6))
+    ax = fig.add_subplot(111)
+    ax.plot(uu[0], vv[0], ".")
+    ax.set_xlabel(r"UU [k$\lambda$]")
+    ax.set_ylabel(r"VV [k$\lambda$]")
+    ax.set_xlim(max(uu[0]), min(uu[0]))
+    #ax.set_ylim(-75, 75)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
 
-plt.savefig("../plots/V4046Sgr/uv_spacings.svg")
+    plt.savefig("uv_coverage.png")

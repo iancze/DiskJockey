@@ -7,9 +7,6 @@ using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
-    # "--opt1"
-    # help = "an option with an argument"
-    # default = 0
     "--norad"
     help = "Use the image already here."
     action = :store_true
@@ -35,7 +32,8 @@ import PyPlot.plt
 using LaTeXStrings
 
 species = config["species"]
-lam0 = lam0s[species]
+transition = config["transition"]
+lam0 = lam0s[species*transition]
 
 # Plot the raw channel maps directly from RADMC
 function plot_chmaps(img::image.RawImage)

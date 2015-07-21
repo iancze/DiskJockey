@@ -39,8 +39,6 @@ end
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-species = config["species"]
-
 outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
 
 # This code is necessary for multiple simultaneous runs on odyssey
@@ -120,6 +118,8 @@ for process in procs()
     @spawnat process global cfg=config
 end
 
+@everywhere const global species = cfg["species"]
+
 @everywhere basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
 
 @everywhere const global basedir = basefmt(run_id)
@@ -179,12 +179,12 @@ debug("Created logfile.")
     run(`cp $ag $keydir`)
     run(`cp wavelength_micron.inp $keydir`)
 
-    # run(`cp lines.inp $keydir`)
+    run(`cp lines.inp $keydir`)
     # run(`cp molecule_co.inp $keydir`)
 
-    ls = "lines_" * molnames[species] * ".inp"
-    lf = keydir * "/lines.inp"
-    run(`cp $ls $lf`)
+    # ls = "lines_" * molnames[species] * ".inp"
+    # lf = keydir * "/lines.inp"
+    # run(`cp $ls $lf`)
 
     mf = "molecule_" * molnames[species] * ".inp"
     run(`cp $mf $keydir`)
@@ -333,10 +333,13 @@ function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
-    dpc = cfg["parameters"]["dpc"][1] # [pc] distance
 
-    # M_star,
-    M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+    if config["fix_d"]
+        dpc = cfg["parameters"]["dpc"][1] # [pc] distance
+        M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+    else
+        M_star, r_c, T_10, q, logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+    end
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
@@ -396,7 +399,12 @@ using PDMats
 
 pp = config["parameters"]
 # The parameters we'll be using
-params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+if config["fix_d"]
+    params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+else
+    params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+end
+# params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 jumps = Array(Float64, nparam)

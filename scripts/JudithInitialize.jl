@@ -27,6 +27,9 @@ s = ArgParseSettings()
     "--nvel", "-n"
     help = "Number of velocity channels."
     arg_type = Int
+    "--vsys"
+    help = "Shift the systemic velocity"
+    arg_type = Float64
 end
 
 parsed_args = parse_args(ARGS, s)
@@ -79,6 +82,7 @@ if config["gas"]
 
     # Which species?
     species = config["species"]
+    transition = config["transition"]
     if species == "12CO"
         ff = assets_dir * "molecule_co.inp"
         run(`cp $ff .`)
@@ -132,7 +136,7 @@ if config["gas"]
         # and create an evenly spaced array of velocities
         vels = linspace(vstart, vend, nvel) # [km/s]
 
-        lam0 = lam0s[species]
+        lam0 = lam0s[species*transition]
 
         # convert velocities to wavelengths
         shift_lams = lam0 * (vels/c_kms + 1)
@@ -142,7 +146,7 @@ if config["gas"]
         lams = read(fid["lams"]) # [μm]
         close(fid)
 
-        # Doppler shift the dataset wavelength to rest-frame wavelength
+        # Doppler shift the dataset wavelength according to the velocity in the parameter file
         beta = vel/c_kms # relativistic Doppler formula
         shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
     end

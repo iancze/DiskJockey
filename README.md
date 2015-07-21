@@ -46,7 +46,7 @@ Recently, I have organized this code into a proper Julia package.
 
 First, make sure you have installed RADMC-3D and you can successfully run one of the example scripts.
 
-Because `JuditheExcalibur` isn't yet an official Julia package (nor will it likely be), for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
+Because `JudithExcalibur` isn't yet an official Julia package (nor will it likely be), for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
 
     julia> Pkg.clone("https://github.com/iancze/JudithExcalibur.git")
 
@@ -69,9 +69,11 @@ To check that you have properly added the scripts, you can try
     Your JudithExcalibur scripts are successfully linked.
     Exiting
 
+Note, if you would like to use the plotting scripts (`scripts/plot_model.jl`) or the IO routines for SMA and ALMA data (`scripts/read_SMA.py`), you will need a Python installation with the following packages installed: `numpy`, `scipy`, `matplotlib`, `h5py`, and `astropy`. The anaconda Python distribution would be a great way to take care of this.
+
 ## Use
 
-Now, the `JuditheExcalibur` package should be installed globally on your system. Because it is likely that you will want to fit more than just one disk, or use different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. For example,
+Now, the `JudithExcalibur` package should be installed globally on your system. Because it is likely that you will want to fit more than just one disk, or use different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. For example,
 
     $ mkdir ExcitingDisk
     $ cd ExcitingDisk

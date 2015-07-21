@@ -33,12 +33,16 @@ m_C18O = 29.9992 * amu # [g]
 
 molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 
-# Rest frame wavelengths
-lam0_12CO = cc/230.538e9 * 1e4 # [microns]
-lam0_13CO = cc/220.39868e9 * 1e4
-lam0_C18O = cc/219.56036e9 * 1e4
+# Species can be "12CO", "13CO", etc.
+# Transition can be "3-2", "2-1", etc.
 
-lam0s = Dict([("12CO", lam0_12CO), ("13CO", lam0_13CO), ("C18O", lam0_C18O)])
+# Key to this dictionary is then species * transition
+
+# Rest frame wavelengths
+lam0s = Dict([("12CO2-1", cc/230.538e9 * 1e4 ),
+            ("13CO2-1", cc/220.39868e9 * 1e4),
+            ("C18O2-1", cc/219.56036e9 * 1e4),
+            ("12CO3-2", cc/345.79599e9 * 1e4)]) # microns
 
 #Disk specific
 m0 = mu_gas * amu #mean molecular weight of gas
