@@ -40,6 +40,7 @@ img = imageGauss(ll, mm, p0, 1)
 # A centered Gaussian image which we will then shift via the phase theorem
 img_plain1 = imageGauss(ll, mm, p_center, 1)
 img_plain2 = imageGauss(ll, mm, p_center, 1)
+img_plain3 = imageGauss(ll, mm, p_center, 1)
 
 lam0 = lam0s["12CO2-1"] # [microns] 12CO 2-1
 
@@ -48,6 +49,7 @@ skim = SkyImage(img, ra, dec, lam0)
 
 skim_plain1 = SkyImage(img_plain1, ra, dec, lam0)
 skim_plain2 = SkyImage(img_plain2, ra, dec, lam0)
+skim_plain3 = SkyImage(img_plain3, ra, dec, lam0)
 
 # Apply a centered correction function on the offset image and Fourier transform the image
 corrfun!(skim, 0., 0.)
@@ -65,6 +67,10 @@ vis_fft_center = transform(skim_plain1)
 corrfun!(skim_plain2, mu_RA, mu_DEC)
 vis_fft_shift = transform(skim_plain2)
 phase_shift!(vis_fft_shift, mu_RA, mu_DEC)
+
+# Apply an offset correction function on the centered image, but later we will phase shift the visibilities *after* they have been downsampled.
+corrfun!(skim_plain3, mu_RA, mu_DEC)
+vis_fft_offset = transform(skim_plain3)
 
 
 # Now, create a slightly different spacing from the raw array, and interpolate to this.
@@ -253,6 +259,25 @@ end
 
 plot_1d(analytic, approx, "plots/interpolation_shift_image.png")
 
+# As a final, final check that the resampling is in fact linear, let's use the centered image, offset corrfun, downsample this, then apply the phase shift at the end. This is where all my confusion started. If we were just able to do the previous two tests OK, it seems like this *shouldn't work*, because if in fact everything is linear, then the only difference is that this has the corrfun applied w/ a shift.
+
+for i=1:n
+    u = uu[i]
+    v = 0.0
+
+    # Now shift the interpolated points according to the phase theorem
+    R = Float64[u, v] * 1e3 #[λ]
+    # Not actually in polar phase form
+    shift = exp(-2pi * 1.0im * (R' * mu)[1])
+
+    approx[i] = shift * interpolate_uv(u, v, vis_fft_offset)
+    analytic[i] = FTGauss(u, v, p0, 1)
+end
+
+plot_1d(analytic, approx, "plots/interpolation_linear_operations.png")
+
+# Ok, this *does not work*. What is the reason? Is the resampling operation not linear apparently?
+# I don't think it's that, rather, I think that in order for the gridding correction function/ gridding convolution function pair to work properly, and properly cancel each other out, then they need to correspond to the same phase center. So, either you do both fixed to 0,0, or you do both offset to some value. Once the interpolation is done, you can phase shift as much as you want, but don't mix order of operations.
 
 # Now, we can check things on an actual 2D image if we so please.
 
