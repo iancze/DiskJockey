@@ -77,8 +77,8 @@ end
 
 # Import the complex conjugate function from Base, and extend it to work
 # on a DataVis.
-# I think this is necessary because the SMA conventions are different from
-# what I'm using in the textbooks.
+# I think this is necessary because the SMA and ALMA baseline conventions are swapped from
+# what I'm using in the NRAO Synthesis Summer School textbook.
 function conj!(dv::DataVis)
     conj!(dv.VV)
 end
@@ -170,7 +170,7 @@ function chi2(dvis::DataVis, mvis::ModelVis)
     return sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
-# Given a new model centroid in the image plane (in arcseconds), shift the
+# Given a new model centroid in the image plane (in arcseconds), shift the model
 # visibilities by corresponding amount
 function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
 
@@ -187,6 +187,27 @@ function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
     end
 end
 
+# Shift the (0,0) data phase center to these new RA, DEC centroids. The mu_RA, mu_DEC should be
+# the same sign as those in the modelVis phase shift routine.
+# This is only necessary if the data is so off centered relative to the RADMC image size
+# that you are running into problems with tapering cutting off a majority of the image.
+# function phase_shift!(dvis::DataVis, mu_RA, mu_DEC)
+#
+#     mu = -Float64[mu_RA, mu_DEC] * arcsec # [radians]
+#
+#     nvis = length(dvis.VV)
+#     # Go through each visibility and apply the phase shift
+#     for i=1:nvis
+#         # Convert from [kλ] to [λ]
+#         R = Float64[dvis.dvis.uu[i], dvis.dvis.vv[i]] * 1e3 #[λ]
+#         # Not actually in polar phase form
+#         shift = exp(-2pi * 1.0im * (R' * mu)[1])
+#         dvis.VV[i] = dvis.VV[i] * shift
+#     end
+# end
+
+# Given a new model centroid in the image plane (in arcseconds), shift the model
+# visibilities by corresponding amount
 function phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
 
     mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
@@ -448,16 +469,16 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     w = sum(uw) * sum(vw)
 
     # 5. Loop over all 36 grid indices and sum to find the interpolation.
-    cum::Complex128 = 0.0 + 0.0im
+    cumulative::Complex128 = 0.0 + 0.0im
     for i=1:6
         for j=1:6
-            cum += uw[i] * vw[j] * VV[j,i] # Array is packed like the image
+            cumulative += uw[i] * vw[j] * VV[j,i] # Array is packed like the image
         end
     end
 
-    cum = cum/w
+    cumulative = cumulative/w
 
-    return cum
+    return cumulative
 end
 
 # Return the frequencies corresponding to the output of the real FFT. After numpy.fft.rfftfreq

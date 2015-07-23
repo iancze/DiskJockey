@@ -1,22 +1,21 @@
+#!/usr/bin/env python
+
+import argparse
+
+parser = argparse.ArgumentParser(description="Convert ALMA NPZ save files into an HDF5 file for JudithExcalibur.")
+parser.add_argument("NPZ", help="The ALMA NPZ file produced by Sean.")
+parser.add_argument("nu0", type=float, help="The starting frequency for index 0, in Hz")
+parser.add_argument("dnu", type=float, help="The change in frequency with array index. Can be negative. In Hz.")
+parser.add_argument("--out", default="data.hdf5", help="The output file.")
+parser.add_argument("--plot", action="store_true", help="Make a plot of the UV coverage.")
+args = parser.parse_args()
+
 import h5py
 import numpy as np
 
 cc = 2.99792458e10 # [cm s^-1]
 
-# Original 50 channel dataset
-# data = np.load("../data/AKSco/AKSco.vis.npz")
-
-# Original dataset with 82 channels
-# data = np.load("../data/AKSco/AKSco.12CO.305kHz.vis.npz")
-
-# Recalibrated original dataset
-# data = np.load("../data/AKSco/AKSco.12CO.305kHz.updated.vis.npz")
-
-# Feb 24th dataset
-# data = np.load("../data/AKSco/AKSco.12CO.305kHz.2015Feb24.vis.npz")
-
-# Finer dataset with 210 channels
-data = np.load("../data/AKSco/AKSco.12CO.122kHz.2015Mar20.vis.npz")
+data = np.load(args.NPZ)
 
 
 # This file has categories
@@ -52,11 +51,18 @@ nchan, nvis = data["Re"].shape
 #####################################
 # # For AKSco.12CO.122kHz.vis.npz
 # # The index 0 channel has a frequnecy of 230.545996 GHz
-nu0 = 230.545996e9 # [Hz]
-dnu = 122.070e3 # [Hz]
+# nu0 = 230.545996e9 # [Hz]
+# dnu = 122.070e3 # [Hz]
 #####################################
 
+#####################################
+# For GWOri.13CO.data.vis.npz
+# nu0 = 220.371112e9 # [Hz]
+# dnu = 122.070e3 # [Hz]
+#####################################
 
+nu0 = args.nu0
+dnu = args.dnu
 
 freqs = nu0 + np.arange(nchan) * dnu # [Hz]
 lams = cc/freqs * 1e4 # [microns]
@@ -78,38 +84,52 @@ real = data["Re"]
 imag = data["Im"]
 weight = data["Wt"]
 
-# Now, stuff each of these into an HDF5 file.
-# fid = h5py.File("../data/AKSco/AKSco.hdf5", "w")
-# fid = h5py.File("../data/AKSco/AKSco_305kHz.hdf5", "w")
-# fid = h5py.File("../data/AKSco/AKSco_305kHz_updated.hdf5", "w")
-fid = h5py.File("../data/AKSco/AKSco_122kHz.hdf5", "w")
+# Now, stuff this into an HDF5 file.
+fid = h5py.File(args.out, "w")
 
-# fid = h5py.File("../data/AKSco/AKSco_305kHz_2015-2-24.hdf5", "w")
+# The HDF5 file must be packed with wavelength increasing in order.
 
+if dnu > 0:
+    print("Swapping order to be increasing wavelength.")
+    # Reverse the order
+    #Currently, everything is stored in decreasing wavelength order, lets flip this.
+    fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams[::-1]
 
-#Currently, everything is stored in decreasing wavelength order, lets flip this.
-fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams[::-1]
+    fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu[::-1, :]
+    fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv[::-1, :]
 
-fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu[::-1, :]
-fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv[::-1, :]
+    fid.create_dataset("real", shape, dtype="float64")[:,:] = real[::-1, :]
+    fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag[::-1, :]
 
-fid.create_dataset("real", shape, dtype="float64")[:,:] = real[::-1, :]
-fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag[::-1, :]
+    fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)[::-1, :]
 
-fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)[::-1, :]
+else:
+    # Keep it as is
+    fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams
+
+    fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu
+    fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv
+
+    fid.create_dataset("real", shape, dtype="float64")[:,:] = real
+    fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag
+
+    fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)
+
 
 fid.close()
 
-# Plot the UV samples for a given channel
-import matplotlib.pyplot as plt
+if args.plot:
 
-fig = plt.figure(figsize=(6,6))
-ax = fig.add_subplot(111)
-ax.plot(uu[25], vv[25], ".")
-ax.set_xlabel(r"UU [k$\lambda$]")
-ax.set_ylabel(r"VV [k$\lambda$]")
-ax.set_xlim(max(uu[25]), min(uu[25]))
-# ax.set_ylim(-75, 75)
-fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
+    # Plot the UV samples for the first channel
+    import matplotlib.pyplot as plt
 
-plt.savefig("../plots/uv_spacings_ALMA.png")
+    fig = plt.figure(figsize=(6,6))
+    ax = fig.add_subplot(111)
+    ax.plot(uu[0], vv[0], ".")
+    ax.set_xlabel(r"UU [k$\lambda$]")
+    ax.set_ylabel(r"VV [k$\lambda$]")
+    ax.set_xlim(max(uu[0]), min(uu[0]))
+    # ax.set_ylim(-75, 75)
+    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
+
+    plt.savefig("uv_spacings.png")

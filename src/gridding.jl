@@ -137,6 +137,37 @@ function corrfun{T}(eta::T, alpha::Float64)
 end
 
 # Apply the correction function to the image.
+function corrfun!(img::SkyImage)
+    ny, nx, nlam = size(img.data)
+
+    # The size of one half-of the image.
+    # sometimes ra and dec will be symmetric about 0, othertimes they won't
+    # so this is a more robust way to determine image half-size
+    maxra = abs(img.ra[2] - img.ra[1]) * nx/2
+    maxdec = abs(img.dec[2] - img.dec[1]) * ny/2
+
+    # If the image will be later offset via a phase shift, then this means that
+    # the corrfunction will need to be applied *as if the image were already
+    # offset.*
+
+    for k=1:nlam
+        for i=1:nx
+            for j=1:ny
+                etax = (img.ra[i])/maxra
+                etay = (img.dec[j])/maxdec
+                if abs(etax) > 1.0 || abs(etay) > 1.0
+                    # We would be querying outside the shifted image
+                    # bounds, so set this emission to 0.0
+                    img.data[j, i, k] = 0.0
+                else
+                    img.data[j, i, k] = img.data[j, i, k] / (corrfun(etax) * corrfun(etay))
+                end
+            end
+        end
+    end
+end
+
+# Apply the correction function to the image, with an offset
 function corrfun!(img::SkyImage, mu_RA, mu_DEC)
     ny, nx, nlam = size(img.data)
 

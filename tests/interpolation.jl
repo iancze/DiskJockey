@@ -1,10 +1,16 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
-
-using gridding
-using visibilities
-using constants
-using image
+using JudithExcalibur.constants
+using JudithExcalibur.gridding
+using JudithExcalibur.visibilities
+using JudithExcalibur.image
 using gauss_model
+
+# This module is designed to test several lines of reasoning regarding the gridding convolution
+# functions.
+
+# Additionally, it is designed to test the application of an additional phase shifts.
+
+# Why should there be *any* difference between phase shifting before interpolation and phase shifting after interpolation?
+
 
 # Test to see if we get the convolutional interpolation correct by using a 2D
 # Elliptical Gaussian.
@@ -14,26 +20,7 @@ const mu_DEC = -0.5 # [arcsec]
 const s_x = 1.2 # [arcsec]
 const s_y = 1.0 # [arcsec]
 const p0 = [mu_RA, mu_DEC, s_x, s_y] # [arcsec]
-
-# Apply Hanning tapering to the image.
-function hanning!(img::SkyImage)
-
-    r0 = maximum(img.ra) # assumes these axes are symmetric
-    d0 = maximum(img.dec)
-    nr = length(img.ra)
-    rd = length(img.dec)
-    nlam = length(img.lams)
-
-    for l=1:nlam
-        for i=1:nr
-            for j=1:rd
-                img.data[j, i, l] = img.data[j, i, l] *
-                (0.5 + 0.5 * cos(pi * img.ra[i]/r0)) * (0.5 + 0.5 * cos(pi * img.dec[j]/d0))
-            end
-        end
-    end
-
-end
+const p_center = [0.0, 0.0, s_x, s_y]
 
 # If the synthesized beam is 0.3", to oversample this by a factor of 10 would require something like 512x512 pixels
 nx = 128
@@ -47,44 +34,76 @@ dec = fftspace(10., ny) # [arcsec]
 ll = sin(ra * arcsec) # direction cosines
 mm = sin(dec * arcsec)
 
+# The natural, shifted Gaussian image
 img = imageGauss(ll, mm, p0, 1)
-img_plain = imageGauss(ll, mm, [0., 0., s_x, s_y], 1)
 
-lam0 = cc/230.538e9 * 1e4 # [microns]
+# A centered Gaussian image which we will then shift via the phase theorem
+img_plain1 = imageGauss(ll, mm, p_center, 1)
+img_plain2 = imageGauss(ll, mm, p_center, 1)
+
+lam0 = lam0s["12CO2-1"] # [microns] 12CO 2-1
 
 skim = SkyImage(img, ra, dec, lam0)
-skim_plain = SkyImage(img_plain, ra, dec, lam0)
 
-# Do one on the actual image with the shift
+
+skim_plain1 = SkyImage(img_plain1, ra, dec, lam0)
+skim_plain2 = SkyImage(img_plain2, ra, dec, lam0)
+
+# Apply a centered correction function on the offset image and Fourier transform the image
+corrfun!(skim, 0., 0.)
 shift_fft = transform(skim)
 
-# Do one FFT without the correction function
-plain_fft = transform(skim_plain)
-phase_shift!(plain_fft, mu_RA, mu_DEC)
+# Now, create images that we will use as test cases for doing the interpolation before or after
+# sampling
+
+# Apply a centered correction function on the centered image (to phase shift downsampled
+# visibilities later)
+corrfun!(skim_plain1, 0, 0)
+vis_fft_center = transform(skim_plain1)
+
+# Apply an offset correction function on the centered image (then  phase shift the full visibilities)
+corrfun!(skim_plain2, mu_RA, mu_DEC)
+vis_fft_shift = transform(skim_plain2)
+phase_shift!(vis_fft_shift, mu_RA, mu_DEC)
+
+
+# Now, create a slightly different spacing from the raw array, and interpolate to this.
+# Take the vis from the transformed dataset
+# uu = shift_fft.uu # [kλ]
+# vv = shift_fft.vv # [kλ]
+
+
+
+ # the correction function, to see what happens
+# plain_fft = transform(skim_plain)
+# phase_shift!(plain_fft, mu_RA, mu_DEC)
 
 # Now do the same thing but apply the gridding correction function
 # before doing the FFT, to be used for interpolation tests.
-skim_plain_corr_center = SkyImage(imageGauss(ll, mm, [0., 0., s_x, s_y], 1), ra, dec, lam0)
-corrfun!(skim_plain_corr_center, 1.0, 0.0, 0.0)
-vis_fft_center = transform(skim_plain_corr_center)
-phase_shift!(vis_fft_center, mu_RA, mu_DEC)
+# skim_plain_corr_center = SkyImage(imageGauss(ll, mm, [0., 0., s_x, s_y], 1), ra, dec, lam0)
+# corrfun!(skim_plain_corr_center, 1.0, 0.0, 0.0)
+# vis_fft_center = transform(skim_plain_corr_center)
+# phase_shift!(vis_fft_center, mu_RA, mu_DEC)
 
 
-corrfun!(skim_plain, 1.0, mu_RA, mu_DEC)
-# FFT the image and see how well it matches the visibility space
-vis_fft = transform(skim_plain)
-phase_shift!(vis_fft, mu_RA, mu_DEC)
+# corrfun!(skim_plain, 1.0, mu_RA, mu_DEC)
+# # FFT the image and see how well it matches the visibility space
+# vis_fft = transform(skim_plain)
+# phase_shift!(vis_fft, mu_RA, mu_DEC)
 
-# Take the vis from the transformed dataset
-uu = plain_fft.uu # [kλ]
-vv = plain_fft.vv # [kλ]
+
+
 
 # Return analytic visibilites for these spacings
-vis_analytic = FTGauss(uu, vv, p0, 1)
+# vis_analytic = FTGauss(uu, vv, p0, 1)
+
+# This right here is not actually a fair comparison, because we haven't yet *interpolated* the FFTed values using the gridding convolution functions.
 
 # Complex subtraction
-println("Maximum FFT discrepancy: ", maximum(abs(plain_fft.VV - vis_analytic)))
-println("Maximum FFT discrepancy: ", maximum(abs(shift_fft.VV - vis_analytic)))
+# println("Maximum FFT discrepancy: ", maximum(abs(plain_fft.VV - vis_analytic)))
+# println("Maximum FFT discrepancy: ", maximum(abs(shift_fft.VV - vis_analytic)))
+
+# quit()
 
 import PyPlot
 import PyPlot.plt
@@ -96,9 +115,11 @@ function scale(data)
     return norm = plt.Normalize(vmin=-s, vmax=s, clip=false)
 end
 
-# Because the sky convention is different than the way the SkyImage is stored,
-# we need to flip the array
 
+# Basic plot of the shifted image
+
+# Because the sky convention is different than the way the SkyImage is stored,
+# we need to flip the array for plotting
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
 ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
@@ -116,13 +137,14 @@ ax[2][:set_xlabel](L"$ll$")
 ax[2][:set_ylabel](L"$mm$")
 
 fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
-plt.savefig("../plots/gaussian_img.png")
+plt.savefig("plots/gaussian_img_array.png")
 
 
+# Basic plot of the *centered* Gaussian image.
 fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 # Real, analytic Gaussian
 ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
-aximg = ax[:imshow](fliplr(skim_plain.data[:,:,1]), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
+aximg = ax[:imshow](fliplr(skim_plain1.data[:,:,1]), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
 ax[:set_title]("image")
 ax[:set_xlabel](L"$\alpha$ [arcsec]")
 ax[:set_ylabel](L"$\delta$ [arcsec]")
@@ -131,293 +153,247 @@ cax = fig[:add_axes]([0.84, 0.25, 0.03, 0.45])
 cb = fig[:colorbar](aximg, cax=cax)
 
 fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
-plt.savefig("../plots/gaussian_img_plain.png")
+plt.savefig("plots/gaussian_img_center.png")
 
-# from here on out, since we are only showing visibilities, this stays same
-ext = (plain_fft.uu[1], plain_fft.uu[end], plain_fft.vv[1], plain_fft.vv[end])
 
-# Real and imaginary components of analytic Gaussian
-fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+# It's nice to see these plots and what they look like, but it doesn't really make sense
+# to compare them, unless we are comparing *interpolated* visibilities to the analytic formula.
+# Just comparing the image is WRONG.
 
-re = ax[1][:imshow](real(vis_analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(vis_analytic)))
-ax[1][:set_title]("Real Analytic")
-ax[1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
-cb = fig[:colorbar](re, cax=cax)
-
-im = ax[2][:imshow](imag(vis_analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(vis_analytic)))
-
-ax[2][:set_title]("Imag Analytic")
-ax[2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.84, 0.15, 0.03, 0.25])
-cb = fig[:colorbar](im, cax=cax)
-
-plt.savefig("../plots/gaussian_analytic.png")
-
-# Real and imaginary components of the FFT Gaussian
-fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
-
-re = ax[1,1][:imshow](real(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
-ax[1,1][:set_title]("Real FFT")
-ax[1,1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1,1][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.14, 0.65, 0.03, 0.25])
-cb = fig[:colorbar](re, cax=cax)
-
-im = ax[2,1][:imshow](imag(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(plain_fft.VV)))
-
-ax[2,1][:set_title]("Imag FFT")
-ax[2,1][:set_xlabel](L"uu [k$\lambda$]")
-ax[2,1][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.14, 0.15, 0.03, 0.25])
-cb = fig[:colorbar](im, cax=cax)
-
-amp = ax[1,2][:imshow](abs(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
-ax[1,2][:set_title]("Amp FFT")
-ax[1,2][:set_xlabel](L"uu [k$\lambda$]")
-ax[1,2][:set_ylabel](L"vv [k$\lambda$]")
-cax = fig[:add_axes]([0.90, 0.65, 0.03, 0.25])
-cb = fig[:colorbar](amp, cax=cax)
-
-pha = ax[2,2][:imshow](angle(plain_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
-ax[2,2][:set_title]("Phase FFT")
-ax[2,2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2,2][:set_ylabel](L"vv [k$\lambda$]")
-cax = fig[:add_axes]([0.90, 0.15, 0.03, 0.25])
-cb = fig[:colorbar](pha, cax=cax)
-
-plt.savefig("../plots/gaussian_fft.png")
-
-# Real and imaginary components of the FFT of the Gaussian that's already shifted
-fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
-
-re = ax[1][:imshow](real(shift_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(real(plain_fft.VV)))
-ax[1][:set_title]("Real FFT")
-ax[1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
-cb = fig[:colorbar](re, cax=cax)
-
-im = ax[2][:imshow](imag(shift_fft.VV), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm = scale(imag(plain_fft.VV)))
-
-ax[2][:set_title]("Imag FFT")
-ax[2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.84, 0.15, 0.03, 0.25])
-cb = fig[:colorbar](im, cax=cax)
-
-plt.savefig("../plots/gaussian_shift_fft.png")
-
-# Difference between the analytic Gaussian and FFT Gaussian
-fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
-
-diff = vis_analytic - plain_fft.VV
-
-re = ax[1][:imshow](real(diff), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(real(diff)))
-ax[1][:set_title]("Real difference")
-ax[1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.84, 0.65, 0.03, 0.25])
-cb = fig[:colorbar](re, cax=cax)
-
-im = ax[2][:imshow](imag(diff), interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(imag(diff)))
-
-ax[2][:set_title]("Imag difference")
-ax[2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.84, 0.15, 0.03, 0.25])
-cb = fig[:colorbar](im, cax=cax)
-
-plt.savefig("../plots/gaussian_difference.png")
+# THIS (following) IS THE ONLY THING WE SHOULD CARE ABOUT.
 
 # Next, choose some (u,v) points within the bounds and see how the
 # interpolated values compare to what the FTGauss would return.
+
+nu = length(shift_fft.uu)
+zer = zeros(nu)
+
+function plot_1d(analytic, approx, fname)
+    fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+    ax[1][:plot](shift_fft.uu, zer, ".k", label="Grid spacing")
+    ax[1][:plot](uu, real(approx), "ob", label="Interp")
+    ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
+    # ax[1][:plot](vis_fft.uu, real(analytic_u), "or", label="Analytic")
+    ax[1][:set_xlim](-100, 100)
+    ax[1][:set_title]("Real")
+    ax[1][:set_xlabel](L"u [k $\lambda$]")
+    ax[1][:legend]()
+
+    ax[2][:plot](shift_fft.uu, zer, ".k", label="Grid spacing")
+    ax[2][:plot](uu, imag(approx), "ob", label="Interp")
+    ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
+    # ax[2][:plot](vis_fft.uu, imag(analytic_u), "or", label="Analytic")
+    ax[2][:set_xlim](-100, 100)
+    ax[2][:set_title]("Imag")
+    ax[2][:set_xlabel](L"u [k $\lambda$]")
+
+    plt.savefig(fname)
+end
 
 n = 100
 uu = linspace(-100, 100, n) # [kλ]
 approx = Array(Complex128, n)
 analytic = Array(Complex128, n)
 
-for i=1:n
-    u = uu[i]
-    v = 0.0
-    #println("Interpolating at $u, $v")
-    approx[i] = interpolate_uv(u, v, vis_fft)
-    analytic[i] = FTGauss(u, v, p0, 1)
-end
-
-fig = plt.figure()
-ax = fig[:add_subplot](111)
-
-nu = length(vis_fft.uu)
-
-zer = zeros(length(vis_fft.uu))
-
-analytic_u = Array(Complex128, nu)
-for i=1:nu
-    analytic_u[i] = FTGauss(vis_fft.uu[i], 0.0, p0, 1)
-end
-
-fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
-ax[1][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
-ax[1][:plot](uu, real(approx), "ob", label="Interp")
-ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
-ax[1][:plot](vis_fft.uu, real(analytic_u), "or", label="Analytic")
-ax[1][:set_xlim](-100, 100)
-ax[1][:set_title]("Real")
-ax[1][:set_xlabel](L"u [k $\lambda$]")
-ax[1][:legend]()
-
-ax[2][:plot](vis_fft.uu, zer, ".k", label="Grid spacing")
-ax[2][:plot](uu, imag(approx), "ob", label="Interp")
-ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
-ax[2][:plot](vis_fft.uu, imag(analytic_u), "or", label="Analytic")
-ax[2][:set_xlim](-100, 100)
-ax[2][:set_title]("Imag")
-ax[2][:set_xlabel](L"u [k $\lambda$]")
-
-
-plt.savefig("../plots/interpolation.png")
-
+# First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
+# with no shift.
 
 for i=1:n
     u = uu[i]
     v = 0.0
     #println("Interpolating at $u, $v")
     approx[i] = interpolate_uv(u, v, vis_fft_center)
+    analytic[i] = FTGauss(u, v, p_center, 1)
+end
+
+plot_1d(analytic, approx, "plots/interpolation.png")
+
+# Next, let's see how the image shifted, then interpolated points compare with the
+# analytic form
+
+for i=1:n
+    u = uu[i]
+    v = 0.0
+    #println("Interpolating at $u, $v")
+    approx[i] = interpolate_uv(u, v, shift_fft)
     analytic[i] = FTGauss(u, v, p0, 1)
 end
 
-fig = plt.figure()
-ax = fig[:add_subplot](111)
+plot_1d(analytic, approx, "plots/interpolation_raw_image_offset.png")
 
-nu = length(vis_fft.uu)
+# Next,  let's see how the FFT'ed, then interpolated, then shifted points compare with the
+# analytic form
+mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
 
-zer = zeros(length(vis_fft_center.uu))
+for i=1:n
+    u = uu[i]
+    v = 0.0
 
-analytic_u = Array(Complex128, nu)
-for i=1:nu
-    analytic_u[i] = FTGauss(vis_fft_center.uu[i], 0.0, p0, 1)
+    # Now shift the interpolated points according to the phase theorem
+    R = Float64[u, v] * 1e3 #[λ]
+    # Not actually in polar phase form
+    shift = exp(-2pi * 1.0im * (R' * mu)[1])
+
+    approx[i] = shift * interpolate_uv(u, v, vis_fft_center)
+    analytic[i] = FTGauss(u, v, p0, 1)
 end
 
-fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
-ax[1][:plot](vis_fft_center.uu, zer, ".k", label="Grid spacing")
-ax[1][:plot](uu, real(approx), "ob", label="Interp")
-ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
-ax[1][:plot](vis_fft_center.uu, real(analytic_u), "or", label="Analytic")
-ax[1][:set_xlim](-100, 100)
-ax[1][:set_title]("Real")
-ax[1][:set_xlabel](L"u [k $\lambda$]")
-ax[1][:legend]()
-
-ax[2][:plot](vis_fft_center.uu, zer, ".k", label="Grid spacing")
-ax[2][:plot](uu, imag(approx), "ob", label="Interp")
-ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
-ax[2][:plot](vis_fft_center.uu, imag(analytic_u), "or", label="Analytic")
-ax[2][:set_xlim](-100, 100)
-ax[2][:set_title]("Imag")
-ax[2][:set_xlabel](L"u [k $\lambda$]")
-
-plt.savefig("../plots/interpolation_gcf_noshift.png")
+plot_1d(analytic, approx, "plots/interpolation_shift_visibilities.png")
 
 
-# Let's try this over a full grid of images.
+# Finally, let's check the way we've been doing things, which is to phase shift the full visibilities first, then downsample.
+
+for i=1:n
+    u = uu[i]
+    v = 0.0
+    #println("Interpolating at $u, $v")
+    approx[i] = interpolate_uv(u, v, vis_fft_shift)
+    analytic[i] = FTGauss(u, v, p0, 1)
+end
+
+plot_1d(analytic, approx, "plots/interpolation_shift_image.png")
+
+
+# Now, we can check things on an actual 2D image if we so please.
 
 # Create analytic function on a smaller grid
 n = 100
 uu = linspace(-150, 150, n)
 vv = linspace(-150, 150, n)
 
-vis_analytic_small = FTGauss(uu, vv, p0, 1)
+function plot_2d(analytic, approx, fname)
 
-vis_intp = Array(Complex128, n, n)
+    # Plot the reals first
+
+    fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
+
+    ext = (uu[1], uu[end], vv[1], vv[end])
+
+    axan = ax[1][:imshow](real(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[1][:set_title]("Analytic FT")
+    ax[1][:set_xlabel](L"uu [k$\lambda$]")
+    ax[1][:set_ylabel](L"vv [k$\lambda$]")
+
+    cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
+    cb = fig[:colorbar](axan, cax=cax)
+
+    axfft = ax[2][:imshow](real(approx), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[2][:set_title]("Interpolated Visibilites from FFT")
+    ax[2][:set_xlabel](L"uu [k$\lambda$]")
+    ax[2][:set_ylabel](L"vv [k$\lambda$]")
+
+    cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
+    cb = fig[:colorbar](axfft, cax=cax)
+
+    diff = real(analytic - approx)
+
+    axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
+    ax[3][:set_title]("Difference")
+    ax[3][:set_xlabel](L"uu [k$\lambda$]")
+    ax[3][:set_ylabel](L"vv [k$\lambda$]")
+
+    cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
+    cb = fig[:colorbar](axdif, cax=cax)
+
+    fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
+
+    plt.savefig(fname * "_real.png")
+
+
+    fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
+
+    axan = ax[1][:imshow](imag(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[1][:set_title]("Analytic FT")
+    ax[1][:set_xlabel](L"uu [k$\lambda$]")
+    ax[1][:set_ylabel](L"vv [k$\lambda$]")
+
+    cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
+    cb = fig[:colorbar](axan, cax=cax)
+
+    axfft = ax[2][:imshow](imag(approx), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[2][:set_title]("Interpolated Visibilites from FFT")
+    ax[2][:set_xlabel](L"uu [k$\lambda$]")
+    ax[2][:set_ylabel](L"vv [k$\lambda$]")
+
+    cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
+    cb = fig[:colorbar](axfft, cax=cax)
+
+    diff = imag(analytic - approx)
+
+    axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
+    ax[3][:set_title]("Difference")
+    ax[3][:set_xlabel](L"uu [k$\lambda$]")
+    ax[3][:set_ylabel](L"vv [k$\lambda$]")
+
+    cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
+    cb = fig[:colorbar](axdif, cax=cax)
+
+    fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
+
+    plt.savefig(fname * "_imag.png")
+
+end
+
+# First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
+# with no shift.
+approx = Array(Complex128, n, n)
+analytic = FTGauss(uu, vv, p_center, 1) # can take in full arrays
+
 for i=1:n
     for j=1:n
-        vis_intp[j, i] = interpolate_uv(uu[i], vv[j], vis_fft)
+        approx[j,i] = interpolate_uv(uu[i], vv[j], vis_fft_center)
     end
 end
 
-fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
+plot_2d(analytic, approx, "plots/2D_interpolation")
 
-ext = (uu[1], uu[end], vv[1], vv[end])
+# Next, let's see how the image shifted, then interpolated points compare with the
+# analytic form
 
-axan = ax[1][:imshow](real(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
-ax[1][:set_title]("Analytic FT")
-ax[1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1][:set_ylabel](L"vv [k$\lambda$]")
+analytic = FTGauss(uu, vv, p0, 1) # can take in full arrays
 
-cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
-cb = fig[:colorbar](axan, cax=cax)
+for i=1:n
+    for j=1:n
+        approx[j,i] = interpolate_uv(uu[i], vv[j], shift_fft)
+    end
+end
 
-axfft = ax[2][:imshow](real(vis_intp), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
-ax[2][:set_title]("Interpolated Visibilites from FFT")
-ax[2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2][:set_ylabel](L"vv [k$\lambda$]")
+plot_2d(analytic, approx, "plots/2D_interpolation_raw_image_offset")
 
-cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
-cb = fig[:colorbar](axfft, cax=cax)
+# Next,  let's see how the FFT'ed, then interpolated, then shifted points compare with the
+# analytic form
 
-diff = real(vis_analytic_small - vis_intp)
+for i=1:n
+    for j=1:n
+        R = Float64[uu[i], vv[j]] * 1e3 #[λ]
+        # Not actually in polar phase form
+        shift = exp(-2pi * 1.0im * (R' * mu)[1])
 
-axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
-ax[3][:set_title]("Difference")
-ax[3][:set_xlabel](L"uu [k$\lambda$]")
-ax[3][:set_ylabel](L"vv [k$\lambda$]")
+        approx[j,i] = shift * interpolate_uv(uu[i], vv[j], vis_fft_center)
+    end
+end
 
-cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
-cb = fig[:colorbar](axdif, cax=cax)
-
-fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
-
-plt.savefig("../plots/interpolation_difference_real.png")
+plot_2d(analytic, approx, "plots/2D_interpolation_shift_visibilities")
 
 
-fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
+# Finally, let's check the way we've been doing things, which is to phase shift the full visibilities first, then downsample.
 
-axan = ax[1][:imshow](imag(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
-ax[1][:set_title]("Analytic FT")
-ax[1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1][:set_ylabel](L"vv [k$\lambda$]")
 
-cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
-cb = fig[:colorbar](axan, cax=cax)
+for i=1:n
+    for j=1:n
+        approx[j,i] = interpolate_uv(uu[i], vv[j], vis_fft_shift)
+    end
+end
 
-axfft = ax[2][:imshow](imag(vis_intp), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
-ax[2][:set_title]("Interpolated Visibilites from FFT")
-ax[2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2][:set_ylabel](L"vv [k$\lambda$]")
+plot_2d(analytic, approx, "plots/2D_interpolation_shift_image.png")
 
-cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
-cb = fig[:colorbar](axfft, cax=cax)
 
-diff = imag(vis_analytic_small - vis_intp)
-
-axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
-ax[3][:set_title]("Difference")
-ax[3][:set_xlabel](L"uu [k$\lambda$]")
-ax[3][:set_ylabel](L"vv [k$\lambda$]")
-
-cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
-cb = fig[:colorbar](axdif, cax=cax)
-
-fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
-
-plt.savefig("../plots/interpolation_difference_imag.png")
+quit()
 
 
 fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
-axan = ax[1][:imshow](abs(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+axan = ax[1][:imshow](abs(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
 ax[1][:set_title]("Amplitude [Analytic]")
 ax[1][:set_xlabel](L"uu [k$\lambda$]")
 ax[1][:set_ylabel](L"vv [k$\lambda$]")
@@ -425,7 +401,7 @@ ax[1][:set_ylabel](L"vv [k$\lambda$]")
 cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
 cb = fig[:colorbar](axan, cax=cax)
 
-axfft = ax[2][:imshow](angle(vis_analytic_small), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+axfft = ax[2][:imshow](angle(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
 ax[2][:set_title]("Phase [Analytic]")
 ax[2][:set_xlabel](L"uu [k$\lambda$]")
 ax[2][:set_ylabel](L"vv [k$\lambda$]")
@@ -435,4 +411,4 @@ cb = fig[:colorbar](axfft, cax=cax)
 
 fig[:subplots_adjust](hspace=0.25, top=0.95, bottom=0.1)
 
-plt.savefig("../plots/interpolation_phase.png")
+plt.savefig("plots/interpolation_phase.png")

@@ -1,7 +1,7 @@
 module gauss_model
 
 # Provide the functionality to model Gaussians as test cases
-using constants
+using JudithExcalibur.constants
 
 export imageGauss, FTGauss
 

@@ -221,14 +221,14 @@ end
 
     nkeys = length(keys)
 
-    # We are using the following convention: inclination ranges from
+    # We are using the following conventions: inclination ranges from
     # 0 to 180 degrees. 0 means face on, angular momentum vector pointing
     # at observer; 90 means edge on; and 180 means face on, angular momentum
     # vector pointing away from observer.
-    # These are also the RADMC conventions.
+    # These are the same as the RADMC-3D conventions.
     incl = p.incl # [deg]
 
-    # We also adopt the RADMC convention for position angle, which defines position angle
+    # We also adopt the RADMC-3D convention for position angle, which defines position angle
     # by the angular momentum vector.
     # A positive PA angle means the disk angular momentum vector will be
     # rotated counter clockwise (from North towards East).
@@ -249,10 +249,10 @@ end
     # println("Writing cameralambda into $keydir")
     write_lambda(lams, "") # write into current directory
 
-    # Run RADMC3D, redirect output to /dev/null
+    # Run RADMC-3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
 
-    # Read the RADMC3D images from disk (we should already be in sub-directory)
+    # Read the RADMC-3D images from disk (we should already be in sub-directory)
     im = imread()
 
     # Convert raw images to the appropriate distance
@@ -260,7 +260,9 @@ end
 
     # Apply the gridding correction function before doing the FFT
     # shifts necessary as if the image were already offset
-    corrfun!(skim, p.mu_RA, p.mu_DEC) # alpha = 1.0
+    # corrfun!(skim, p.mu_RA, p.mu_DEC) # alpha = 1.0
+    # No shift needed
+    corrfun!(skim)
 
     lnprobs = Array(Float64, nkeys)
     # Do the Fourier domain stuff per channel
@@ -270,11 +272,14 @@ end
         vis_fft = transform(skim, i)
 
         # Apply the phase correction here, before we do the interpolation
-        phase_shift!(vis_fft, p.mu_RA, p.mu_DEC)
+        # phase_shift!(vis_fft, p.mu_RA, p.mu_DEC)
 
         # Interpolate the `vis_fft` to the same locations as the DataSet
         # mvis = int_arr[i](dv, vis_fft)
         mvis = ModelVis(dv, vis_fft)
+
+        # Apply the phase shift here
+        phase_shift!(mvis, p.mu_RA, p.mu_DEC)
 
         # Calculate chi^2 between these two
         lnprobs[i] = lnprob(dv, mvis)
