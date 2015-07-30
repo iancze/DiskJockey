@@ -55,11 +55,11 @@ Lastly, I have written several "driver" command line scripts that are used to pe
     julia> Pkg.dir("JudithExcalibur")
     "/home/ian/.julia/JudithExcalibur"
 
-Your PATH will vary. The scripts are located inside of a `scripts` directory, so if you are using Z-shell, you will want to add the PATH that looks something like
+Your PATH will vary. The scripts are located inside of a `scripts` directory, so if you are using bash or Z-shell, you will want to add the PATH that looks something like
 
     export PATH="/home/ian/.julia/JudithExcalibur/scripts:$PATH"
 
-inside of your `.zshrc` file. Finally,
+inside of your `.bashrc` or `.zshrc` file. Finally,
 
     $ source ~/.zshrc
 

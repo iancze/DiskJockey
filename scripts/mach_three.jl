@@ -259,9 +259,7 @@ end
     skim = imToSky(im, p.dpc)
 
     # Apply the gridding correction function before doing the FFT
-    # shifts necessary as if the image were already offset
-    # corrfun!(skim, p.mu_RA, p.mu_DEC) # alpha = 1.0
-    # No shift needed
+    # No shift needed, since we will shift the resampled visibilities
     corrfun!(skim)
 
     lnprobs = Array(Float64, nkeys)
@@ -270,9 +268,6 @@ end
         dv = dvarr[i]
         # FFT the appropriate image channel
         vis_fft = transform(skim, i)
-
-        # Apply the phase correction here, before we do the interpolation
-        # phase_shift!(vis_fft, p.mu_RA, p.mu_DEC)
 
         # Interpolate the `vis_fft` to the same locations as the DataSet
         # mvis = int_arr[i](dv, vis_fft)

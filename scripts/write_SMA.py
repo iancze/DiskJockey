@@ -1,4 +1,14 @@
-# Picking up where `write_SMA.jl` left off
+#!/usr/bin/env python
+
+import argparse
+
+parser = argparse.ArgumentParser(description="Convert HDF5 files into SMA FITS files.")
+parser.add_argument("FITS", help="The original FITS data set, so that we can copy it to stuff in new values.")
+parser.add_argument("--HDF5", default="model.hdf5", help="The HDF5 model file.")
+parser.add_argument("--out", default="model.vis.fits", help="The output file.")
+args = parser.parse_args()
+
+# Picking up where `write_model.jl` left off
 
 from astropy.io import fits
 import h5py
@@ -7,8 +17,8 @@ import shutil
 
 cc = 2.99792458e10 # [cm s^-1]
 
-# Read all of the data from the HDF5 file
-fid = h5py.File("../data/V4046Sgr/V4046Sgr_model.hdf5", "r")
+# Read the model from the HDF5 file
+fid = h5py.File(args.HDF5, "r")
 
 freqs = cc/fid["lams"][:]*1e4 # [Hz]
 uu = fid["uu"][:,:] # [klam]
@@ -20,18 +30,17 @@ fid.close()
 
 # (nfreq, nvis) arrays
 
-# New SMA dataset
-fname = "../data/V4046Sgr/V4046Sgr.12CO21.model.vis.fits"
-
-# Copy the original dataset to something new
-shutil.copy("../data/V4046Sgr/V4046Sgr.12CO21.final.vis.fits", fname)
+# Copy the original dataset to something new, so that we can update the new data set.
+shutil.copy(args.FITS, args.out)
 
 # Overwrite a copy of the original dataset with these values.
-hdulist = fits.open(fname, mode="update")
+hdulist = fits.open(args.out, mode="update")
 
 # data["DATA"] is originally (23302, 1, 1, 25, 1, 3)
 # (nvis, 1, 1, nchan, 1, 3)
 # 3 is real, imag, weight)
+
+# print(hdulist[0].data["DATA"].shape)
 
 # Concatenate the different parts of the visibility
 D = np.array([real, imag, weight]).T
@@ -39,6 +48,8 @@ D = np.array([real, imag, weight]).T
 
 # Add the zombie dimensions back in
 vis = D[:, np.newaxis, np.newaxis, :, np.newaxis, :]
+
+# print(vis.shape)
 
 # Stuff the new visibilities into the existing dataset
 hdulist[0].data["DATA"][:] = vis

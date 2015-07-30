@@ -73,43 +73,11 @@ corrfun!(skim_plain3, mu_RA, mu_DEC)
 vis_fft_offset = transform(skim_plain3)
 
 
-# Now, create a slightly different spacing from the raw array, and interpolate to this.
-# Take the vis from the transformed dataset
-# uu = shift_fft.uu # [kλ]
-# vv = shift_fft.vv # [kλ]
-
-
-
- # the correction function, to see what happens
-# plain_fft = transform(skim_plain)
-# phase_shift!(plain_fft, mu_RA, mu_DEC)
-
-# Now do the same thing but apply the gridding correction function
-# before doing the FFT, to be used for interpolation tests.
-# skim_plain_corr_center = SkyImage(imageGauss(ll, mm, [0., 0., s_x, s_y], 1), ra, dec, lam0)
-# corrfun!(skim_plain_corr_center, 1.0, 0.0, 0.0)
-# vis_fft_center = transform(skim_plain_corr_center)
-# phase_shift!(vis_fft_center, mu_RA, mu_DEC)
-
-
-# corrfun!(skim_plain, 1.0, mu_RA, mu_DEC)
-# # FFT the image and see how well it matches the visibility space
-# vis_fft = transform(skim_plain)
-# phase_shift!(vis_fft, mu_RA, mu_DEC)
-
-
-
-
-# Return analytic visibilites for these spacings
-# vis_analytic = FTGauss(uu, vv, p0, 1)
-
 # This right here is not actually a fair comparison, because we haven't yet *interpolated* the FFTed values using the gridding convolution functions.
 
 # Complex subtraction
 # println("Maximum FFT discrepancy: ", maximum(abs(plain_fft.VV - vis_analytic)))
 # println("Maximum FFT discrepancy: ", maximum(abs(shift_fft.VV - vis_analytic)))
-
-# quit()
 
 import PyPlot
 import PyPlot.plt

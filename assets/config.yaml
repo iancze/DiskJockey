@@ -51,6 +51,13 @@ base_dir: /scratch/
 # The HDF5 file containing the visibilities
 data_file: data/data.hdf5
 
+# Some parameters that may be helpful for making channel map plots of the model
+beam :
+  rms : 0.00785 # Jy/beam
+  BMAJ: 0.933 # arcsec
+  BMIN: 0.602 # arcsec
+  BPA: -50.54 # degrees east of North
+
 # Image setup
 npix: 256
 # pixsize : 38568201867193.242 # [cm], copied from a previous image.out
