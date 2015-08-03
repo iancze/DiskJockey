@@ -73,7 +73,7 @@ for i=1:nchan
     mvis = ModelVis(dv, vis_fft)
 
     # Apply the phase correction here, since there are fewer data points
-    phase_shift!(vis_fft, pars.mu_RA, pars.mu_DEC)
+    phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
 
     dvis = visibilities.ModelVis2DataVis(mvis)
 
