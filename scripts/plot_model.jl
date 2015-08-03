@@ -30,37 +30,16 @@ using HDF5
 
 import PyPlot.plt
 using LaTeXStrings
+import Images
 
 species = config["species"]
 transition = config["transition"]
 lam0 = lam0s[species*transition]
 
-# If there is a "beam" section from making the channel maps, then we can plot the model with more realistic characteristics, like 3 sigma contours that match.
-# If "beam" exists in config,
-# then read in the RMS
-# and the beam dimensions, major, minor axis, and orientation.
-# get the contour levels from the RMS
-
-
-# then pack the image into Images.jl, then do a convolution with the beam. Make sure we have the image oriented the right way relative to the beam.
-
-# You can output this as an entirely new image.
-
 # First contour is at 3 sigma, and then contours go up (or down) in multiples of spacing
-function get_levels(rms::Float64, vmin::Float64, vmax::Float64, spacing=3)
+function get_levels(rms::Float64, vmax::Float64, spacing=3)
     levels = Float64[]
-    # Add contours from rms to vmin, then reverse
-    # We don't want a 0-level contour
-    val = -(3 * rms)
-    while (val > vmin)
-        append!(levels, [val])
-        # After the first level, go down in increments of spacing
 
-        val -= rms * spacing
-    end
-
-    # Reverse in place
-    reverse!(levels)
     val = 3 * rms
     while (val < vmax)
         append!(levels, [val])
@@ -69,6 +48,14 @@ function get_levels(rms::Float64, vmin::Float64, vmax::Float64, spacing=3)
 
     return levels
 end
+
+# function plot_beam(ax, BMAJ, BMIN, xy=(1,-1))
+#     BMAJ = 3600. * header["BMAJ"] # [arcsec]
+#     BMIN = 3600. * header["BMIN"] # [arcsec]
+#     BPA =  header["BPA"] # degrees East of North
+#     # from matplotlib.patches import Ellipse
+#     ax[:add_artist](PyPlot.matplotlib[:patches][:Ellipse](xy=xy, width=BMIN, height=BMAJ, angle=BPA, facecolor="0.8", linewidth=0.2))
+# end
 
 # Make our custom intensity scale
 # dict_BuRd = {'red':   [(0.0,  0.0, 0.0),
@@ -186,27 +173,18 @@ function plot_chmaps(img::image.RawImage)
 end
 
 # Plot the channel maps using sky convention
-function plot_chmaps(img::image.SkyImage)
+function plot_chmaps(img::image.SkyImage, fname="channel_maps_sky.png")
 
     (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
 
     # Image needs to be flipped along RA dimension
     ext = (img.ra[end], img.ra[1], img.dec[1], img.dec[end])
 
-    # CO 2-1 rest frame
-    # lam0 = cc/230.538e9 * 1e4 # [microns]
-    # nlam = length(img.lams)
-
-    # convert wavelengths to velocities
-    # vels = c_kms * (img.lams .- lam0)/lam0
-
     # Figure out how many plots we'll have.
     ncols = 8
     nrows = iceil(nlam/ncols)
 
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
-
-
 
     for row=1:nrows
         for col=1:ncols
@@ -249,7 +227,7 @@ function plot_chmaps(img::image.SkyImage)
 
     fig[:subplots_adjust](hspace=0.06, wspace=0.01, top=0.9, bottom=0.1, left=0.05, right=0.95)
 
-    plt.savefig("channel_maps_sky.png")
+    plt.savefig(fname)
 
 end
 
@@ -262,11 +240,7 @@ function plot_chmaps_data(img::image.SkyImage)
     mm = sin(img.dec .* arcsec)
     ext = (ll[1], ll[end], mm[1], mm[end])
 
-    # Transition rest frame
     nlam = length(img.lams)
-
-    # convert wavelengths to velocities
-    # vels = c_kms * (img.lams .- lam0)/lam0
 
     fig, ax = plt.subplots(nrows=2, ncols=12, figsize=(12, 2.8))
 
@@ -314,12 +288,6 @@ function plot_spectrum(img::image.SkyImage)
 
     spec = imToSpec(img)
 
-    # Rest frame transition
-    # lam0 = lam0s[species]
-
-    # convert wavelengths to velocities
-    # vels = c_kms * (img.lams .- lam0)/lam0 # [km/s]
-
     ax[:plot](vels, spec[:,2], ls="steps-mid")
     # ax[:plot](vels, reverse(spec[:,2]), ls="steps-mid")
     ax[:set_ylabel](L"$f_\nu$ [Jy]")
@@ -330,14 +298,6 @@ function plot_spectrum(img::image.SkyImage)
     plt.savefig("spectrum.png")
 end
 
-# If we use `JudithInitialize`, then we won't need to use these commands to regenerate the scripts.
-
-# read the wavelengths for all 23 channels
-# fid = h5open(config["data_file"], "r")
-# lams = read(fid["lams"]) # [μm]
-# close(fid)
-#
-#
 pp = config["parameters"]
 params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
@@ -394,20 +354,38 @@ global vels = c_kms * (skim.lams .- lam0)/lam0
 vmin, vmax = extrema(skim.data)
 vvmax = maxabs(skim.data)
 
+ldata = log10(skim.data + 1e-99)
+vlmax = maximum(ldata)
+
 # if in(config, "beam")
 beam = config["beam"]
 rms = beam["rms"] # Jy/beam
-BMAJ = beam["BMAJ"] # semi-major axis [arcsec]
-BMIN = beam["BMIN"] # semi-minor axis [arcsec]
+BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
+BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
+BAVG = (BMAJ + BMIN)/2
 BPA = beam["BPA"] # position angle East of North [degrees]
-global levels = get_levels(rms, vmin, vmax)
-# end
 
+println("Beam sigma ", BAVG, " [arcsec]")
 
-norm = PyPlot.matplotlib[:colors][:Normalize](-vvmax, vvmax)
+arcsec_ster = (4.25e10)
+# Convert beam from arcsec^2 to Steradians
+rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
+global levels = get_levels(rms, vmax)
 
+norm = PyPlot.matplotlib[:colors][:Normalize](vlmax - 8, vlmax)
 
+println("Plotting hires maps")
 plot_chmaps(skim)
-# plot_chmaps_data(skim)
+
+println("bluring maps")
+sk_blur = blur(skim, [BAVG, BAVG])
+
+# Now redo all this for the blurred
+vmin, vmax = extrema(sk_blur.data)
+global levels = get_levels(rms, vmax)
+norm = PyPlot.matplotlib[:colors][:Normalize](0, vmax)
+
+println("Plotting blured maps")
+plot_chmaps(sk_blur, "channel_maps_blur.png")
 
 plot_spectrum(skim)

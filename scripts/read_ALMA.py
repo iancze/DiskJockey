@@ -2,12 +2,12 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Convert ALMA NPZ save files into an HDF5 file for JudithExcalibur.")
+parser = argparse.ArgumentParser(description="Convert ALMA NPZ save files into an HDF5 file for JudithExcalibur.", prefix_chars="@")
 parser.add_argument("NPZ", help="The ALMA NPZ file produced by Sean.")
 parser.add_argument("nu0", type=float, help="The starting frequency for index 0, in Hz")
 parser.add_argument("dnu", type=float, help="The change in frequency with array index. Can be negative. In Hz.")
-parser.add_argument("--out", default="data.hdf5", help="The output file.")
-parser.add_argument("--plot", action="store_true", help="Make a plot of the UV coverage.")
+parser.add_argument("@out", default="data.hdf5", help="The output file.")
+parser.add_argument("@plot", action="store_true", help="Make a plot of the UV coverage.")
 args = parser.parse_args()
 
 import h5py
@@ -58,11 +58,14 @@ nchan, nvis = data["Re"].shape
 #####################################
 # For GWOri.13CO.data.vis.npz
 # nu0 = 220.371112e9 # [Hz]
-# dnu = 122.070e3 # [Hz]
+# dnu = -122.070e3 # [Hz]
 #####################################
 
 nu0 = args.nu0
 dnu = args.dnu
+
+print("nu0: ", nu0)
+print("dnu: ", dnu)
 
 freqs = nu0 + np.arange(nchan) * dnu # [Hz]
 lams = cc/freqs * 1e4 # [microns]
@@ -90,6 +93,7 @@ fid = h5py.File(args.out, "w")
 # The HDF5 file must be packed with wavelength increasing in order.
 
 if dnu > 0:
+    # e.g, like AK Sco 12CO 2-1
     print("Swapping order to be increasing wavelength.")
     # Reverse the order
     #Currently, everything is stored in decreasing wavelength order, lets flip this.
@@ -104,7 +108,8 @@ if dnu > 0:
     fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)[::-1, :]
 
 else:
-    # Keep it as is
+    # e.g., like GW Ori 13CO 2-1
+    print("Order is already in increasing wavelength.")
     fid.create_dataset("lams", (nchan,), dtype="float64")[:] = lams
 
     fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu

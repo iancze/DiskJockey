@@ -12,9 +12,10 @@
 
 module image
 
-export imread, imToSky, imToSpec, SkyImage
+export imread, imToSky, imToSpec, SkyImage, blur
 
 using ..constants
+import Images # The Images.jl package, not affiliated w/ JudithExcalibur
 
 # Define an image type, which can store the data as well as pixel spacing
 
@@ -135,17 +136,37 @@ function imToSky(img::RawImage, dpc::Float64)
 
 end
 
-# Given an array of imgs, concatenate them into a single image, in wavelength order
-function catImages(imgs::Array{Image, 1})
+# Following Images.jl, give the number of arcseconds in each dimension on how to Gaussian
+# blur the channel maps. Unfortunately only aligned Gaussians are allowed so far, no rotation.
+function blur(img::SkyImage, sigma)
+    # convert sigma in arcseconds into pixels
+    # sigma is a length 2 array with the [sigma_y, sigma_x] blurring scales
 
-    # Assert each image has the same number of pixels, and that they are all either RawImages or SkyImages
+    # measure image size in arcsecs
+    width = img.ra[end] - img.ra[1] # [arcsec]
+    npix = size(img.data)[1]
+    nchan = size(img.data)[3]
 
-    # Determine the stacking order based upon each lam
+    println("Image width: $width [arcsec], npix: $npix, nchan: $nchan, sigma: $sigma [arcsec]")
 
-    # Stack each img together along the spectral dimension
+    pixel_arcsec = npix / width #
 
-    # cat the lam together
-    0
+    println("Pixel_arcsec: $pixel_arcsec")
+
+    sigma *= pixel_arcsec # [pixels]
+
+    println("Pixel sigma: $sigma [pixels]")
+
+    data_blur = Array(Float64, size(img.data)...)
+    # go through each channel
+    for i=1:nchan
+        # Now, load this into an Images.jl frame
+        img_Images = Images.Image(img.data[:,:,i])
+        data_blur[:,:,i] = Images.imfilter_gaussian(img_Images, sigma)
+    end
+
+    return SkyImage(data_blur, img.ra, img.dec, img.lams)
+
 end
 
 # Take an image and integrate all the frames to create a spatially-integrated spectrum

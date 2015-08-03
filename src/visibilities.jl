@@ -9,7 +9,7 @@ using ..constants
 
 import Base.conj! # extend this later
 
-export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis
+export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis
 export plan_interpolate, interpolate_uv
 export transform, rfftfreq, fftfreq, phase_shift!
 export lnprob
@@ -154,10 +154,28 @@ function ModelVis(dvis::DataVis, fmvis::FullModelVis)
     return ModelVis(dvis, VV)
 end
 
-# For testing purposes, collapse a ModelVis into a DataVis
+# Collapse a ModelVis into a DataVis for writing purposes
 function ModelVis2DataVis(mvis::ModelVis)
     DV = mvis.dvis
     return DataVis(DV.lam, DV.uu, DV.vv, mvis.VV, DV.invsig)
+end
+
+function conj!(mv::ModelVis)
+    conj!(mv.VV)
+end
+
+# Return a model visibility file that actually contains the residuals
+function ResidVis(dvarr::Array{DataVis, 1}, mvarr)
+    nchan = length(dvarr)
+    @assert length(mvarr) == nchan # make sure data and model are the same length.
+    rvarr = Array(DataVis, nchan)
+    for i=1:nchan
+        dvis = dvarr[i]
+        mvis = mvarr[i]
+        VV = dvis.VV - mvis.VV
+        rvarr[i] = DataVis(dvis.lam, dvis.uu, dvis.vv, VV, dvis.invsig)
+    end
+    return rvarr
 end
 
 function lnprob(dvis::DataVis, mvis::ModelVis)
