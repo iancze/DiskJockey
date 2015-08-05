@@ -1,18 +1,12 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+#!/usr/bin/env julia
 
 using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
-    # "--opt1"
-    # help = "an option with an argument"
-    # default = 0
-    "--norad"
-    help = "Use the image already here."
-    action = :store_true
     "config"
     help = "a YAML configuration file"
-    required = true
+    default = "config.yaml"
 end
 
 parsed_args = parse_args(ARGS, s)
@@ -22,14 +16,14 @@ config = YAML.load(open(parsed_args["config"]))
 
 # Make some diagnostic plots to show what the model looks like in analytic terms
 
-using model
+using JudithExcalibur.model
+using JudithExcalibur.constants
 import PyPlot.plt
 using LaTeXStrings
-using constants
 
 # velocity structure
 function plot_vel(pars::Parameters, grid)
-    vels = model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
+    vels = JudithExcalibur.model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -38,12 +32,12 @@ function plot_vel(pars::Parameters, grid)
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("../plots/velocity.png")
+    plt.savefig("velocity.png")
 end
 
 # temperature structure
 function plot_temp(pars::Parameters, grid)
-    temps = model.temperature(grid.rs, pars)
+    temps = JudithExcalibur.model.temperature(grid.rs, pars)
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -52,12 +46,12 @@ function plot_temp(pars::Parameters, grid)
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("../plots/temperature.png")
+    plt.savefig("temperature.png")
 end
 
 # scale height
 function plot_height(pars::Parameters, grid)
-    heights = model.Hp(grid.rs, pars) ./ AU
+    heights = JudithExcalibur.model.Hp(grid.rs, pars) ./ AU
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -66,11 +60,13 @@ function plot_height(pars::Parameters, grid)
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("../plots/scale_height.png")
+    plt.savefig("scale_height.png")
 end
 
 # density structure
 function plot_dens(pars::Parameters, grid)
+
+    # Instead of spherical coordinates, do this with cartesian
     nz = 64
     zs = linspace(0, 300 * AU, nz)
     zz = zs./AU
@@ -140,7 +136,7 @@ function plot_dens(pars::Parameters, grid)
 
     ax[:set_ylim](0, maximum(zz))
 
-    plt.savefig("../plots/density.png")
+    plt.savefig("density.png")
 
 end
 
@@ -165,4 +161,4 @@ const global rr = grid.rs ./ AU # convert to AU
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)
-plot_dens(pars, grid)
+# plot_dens(pars, grid)

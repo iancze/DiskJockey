@@ -423,10 +423,13 @@ if parsed_args["opt"]
     opt = Opt(:LN_COBYLA, nparam)
 
     max_objective!(opt, fgrad)
-    ftol_abs!(opt, 0.05) # the precision we want lnprob to
+    # ftol_abs!(opt, 0.05) # the precision we want lnprob to
+    xtol_rel!(opt, 0.001)
 
-    lower = Float64[1.9, 3.0, 1.0, 0.01, -5.0, 0.01, 100.0, 140.0, -26.5, 0.0, 0.0]
-    upper = Float64[3.0, 40., 100., 1.0, 1.0, 0.5, 115., 145., -25.5, 0.1, 0.1]
+    # params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+
+    lower = Float64[0.1, 3.0, 1.0, 0.01, -5.0, 0.01, 0.0, 0.0, 42., -0.5, -0.5]
+    upper = Float64[10.0, 2000., 2000., 2.0, 1.0, 2.0, 180., 360., 43., 0.5, 0.5]
 
     lower_bounds!(opt, lower)
     upper_bounds!(opt, upper)
