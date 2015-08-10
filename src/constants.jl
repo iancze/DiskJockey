@@ -31,6 +31,13 @@ m_12CO = 27.9949 * amu # [g]
 m_13CO = 28.9983 * amu # [g]
 m_C18O = 29.9992 * amu # [g]
 
+# Mass fractions (unitless)
+X_12CO = 1e-4
+X_13CO = 1/70. * X_12CO
+X_C18O = = 1/557. * X_12CO
+
+mass_fractions = Dict([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
+
 molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 
 # Species can be "12CO", "13CO", etc.

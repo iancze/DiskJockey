@@ -7,7 +7,6 @@ parser.add_argument("--glob", help="Do something on this glob. Must be given as 
 
 # parser.add_argument("--dir", action="store_true", help="Concatenate all of the flatchains stored
 # within run* folders in the current directory. Designed to collate runs from a JobArray.")
-parser.add_argument("--outdir", default="mcmcplot", help="Output directory to contain all plots.")
 parser.add_argument("--output", default="combined.hdf5", help="Output HDF5 file.")
 
 parser.add_argument("--files", nargs="+", help="The HDF5 or CSV files containing the MCMC samples, separated by whitespace.")
@@ -41,12 +40,6 @@ from astropy.table import Table
 from astropy.io import ascii
 import sys
 import csv
-
-#Check to see if outdir exists.
-if not os.path.exists(args.outdir):
-    os.makedirs(args.outdir)
-
-args.outdir += "/"
 
 
 
@@ -138,7 +131,7 @@ def gelman_rubin(samplelist):
         print("You might consider running the chain for longer. Not all R_hats are less than 1.1.")
 
 
-def plot(flatchain, base=args.outdir, format=".png"):
+def plot(flatchain, base="", format=".png"):
     '''
     Make a triangle plot
     '''
@@ -154,7 +147,7 @@ def plot(flatchain, base=args.outdir, format=".png"):
         plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True)
     figure.savefig(base + "triangle" + format)
 
-def paper_plot(flatchain, base=args.outdir, format=".pdf"):
+def paper_plot(flatchain, base="", format=".pdf"):
     '''
     Make a triangle plot of just M vs i
     '''
@@ -192,7 +185,7 @@ def paper_plot(flatchain, base=args.outdir, format=".pdf"):
     figure.savefig(base + "ptriangle" + format)
 
 
-def plot_walkers(flatchain, base=args.outdir, start=0, end=-1, labels=None):
+def plot_walkers(flatchain, base="", start=0, end=-1, labels=None):
     import matplotlib.pyplot as plt
     from matplotlib.ticker import MaxNLocator
     # majorLocator = MaxNLocator(nbins=4)
@@ -259,7 +252,6 @@ def estimate_covariance(flatchain):
     print("'Optimal' jumps with covariance (units squared)")
 
     opt_jump = 2.38**2/d * cov
-    # opt_jump = 1.7**2/d * cov # gives about ??
     print(opt_jump)
 
     print("Standard deviation")
@@ -273,7 +265,7 @@ def estimate_covariance(flatchain):
         d = flatchain.shape[1]
     print(2.38/np.sqrt(d) * std_dev)
 
-    np.save("mcmcplot/opt_jump.npy", opt_jump)
+    np.save("opt_jump.npy", opt_jump)
 
 
 
