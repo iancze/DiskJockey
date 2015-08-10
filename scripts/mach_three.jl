@@ -322,7 +322,7 @@ function fprob(p::Vector{Float64})
     # T_10::Float64 # [K] temperature at 10 AU
     # q::Float64 # temperature gradient exponent
     # gamma::Float64 # surface temperature gradient exponent
-    # M_CO::Float64 # [g] disk mass of CO
+    # M_gas::Float64 # [g] disk mass of gas
     # ksi::Float64 # [cm s^{-1}] microturbulence
     # dpc::Float64 # [pc] distance to system
     # incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -336,9 +336,9 @@ function fprob(p::Vector{Float64})
 
     if config["fix_d"]
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-        M_star, r_c, T_10, q, logM_CO, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
     else
-        M_star, r_c, T_10, q, logM_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
     end
 
     # Enforce hard priors on physical parameters
@@ -351,10 +351,10 @@ function fprob(p::Vector{Float64})
         return -Inf
     end
 
-    M_CO = 10^logM_CO
+    M_gas = 10^logM_gas
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    pars = Parameters(M_star, r_c, T_10, q, gamma, M_CO, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk in base directory
     write_model(pars, basedir, grid, species)
@@ -400,9 +400,9 @@ using PDMats
 pp = config["parameters"]
 # The parameters we'll be using
 if config["fix_d"]
-    params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+    params = ["M_star", "r_c", "T_10", "q", "logM_gas", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 else
-    params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+    params = ["M_star", "r_c", "T_10", "q", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 end
 # params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)

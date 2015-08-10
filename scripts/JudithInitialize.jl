@@ -109,7 +109,7 @@ if config["gas"]
 
     # Load the starting parameters
     pp = config["parameters"]
-    params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+    params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
     nparam = length(params)
     starting_param = Array(Float64, nparam)
 
@@ -117,7 +117,7 @@ if config["gas"]
         starting_param[i] = pp[params[i]][1]
     end
 
-    # Convert logM_CO to M_CO
+    # Convert logM_gas to M_gas
     starting_param[6] = 10^starting_param[6]
 
     pars = Parameters(starting_param...)

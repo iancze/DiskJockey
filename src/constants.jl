@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
+export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, mass_fractions, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -31,12 +31,16 @@ m_12CO = 27.9949 * amu # [g]
 m_13CO = 28.9983 * amu # [g]
 m_C18O = 29.9992 * amu # [g]
 
+atomic_massses = Dict([("12CO", m_12CO), ("13CO", m_13CO), ("C18O", m_C18O)])
+
 # Mass fractions (unitless)
 X_12CO = 1e-4
 X_13CO = 1/70. * X_12CO
-X_C18O = = 1/557. * X_12CO
+X_C18O = 1/557. * X_12CO
 
 mass_fractions = Dict([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
+
+number_densities = Dict([("12CO", X_12CO/m_12CO), ("13CO", X_13CO/m_13CO), ("C18O", X_C18O/m_C18O)])
 
 molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 
@@ -81,10 +85,12 @@ function MCO(logCO::Float64)
     # Convert from Earth to M_sun
     CO_sun = CO_earth * M_earth/M_sun
 
-    # Convert from CO to H2 mass using the number ratio of C12/H2 = 7e-5
-    mass = CO_sun * 1/(7e-5)
-    return mass
+    # Convert from 12CO to total gas mass using the mass ratio of 1e-4
+    gas_mass = CO_sun / X_12CO
+
+    logM_gas = log10(gas_mass)
+
+    return logM_gas
 end
 
-
-end
+end # Module
