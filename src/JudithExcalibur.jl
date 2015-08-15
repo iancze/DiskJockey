@@ -1,8 +1,9 @@
 module JudithExcalibur
 
 export constants,
-    model,
-    emodel,
+    model, # normal, axisymmetric disk. Czekala et al. 15, Rosenfeld et al. 12
+    emodel, # eccentric disk
+    hmodel, # vertical temperature gradient
     image,
     gridding,
     visibilities,
@@ -16,6 +17,7 @@ export constants,
 include("constants.jl")
 include("model.jl")
 include("emodel.jl")
+include("hmodel.jl")
 include("image.jl")
 include("gridding.jl")
 include("visibilities.jl")

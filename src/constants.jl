@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, mass_fractions, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
+export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_ratio, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -33,14 +33,16 @@ m_C18O = 29.9992 * amu # [g]
 
 atomic_massses = Dict([("12CO", m_12CO), ("13CO", m_13CO), ("C18O", m_C18O)])
 
-# Mass fractions (unitless)
-X_12CO = 1e-4
-X_13CO = 1/70. * X_12CO
+# Using numbers from Charlie Qi
+# Number ratios measured relative to all H nuclei (unitless)
+X_12CO = 7.5e-5
+X_13CO = 1/69. * X_12CO
 X_C18O = 1/557. * X_12CO
 
-mass_fractions = Dict([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
+number_ratio = Dict([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
 
-number_densities = Dict([("12CO", X_12CO/m_12CO), ("13CO", X_13CO/m_13CO), ("C18O", X_C18O/m_C18O)])
+# Use this to multiply against M_gas to get n_12CO or n_13CO
+number_densities = Dict([("12CO", X_12CO/(mu_gas * m_H)), ("13CO", X_13CO/(mu_gas * m_H)), ("C18O", X_C18O/(mu_gas * m_H))])
 
 molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 
