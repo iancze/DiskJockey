@@ -23,7 +23,7 @@ parsed_args = parse_args(ARGS, s)
 
 using JudithExcalibur.constants
 using JudithExcalibur.image
-using JudithExcalibur.model
+# using JudithExcalibur.model
 using JudithExcalibur.visibilities
 using JudithExcalibur.gridding
 
@@ -46,10 +46,13 @@ pp = config["parameters"]
 a = (st)->pp[st][1]
 
 # The parameters we'll be using
-pars = Parameters(a("M_star"), a("r_c"), a("T_10"), a("q"), a("gamma"), 10.^a("logM_CO"), a("ksi"), a("dpc"), a("incl"), a("PA"), a("vel"), a("mu_RA"), a("mu_DEC") )
+# pars = Parameters(a("M_star"), a("r_c"), 100., a("q"), a("gamma"), 10.^a("logM_CO"), a("ksi"), a("dpc"), a("incl"), a("PA"), a("vel"), a("mu_RA"), a("mu_DEC") )
+mu_RA = a("mu_RA")
+mu_DEC = a("mu_DEC")
+dpc = a("dpc")
 
 im = imread()
-skim = imToSky(im, pars.dpc)
+skim = imToSky(im, dpc)
 corrfun!(skim) # alpha = 1.0
 
 dvarr = DataVis(config["data_file"])
@@ -73,7 +76,7 @@ for i=1:nchan
     mvis = ModelVis(dv, vis_fft)
 
     # Apply the phase correction here, since there are fewer data points
-    phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
+    phase_shift!(mvis, mu_RA, mu_DEC)
 
     dvis = visibilities.ModelVis2DataVis(mvis)
 
