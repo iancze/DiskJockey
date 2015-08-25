@@ -106,9 +106,6 @@ function write_grid(basedir::String, grid::Grid)
     close(f)
 end
 
-
-#Define the 7 parameters listed in Rosenfeld et al., then write functions to go from those parameters to dust density, velocity, microturbulence.
-
 #Let's try defining a parameters type, an object of which gets passed around.
 
 type Parameters
@@ -193,6 +190,9 @@ function dlnrho(r::Float64, z::Float64, pars::Parameters)
     T = temperature(r, z, pars)
     dTemp = dT(r, z, pars)
     return -(dTemp/T + (mu_gas * m_H)/(kB * T) * (G * pars.M_star * M_sun * z)/(r^2 + z^2)^1.5)
+    # Vertically isothermal testcase
+    # return -(mu_gas * m_H)/(kB * T) * (G * pars.M_star * M_sun * z)/r^3
+
 end
 
 # Delivers an unnormalized gas density. Needs to be multiplied by correction factor.
@@ -214,7 +214,7 @@ end
 
 # Calculate the multiplicative factor needed to normalize `un_rho` based upon the boundary
 # condition that the integral of rho(r, z) with z from -inf to inf should be equal to Sigma(r)
-function correction_factor(r::Float64, pars::Parameters)
+function lncorrection_factor(r::Float64, pars::Parameters)
     S = Sigma(r, pars)
     zq = z_q(r, pars)
     # Most of the total density is near the midplane. This is necessary to create a logspaced array with 0 as the beginning.
@@ -223,29 +223,26 @@ function correction_factor(r::Float64, pars::Parameters)
 
     # How best to choose the outer bound? Some multiple of zq is probably a good idea, but this
     # doesn't really work in the inner disk. Instead, let's choose a minimum threshold.
-    if (10 * zq) >= 20 * AU
+    if (10 * zq) >= 10 * AU
         outer_reaches = zq * 10
     else
-        outer_reaches = 20 * AU
+        outer_reaches = 10 * AU
     end
 
-    zints = cat(1, [0], logspace(log10(0.1 * AU), log10(outer_reaches), nz-1))
+    zints = cat(1, [0], logspace(log10(0.01 * AU), log10(outer_reaches), nz-1))
 
     un_lnrhos = Array(Float64, nz)
     for i=1:nz
         un_lnrhos[i] = un_lnrho(r, zints[i], pars)
     end
 
+    bar_lnrho = un_lnrhos[1]
+
+    # Remove the largest value so we don't get an overflow error
+    un_lnrhos -= bar_lnrho
+
     # Convert from ln(rho) to rho, but this is still unnormalized.
     un_rhos = exp(un_lnrhos)
-
-    # println("Correction function values")
-    # println("S :", S)
-
-
-    # println("zints: ", zints./AU)
-    # println("un_lnrhos: ", un_lnrhos)
-    # println("un_rhos: ", un_rhos)
 
     # Now that we have the shape of the density structure but not the normalization,
     # integrate to get the normalization
@@ -255,14 +252,17 @@ function correction_factor(r::Float64, pars::Parameters)
     # Integral is from -inf to inf
     tot = 2 * integrate(spl, 0., zints[end])
 
-    # println("tot: ", tot)
+    # println("Norm. tot: ", tot, " lntot:", log(tot))
+    # println("bar_lnrho. exp: ", exp(bar_lnrho), " bar_lnrho: ", bar_lnrho)
+    # println("With bar_lnrho :", tot * exp(bar_lnrho), " lntot :", log(tot) + bar_lnrho)
 
     # The correction factor is the ratio of the actual surface density to the value of the integral of our unnormalized density.
-    cor = S / tot
+    lncor = log(S) - (log(tot) + bar_lnrho)
 
+    # cor = S/tot
     # apply this as
     # rhos = cor * unnormed_rhos
-    return cor
+    return lncor
 end
 
 # Now, create an interpolator for the the correction function. In spherical coordinates, that way, first evaluate it at every point (r, z=0) in the grid. Then, when we want to query the density of the disk at (r, z), which will correspond to a different r_cyl than the one used to compute the normalization, we can just use the spline interpolation and not have to redo the time consuming normalization integral.
@@ -274,7 +274,7 @@ function make_correction_interpolator(pars::Parameters, grid::Grid)
     cors = Array(Float64, nr)
 
     for i=1:nr
-        cors[i] = correction_factor(rs[i], pars)
+        cors[i] = lncorrection_factor(rs[i], pars)
     end
 
     # An interpolating spline for this correction factor.
@@ -293,15 +293,17 @@ function rho_gas(r::Float64, z::Float64, pars::Parameters, spl)
 
     else
         # Evaluate the correction factor for this radius.
-        cor = evaluate(spl, r)
+        lncor = evaluate(spl, r)
 
         # Calculate the unnormalized ln rho
         un = un_lnrho(r, z, pars)
 
-        # Exponentiate it and apply the correction factor
-        rho = cor * exp(un)
+        # rho = cor * exp(un)
+        # apply the correction factor
+        lnrho = lncor + un
 
-        return rho
+        # Exponentiate it
+        return exp(lnrho)
     end
 end
 

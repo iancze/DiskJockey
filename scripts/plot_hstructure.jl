@@ -118,9 +118,9 @@ end
 
 function plot_density_gradient(pars::Parameters)
 
-    nz = 50
-    zs = linspace(0, 50 * AU, nz)
-    R = 1 * AU
+    nz = 500
+    zs = linspace(0, 5 * AU, nz)
+    R = 0.5 * AU
     y = Array(Float64, nz)
     for i=1:nz
         y[i] = JudithExcalibur.hmodel.dlnrho(R, zs[i], pars)
@@ -141,8 +141,8 @@ end
 
 function plot_density_1D_unnormed(pars::Parameters)
     nz = 50
-    zs = linspace(0, 50 * AU, nz)
-    R = 1 * AU
+    zs = linspace(0, 14 * AU, nz)
+    R = 10 * AU
     y = Array(Float64, nz)
     for i=1:nz
         y[i] = JudithExcalibur.hmodel.un_lnrho(R, zs[i], pars)
@@ -151,45 +151,84 @@ function plot_density_1D_unnormed(pars::Parameters)
     fig = plt.figure()
     ax = fig[:add_subplot](111)
 
-    ax[:plot](zs/AU, y * AU)
+    ax[:plot](zs/AU, y)
 
-    # ax[:set_ylabel](L"$\log_{10} n_\textrm{gas} \quad [\log_{10}$ 1/cm^3]")
     ax[:set_ylabel](L"$\ln \rho_\textrm{gas}$ unnormalized")
     ax[:set_xlabel](L"$z$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("ln_gas_slice.png")
+    plt.savefig("un_ln_gas_slice.png")
 
+end
+
+function plot_temperature_1D(pars::Parameters)
+    nz = 50
+    zs = linspace(0, 200 * AU, nz)
+    R = 10 * AU
+    temps = Array(Float64, nz)
+    for i=1:nz
+        temps[i] = JudithExcalibur.hmodel.temperature(R, zs[i], pars)
+    end
+
+    fig = plt.figure()
+    ax = fig[:add_subplot](111)
+
+    ax[:plot](zs/AU, temps)
+
+    ax[:set_ylabel]("T [K]")
+    ax[:set_xlabel](L"$z$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt.savefig("temperature_1D.png")
+end
+
+
+function plot_dlnrho(pars::Parameters)
+    nz = 50
+    zs = linspace(0, 200 * AU, nz)
+    R = 10 * AU
+    dlnrhos = Array(Float64, nz)
+    for i=1:nz
+        dlnrhos[i] = JudithExcalibur.hmodel.dlnrho(R, zs[i], pars)
+    end
+
+    fig = plt.figure()
+    ax = fig[:add_subplot](111)
+
+    ax[:plot](zs/AU, dlnrhos)
+
+    ax[:set_ylabel](L"$d \ln \rho$")
+    ax[:set_xlabel](L"$z$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    fig[:savefig]("dlnrhos.png")
 end
 
 function plot_density_1D(pars::Parameters)
     nz = 50
-    zs = linspace(0, 200 * AU, nz)
-    R = 1 * AU
+    zs = linspace(0, 30 * AU, nz)
+    R = 0.5 * AU
     y = Array(Float64, nz)
     for i=1:nz
         y[i] = JudithExcalibur.hmodel.un_lnrho(R, zs[i], pars)
     end
 
     # Now calculate the correction factor here
-    cor = JudithExcalibur.hmodel.correction_factor(R, pars)
-    println("Correction factor is ", cor)
-    println("y is ", y)
+    lncor = exp(JudithExcalibur.hmodel.lncorrection_factor(R, pars))
 
-    gas = log10(cor * exp(y)/(mu_gas * m_H))
-    println("Gas output ", gas)
+    lngas = lncor +  y - log(mu_gas * m_H)
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
 
-    ax[:plot](zs/AU, gas)
+    ax[:plot](zs/AU, lngas)
 
-    # ax[:set_ylabel](L"$\log_{10} n_\textrm{gas} \quad [\log_{10}$ 1/cm^3]")
-    ax[:set_ylabel](L"$\log_{10} n_\textrm{gas}$")
+    ax[:set_ylabel](L"$\ln n_\textrm{gas}$")
     ax[:set_xlabel](L"$z$ [AU]")
+    ax[:set_xlim](0,30)
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("log10_gas_slice.png")
+    plt.savefig("ln_gas_slice.png")
 end
 
 # Go through some trial points and plot the interpolator to see how it's doing.
@@ -198,13 +237,11 @@ function plot_interpolator(pars::Parameters)
     nr = grid.nr
     rs = grid.rs
 
-    cors = Array(Float64, nr)
+    lncors = Array(Float64, nr)
 
     for i=1:nr
-        cors[i] = JudithExcalibur.hmodel.correction_factor(rs[i], pars)
+        lncors[i] = JudithExcalibur.hmodel.lncorrection_factor(rs[i], pars)
     end
-
-    lncors = log10(cors)
 
     # Now, let's use the interpolator to make finer samples and see if they line up.
     spl = JudithExcalibur.hmodel.make_correction_interpolator(pars, grid)
@@ -212,12 +249,11 @@ function plot_interpolator(pars::Parameters)
     # Now, come up with a finer spaceing of grid points
     n_fine = 100
     rs_fine = logspace(log10(rs[1]), log10(rs[end]), n_fine)
-    cors_fine = Array(Float64, n_fine)
+    lncors_fine = Array(Float64, n_fine)
     for i=1:n_fine
-        cors_fine[i] = evaluate(spl, rs_fine[i])
+        lncors_fine[i] = evaluate(spl, rs_fine[i])
     end
 
-    lncors_fine = log10(cors_fine)
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -226,14 +262,13 @@ function plot_interpolator(pars::Parameters)
     ax[:plot](rs_fine/AU, lncors_fine, "o")
 
     ax[:set_xlabel](L"$r$ [AU]")
-    ax[:set_ylabel]("log10 correction factor")
+    ax[:set_ylabel]("ln correction factor")
 
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    ax[:set_xlim](0, 20)
+    # ax[:set_xlim](0, 20)
 
     plt.savefig("cor_factor.png")
-
 
 end
 
@@ -275,6 +310,7 @@ function plot_dens(pars::Parameters, grid)
     #Add a tiny bit to nn to prevent log10(0.0)
 
     levels = Float64[4.0, 5, 6, 7, 8, 9]
+    # levels = linspace(4, 12., 8)
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -341,12 +377,14 @@ grd = config["grid"]
 grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 const global rr = grid.rs ./ AU # convert to AU
 
-plot_vel(pars, grid)
-plot_height(pars, grid)
-plot_atm_height(pars, grid)
+# plot_vel(pars, grid)
+# plot_height(pars, grid)
+# plot_atm_height(pars, grid)
 plot_temp(pars, grid)
-plot_density_gradient(pars)
+# plot_density_gradient(pars)
 plot_density_1D_unnormed(pars)
 plot_density_1D(pars)
 plot_interpolator(pars)
 plot_dens(pars, grid)
+plot_temperature_1D(pars)
+plot_dlnrho(pars)

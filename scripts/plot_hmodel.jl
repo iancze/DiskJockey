@@ -57,69 +57,6 @@ end
 #     ax[:add_artist](PyPlot.matplotlib[:patches][:Ellipse](xy=xy, width=BMIN, height=BMAJ, angle=BPA, facecolor="0.8", linewidth=0.2))
 # end
 
-# Make our custom intensity scale
-# dict_BuRd = {'red':   [(0.0,  0.0, 0.0),
-#                    (0.5,  1.0, 1.0),
-#                    (1.0,  1.0, 1.0)],
-#
-#          'green': [(0.0,  0.0, 0.0),
-#                    (0.5, 1.0, 1.0),
-#                    (1.0,  0.0, 0.0)],
-#
-#          'blue':  [(0.0,  1.0, 1.0),
-#                    (0.5,  1.0, 1.0),
-#                    (1.0,  0.0, 0.0)]}
-#
-# BuRd = LSC("BuRd", dict_BuRd)
-#
-# dict_YlGr = {'red':   [(0.0,  1.0, 1.0),
-#                    (0.5,  1.0, 1.0),
-#                    (1.0,  0.0, 0.0)],
-#
-#          'green': [(0.0,  1.0, 1.0),
-#                    (0.5, 1.0, 1.0),
-#                    (1.0,  1.0, 1.0)],
-#
-#          'blue':  [(0.0,  0.0, 0.0),
-#                    (0.5,  1.0, 1.0),
-#                    (1.0,  0.0, 0.0)]}
-#
-# YlGr = LSC("YlGr", dict_YlGr)
-
-# Even more general color maps may be defined by passing arrays of (x,y0,y1) tuples for the red, green, blue, and (optionally) alpha components, as defined by the
-# Julia call signal is
-# ColorMap{T<:Real}(name::String, r::AbstractVector{(T,T,T)}, g::AbstractVector{(T,T,T)}, b::AbstractVector{(T,T,T)}, n=256, gamma=1.0)
-#
-
-# plt.ColorMap()
-# # Given a symmetric velocity fraction between 0 (minimum) and 1.0 (maximum),
-# # with 0.5 being the middle, create a colormap to scale the emission in this channel.
-# def make_cmap(vel_frac)
-#
-#     assert vel_frac >= 0.0 and vel_frac <= 1.0, "vel_frac must be in the range [0, 1]"
-#
-#     # negative values
-#     r, g, b, a = YlGr(vel_frac)
-#
-#     # positive values
-#     R, G, B, A = BuRd(vel_frac)
-#
-#     # Take these rgba values and construct a new colorscheme
-#     cdict = {'red':   [(0.0,  r, r),
-#                    (0.5,  1.0, 1.0),
-#                    (1.0,  R, R)],
-#
-#          'green': [(0.0,  g, g),
-#                    (0.5, 1.0, 1.0),
-#                    (1.0,  G, G)],
-#
-#          'blue':  [(0.0,  b, b),
-#                    (0.5,  1.0, 1.0),
-#                    (1.0,  B, B)]}
-#
-#     return  LSC("new", cdict)
-# end
-
 
 # Plot the raw channel maps directly from RADMC
 function plot_chmaps(img::image.RawImage)
@@ -214,10 +151,12 @@ function plot_chmaps(img::image.SkyImage, fname="channel_maps_sky.png")
                 # ax[row, col][:imshow](lframe, extent=ext, interpolation="none", vmin=max - 6, vmax=max, origin="lower", cmap=plt.get_cmap("PuBu"))
                 ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"), norm=norm)
 
-                # levels = linspace(max - 0.8, max, 8)
-                ax[row, col][:contour](frame, origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
-                # ax[row, col][:plot](img.ra[end - ix], img.dec[iy], "k.")
-                # ax[row, col][:plot](ix, iy, "k.")
+                # println("frame ", iframe)
+                # println("levels ", levels)
+                # println("extrema ", extrema(frame))
+                if length(levels) > 0
+                    ax[row, col][:contour](frame, origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
+                end
 
                 ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
             end
@@ -370,12 +309,13 @@ println("Beam sigma ", BAVG, " [arcsec]")
 arcsec_ster = (4.25e10)
 # Convert beam from arcsec^2 to Steradians
 rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
+# println("RMS: ", rms, " vmax: ", vmax)
 global levels = get_levels(rms, vmax)
 
 norm = PyPlot.matplotlib[:colors][:Normalize](vlmax - 8, vlmax)
 
-println("Plotting hires maps")
-plot_chmaps(skim)
+# println("Plotting hires maps")
+# plot_chmaps(skim)
 
 println("bluring maps")
 sk_blur = blur(skim, [BAVG, BAVG])

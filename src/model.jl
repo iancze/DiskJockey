@@ -139,12 +139,6 @@ vel = 0.0
 mu_RA = 0.0
 mu_DEC = 0.0
 
-# Using X_12CO = 1e-4, M_gas
-M_gas = M_CO / number_ratio["12CO"] * M_earth/M_sun # [M_sun]
-
-# global object which is useful for reproducing V4046Sgr
-params = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-
 # Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.
 # Alternate functions accept pars passed around, where pars is in M_star, AU, etc...
@@ -164,13 +158,27 @@ function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
 end
 Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 
-# No parametric type for number density, because it is a 2D function.
-function rho_gas(r::Float64, z::Float64, r_c::Float64, M_gas::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
-    H = Hp(r, M_star, T_10, q)
-    (2. - gamma) * M_gas/((2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
+# Calculate the gas surface density
+function Sigma(r::Float64, pars::Parameters)
+    r_c = pars.r_c * AU
+    Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
+    return Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
 end
 
-rho_gas(r::Float64, z::Float64, pars::Parameters) = rho_gas(r, z, pars.r_c * AU, pars.M_gas * M_sun, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
+# No parametric type for number density, because it is a 2D function.
+function rho_gas(r::Float64, z::Float64, pars::Parameters)
+    H = Hp(r, pars)
+    S = Sigma(r, pars)
+    S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+end
+
+# No parametric type for number density, because it is a 2D function.
+# function rho_gas(r::Float64, z::Float64, r_c::Float64, M_gas::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
+#     H = Hp(r, M_star, T_10, q)
+#     (2. - gamma) * M_gas/((2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
+# end
+#
+# rho_gas(r::Float64, z::Float64, pars::Parameters) = rho_gas(r, z, pars.r_c * AU, pars.M_gas * M_sun, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
 
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.
 

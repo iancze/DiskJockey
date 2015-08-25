@@ -63,18 +63,90 @@ function plot_height(pars::Parameters, grid)
     plt.savefig("scale_height.png")
 end
 
+function plot_temperature_1D(pars::Parameters)
+    nz = 50
+    zs = linspace(0, 200 * AU, nz)
+    R = 10 * AU
+    temps = Array(Float64, nz)
+    for i=1:nz
+        temps[i] = JudithExcalibur.model.temperature(R, pars)
+    end
+
+    fig = plt.figure()
+    ax = fig[:add_subplot](111)
+
+    ax[:plot](zs/AU, temps)
+
+    ax[:set_ylabel]("T [K]")
+    ax[:set_xlabel](L"$z$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt.savefig("temperature_1D.png")
+end
+
+function plot_dlnrho(pars::Parameters)
+    nz = 50
+    zs = linspace(0, 200 * AU, nz)
+    R = 10 * AU
+    dlnrhos = Array(Float64, nz)
+    for i=1:nz
+        dlnrhos[i] = - G * pars.M_star * M_sun * zs[i] * mu_gas * m_H / ((R^2 + zs[i]^2)^1.5 * kB * JudithExcalibur.model.temperature(R, pars))
+    end
+
+    fig = plt.figure()
+    ax = fig[:add_subplot](111)
+
+    ax[:plot](zs/AU, dlnrhos)
+
+    ax[:set_ylabel](L"$d \ln \rho$")
+    ax[:set_xlabel](L"$z$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    fig[:savefig]("dlnrhos.png")
+end
+
+function plot_density_1D(pars::Parameters)
+    nz = 50
+    zs = linspace(0, 30 * AU, nz)
+    println("zs ", zs/AU)
+    R = 100 * AU
+    rhos = Array(Float64, nz)
+    for i=1:nz
+        rhos[i] = JudithExcalibur.model.rho_gas(R, zs[i], pars)
+    end
+
+    lngas = log(rhos) - log(mu_gas * m_H)
+
+    println("lngas ", lngas)
+
+    fig = plt.figure()
+    ax = fig[:add_subplot](111)
+
+    ax[:plot](zs/AU, lngas)
+
+    # ax[:set_ylabel](L"$\log_{10} n_\textrm{gas} \quad [\log_{10}$ 1/cm^3]")
+    ax[:set_ylabel](L"$\ln n_\textrm{gas}$")
+    ax[:set_xlabel](L"$z$ [AU]")
+    ax[:set_xlim](0, 30)
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    fig[:savefig]("ln_gas_slice.png")
+end
+
 # density structure
 function plot_dens(pars::Parameters, grid)
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
-    zs = linspace(0, 300 * AU, nz)
+    zs = linspace(0, 420 * AU, nz)
     zz = zs./AU
-    nr = length(grid.rs)
+
+    nr = grid.nr
+    rs = grid.rs
 
     xx = Array(Float64, (nz, nr))
     yy = Array(Float64, (nz, nr))
-    nn = Array(Float64, (nz, nr))
+    rhos = Array(Float64, (nz, nr))
 
     for i=1:nz
         xx[i, :] = rr
@@ -86,15 +158,13 @@ function plot_dens(pars::Parameters, grid)
 
     for i=1:nz
         for j=1:nr
-            nn[i,j] = model.n_CO(grid.rs[j], zs[i], pars)
+            rhos[i,j] = model.rho_gas(grid.rs[j], zs[i], pars)
         end
     end
 
-    #Add a tiny bit to nn to prevent log10(0.0)
-    nlog = log10(nn + 1e-99)
-    max = int(maximum(nlog))
+    nlog = log10(rhos/(mu_gas * m_H))
 
-    levels = linspace(max - 15, max, 15 + 1)
+    levels = Float64[4.0, 5, 6, 7, 8, 9]
 
     fig = plt.figure()
     ax = fig[:add_subplot](111)
@@ -117,31 +187,31 @@ function plot_dens(pars::Parameters, grid)
     # First, the radial lines
 
     # Basically, each of these originates from x = 0, z = 0, and has a slope of theta
-    for theta in (pi/2 - grid.Thetas)
-        slope = tan(theta)
-        ax[:plot](rr, slope .* rr, "k", lw=0.1)
-    end
-
-    # Arcs
-    xs = Array(Float64, (grid.ntheta + 1))
-    ys = Array(Float64, (grid.ntheta + 1))
-
-    for r in rr
-        for (i, theta) in enumerate(pi/2 - grid.Thetas)
-            xs[i] = cos(theta) * r
-            ys[i] = sin(theta) * r
-        end
-        ax[:plot](xs, ys, "k", lw=0.1)
-    end
-
-    ax[:set_ylim](0, maximum(zz))
+    # for theta in (pi/2 - grid.Thetas)
+    #     slope = tan(theta)
+    #     ax[:plot](rr, slope .* rr, "k", lw=0.1)
+    # end
+    #
+    # # Arcs
+    # xs = Array(Float64, (grid.ntheta + 1))
+    # ys = Array(Float64, (grid.ntheta + 1))
+    #
+    # for r in rr
+    #     for (i, theta) in enumerate(pi/2 - grid.Thetas)
+    #         xs[i] = cos(theta) * r
+    #         ys[i] = sin(theta) * r
+    #     end
+    #     ax[:plot](xs, ys, "k", lw=0.1)
+    # end
+    #
+    # ax[:set_ylim](0, maximum(zz))
 
     plt.savefig("density.png")
 
 end
 
 pp = config["parameters"]
-params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 
@@ -149,7 +219,7 @@ for i=1:nparam
     starting_param[i] = pp[params[i]][1]
 end
 
-# Convert logM_CO to M_CO
+# Convert logM_gas to M_gas
 starting_param[6] = 10^starting_param[6]
 
 pars = Parameters(starting_param...)
@@ -161,4 +231,7 @@ const global rr = grid.rs ./ AU # convert to AU
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)
-# plot_dens(pars, grid)
+plot_dens(pars, grid)
+plot_density_1D(pars)
+plot_temperature_1D(pars)
+plot_dlnrho(pars)
