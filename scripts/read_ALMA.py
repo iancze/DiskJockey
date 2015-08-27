@@ -67,6 +67,13 @@ nchan, nvis = data["Re"].shape
 # dnu = -122.070e3 # [Hz]
 ####################################
 
+#####################################
+# For DM Tau 12CO
+# nu0 = 230.514180e9  # [Hz]
+# dnu = 61.035e3 # [Hz]
+####################################
+
+
 nu0 = args.nu0
 dnu = args.dnu
 
@@ -92,6 +99,12 @@ shape = uu.shape
 real = data["Re"]
 imag = data["Im"]
 weight = data["Wt"]
+
+# Test to see if there are any autocorrelation baselines present
+ant1 = data["ant1"]
+ant2 = data["ant2"]
+same = (ant1 == ant2)
+print("There are {} autocorrelation visibilities.".format(np.sum(same)))
 
 # Now, stuff this into an HDF5 file.
 fid = h5py.File(args.out, "w")

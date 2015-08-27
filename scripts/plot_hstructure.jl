@@ -301,7 +301,9 @@ function plot_dens(pars::Parameters, grid)
     rhos = Array(Float64, (nz,nr))
     for j=1:nz
         for i=1:nr
-            rhos[j, i] = JudithExcalibur.hmodel.rho_gas(rs[i], zs[j], pars, spl)
+            temp = JudithExcalibur.hmodel.temperature(rs[i], zs[j], pars)
+            XF = JudithExcalibur.hmodel.X_freeze(temp, pars)
+            rhos[j, i] = XF * JudithExcalibur.hmodel.rho_gas(rs[i], zs[j], pars, spl)
         end
     end
 
@@ -360,7 +362,7 @@ function plot_dens(pars::Parameters, grid)
 end
 
 pp = config["parameters"]
-params = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "gamma", "h", "delta", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "gamma", "h", "delta", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 
@@ -369,7 +371,7 @@ for i=1:nparam
 end
 
 # Convert logM_gas to M_gas
-starting_param[10] = 10^starting_param[10]
+starting_param[12] = 10^starting_param[12]
 
 pars = Parameters(starting_param...)
 
@@ -380,11 +382,11 @@ const global rr = grid.rs ./ AU # convert to AU
 # plot_vel(pars, grid)
 # plot_height(pars, grid)
 # plot_atm_height(pars, grid)
-plot_temp(pars, grid)
-# plot_density_gradient(pars)
-plot_density_1D_unnormed(pars)
-plot_density_1D(pars)
-plot_interpolator(pars)
+# plot_temp(pars, grid)
+# # plot_density_gradient(pars)
+# plot_density_1D_unnormed(pars)
+# plot_density_1D(pars)
+# plot_interpolator(pars)
 plot_dens(pars, grid)
-plot_temperature_1D(pars)
-plot_dlnrho(pars)
+# plot_temperature_1D(pars)
+# plot_dlnrho(pars)

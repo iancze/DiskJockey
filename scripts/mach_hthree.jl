@@ -317,6 +317,8 @@ function fprob(p::Vector{Float64})
     # which every single subprocess will use
 
     # Fix the following arguments: gamma, dpc
+    T_freeze = cfg["parameters"]["T_freeze"][1]
+    X_freeze = cfg["parameters"]["X_freeze"][1]
 
     if config["fix_d"]
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance
@@ -338,7 +340,7 @@ function fprob(p::Vector{Float64})
     M_gas = 10^logM_gas
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    pars = Parameters(M_star, r_c, T_10m, q_m, T_10a, q_a, gamma, h, delta, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    pars = Parameters(M_star, r_c, T_10m, q_m, T_10a, q_a, T_freeze, X_freeze, gamma, h, delta, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Compute parameter file using model.jl, write to disk in base directory
     write_model(pars, basedir, grid, species)

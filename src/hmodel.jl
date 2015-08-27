@@ -115,6 +115,8 @@ type Parameters
     q_m::Float64 # midplane temperature gradient exponent
     T_10a::Float64 # [K] temperature at 10 AU, atmosphere
     q_a::Float64 # atmosphere temperature gradient exponent
+    T_freeze::Float64 # [K] temperature below which to reduce CO abundance
+    X_freeze::Float64 # [ratio] amount to reduce CO abundance
     gamma::Float64 # surface temperature gradient exponent
     h::Float64 # Number of scale heights that z_q is at, currently fixed to 4
     delta::Float64 # Shape exponent, currently fixed to 2
@@ -303,7 +305,15 @@ function rho_gas(r::Float64, z::Float64, pars::Parameters, spl)
         lnrho = lncor + un
 
         # Exponentiate it
-        return exp(lnrho)
+        rho = exp(lnrho)
+
+        # Check to make sure that this didn't return NaN, due to overflow or underflow errors somewhere in the integration pipeline. RADMC-3D will run with a NaN input to synthesize a blank image, and so the MCMC chain will gladly go on synthesizing blank images, even though the model is nonsense.
+        if isnan(rho)
+            println("Returned NaN for density.")
+            throw(OverflowError)
+        else
+            return rho
+        end
     end
 end
 
@@ -312,6 +322,20 @@ n_12CO(r::Float64, z::Float64, pars::Parameters, spl) = number_densities["12CO"]
 n_13CO(r::Float64, z::Float64, pars::Parameters, spl) = number_densities["13CO"] * rho_gas(r, z, pars, spl)
 
 n_C18O(r::Float64, z::Float64, pars::Parameters, spl) = number_densities["C18O"] * rho_gas(r, z, pars, spl)
+
+# It is realistic to include freezout of CO onto dust grains.
+# This is the amount by which the number density of the CO is reduced (X_freeze) relative to
+# the nominal value.
+function X_freeze(temp::Float64, pars::Parameters)
+    # If it's cooler than the freezout temperature, reduce the number density by the given factor
+    if temp <= pars.T_freeze
+        return pars.X_freeze
+    # Otherwise, just keep it as is.
+    else
+        return 1.0
+    end
+end
+
 
 function rho_dust(r::Float64, z::Float64, pars::Parameters)
     nCO = n_CO(r, z, pars) # number of CO molecules per cm^3
@@ -376,9 +400,11 @@ function write_model(pars::Parameters, basedir::String, grid::Grid, species::ASC
                 z = r * cos(theta)
                 r_cyl = r * sin(theta)
 
-                @printf(fdens, "%.9e\n", n_CO(r_cyl, z, pars, spl))
+                temp = temperature(r_cyl, z, pars)
+                XF = X_freeze(temp, pars)
+                @printf(fdens, "%.9e\n", XF * n_CO(r_cyl, z, pars, spl))
                 @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars))
-                @printf(ftemp, "%.9e\n", temperature(r_cyl, z, pars))
+                @printf(ftemp, "%.9e\n", temp)
                 @printf(fmicro, "%.9e\n", microturbulence(pars))
             end
         end

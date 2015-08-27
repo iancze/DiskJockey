@@ -172,36 +172,26 @@ function rho_gas(r::Float64, z::Float64, pars::Parameters)
     S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
 end
 
-# No parametric type for number density, because it is a 2D function.
-# function rho_gas(r::Float64, z::Float64, r_c::Float64, M_gas::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
-#     H = Hp(r, M_star, T_10, q)
-#     (2. - gamma) * M_gas/((2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
-# end
-#
-# rho_gas(r::Float64, z::Float64, pars::Parameters) = rho_gas(r, z, pars.r_c * AU, pars.M_gas * M_sun, pars.M_star * M_sun, pars.T_10, pars.q, pars.gamma)
-
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.
-
-# function n_12CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
-#     H = Hp(r, M_star, T_10, q)
-#     (2. - gamma) * M_CO/(m_12CO * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
-# end
-#
-# function n_13CO(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
-#     H = Hp(r, M_star, T_10, q)
-#     (2. - gamma) * M_CO/(m_13CO * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
-# end
-#
-# function n_C18O(r::Float64, z::Float64, r_c::Float64, M_CO::Float64, M_star::Float64, T_10::Float64, q::Float64, gamma::Float64)
-#     H = Hp(r, M_star, T_10, q)
-#     (2. - gamma) * M_CO/(m_C18O * (2. * pi)^(1.5) * r_c^2 * H) * (r/r_c)^(-gamma) * exp(-0.5 * (z/H)^2 - (r/r_c)^(2. - gamma))
-# end
 
 n_12CO(r::Float64, z::Float64, pars::Parameters) = number_densities["12CO"] * rho_gas(r, z, pars)
 
 n_13CO(r::Float64, z::Float64, pars::Parameters) = number_densities["13CO"] * rho_gas(r, z, pars)
 
 n_C18O(r::Float64, z::Float64, pars::Parameters) = number_densities["C18O"] * rho_gas(r, z, pars)
+
+# It is realistic to include freezout of CO onto dust grains.
+# This is the amount by which the number density of the CO is reduced (X_freeze) relative to
+# the nominal value.
+function X_freeze(temp::Float64, pars::Parameters)
+    # If it's cooler than the freezout temperature, reduce the number density by the given factor
+    if temp <= pars.T_freeze
+        return pars.X_freeze
+    # Otherwise, just keep it as is.
+    else
+        return 1.0
+    end
+end
 
 function rho_dust(r::Float64, z::Float64, pars::Parameters)
     nCO = n_CO(r, z, pars) # number of CO molecules per cm^3
