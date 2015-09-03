@@ -146,11 +146,11 @@ def plot(flatchain, base="", format=".png"):
     r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
 
     # Vertical temperature gradient
-    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10,m}$ [K]",
-    r"$q_m$", r"$T_{10,a}$ [K]", r"$q_a$", r"$\gamma$", r"$h$", r"$\delta$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]",
-    # r"$d$ [pc]",
-    r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
-    r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+    # labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10,m}$ [K]",
+    # r"$q_m$", r"$T_{10,a}$ [K]", r"$q_a$", r"$\gamma$", r"$h$", r"$\delta$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]",
+    # # r"$d$ [pc]",
+    # r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
+    # r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
 
     figure = triangle.corner(flatchain, quantiles=[0.16, 0.5, 0.84],
         plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True)
@@ -357,4 +357,4 @@ if args.save_npy:
     assert len(flatchainList) == 1, "If plotting Markov Chain, only specify one flatchain"
     flatchain = flatchainList[0]
 
-    np.save("mdi.npy", flatchain[:,np.array([0, 6, 7])])
+    np.save("flatchain.npy", flatchain)
