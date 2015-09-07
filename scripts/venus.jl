@@ -230,7 +230,7 @@ debug("Wrote grid")
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
-    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0 || T_10 > 2000.
+    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0 || T_10 > 1500. || q < 0. || q > 1.0
         return -Inf
     end
 
@@ -277,6 +277,7 @@ debug("Wrote grid")
     # println("Now in $keydir")
     # run(`ls`)
 
+    println("p ", p)
     # Run RADMC-3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
 
