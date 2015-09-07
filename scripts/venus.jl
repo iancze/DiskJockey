@@ -230,7 +230,7 @@ debug("Wrote grid")
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
-    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0
+    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0 || T_10 > 2000.
         return -Inf
     end
 
