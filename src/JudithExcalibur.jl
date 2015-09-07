@@ -8,7 +8,8 @@ export constants,
     gridding,
     visibilities,
     parallel,
-    LittleMC
+    LittleMC,
+    EnsembleSampler
 
 # These statements just straight up dump the source code directly here, making JudithExcalibur.jl
 # act as one giant file with multiple module definitions inside the `module JudithExcalibur`
@@ -23,5 +24,6 @@ include("gridding.jl")
 include("visibilities.jl")
 include("parallel.jl")
 include("LittleMC.jl")
+include("EnsembleSampler.jl")
 
 end

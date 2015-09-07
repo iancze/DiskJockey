@@ -83,6 +83,13 @@ function conj!(dv::DataVis)
     conj!(dv.VV)
 end
 
+# Apply this to a DataVis array
+function conj!(dvarr::Array{DataVis, 1})
+    for dset in dvarr
+        conj!(dset) # Swap UV convention
+    end
+end
+
 # Take in a visibility data set and then write it to the HDF5 file
 # The HDF5 file actually expects multi-channel data, so instead we will need to
 # store all of this information with arrays of shape (..., 1) [an extra trailing]
