@@ -154,7 +154,6 @@ debug("Wrote grid")
 #     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
 # end
 
-
 # Here, if we actually are going to be fixing distance, evaluate one image to get the interpolation
 # closures
 # Interpolation closures need to be global objects
@@ -165,21 +164,20 @@ debug("Wrote grid")
 #     M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
 # end
 
-# For each channel, also calculate the interpolation closures
-# npix = cfg["npix"]
-# pixsize = cfg["pixsize"] # [cm]
-# pix_AU = pixsize/AU # [AU]
-#
-# dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
-#
-# uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-# vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-#
-# int_arr = Array(Function, length(keys))
-# for (i, dset) in enumerate(dvarr)
-#     int_arr[i] = plan_interpolate(dset, uu, vv)
-# end
 
+@everywhere pixsize = cfg["pixsize"] # [cm]
+@everywhere pix_AU = pixsize/AU # [AU]
+
+@everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
+
+@everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+@everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+
+# For each channel, also calculate the interpolation closures
+@everywhere int_arr = Array(Function, nchan)
+@everywhere for (i, dset) in enumerate(dvarr)
+    int_arr[i] = plan_interpolate(dset, uu, vv)
+end
 
 # This function is fed to the EnsembleSampler
 # That means, using the currently available global processes, like the data visibilities,
@@ -297,9 +295,9 @@ debug("Wrote grid")
         vis_fft = transform(skim, i)
 
         # Interpolate the `vis_fft` to the same locations as the DataSet
-        # mvis = int_arr[i](dv, vis_fft)
+        mvis = int_arr[i](dv, vis_fft)
 
-        mvis = ModelVis(dv, vis_fft)
+        # mvis = ModelVis(dv, vis_fft)
 
         # Apply the phase shift here
         phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
