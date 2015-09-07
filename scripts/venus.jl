@@ -356,17 +356,19 @@ nwalkers = 4 * ndim
 
 sampler = Sampler(nwalkers, ndim, fprob)
 
-# Option to load previous positions from a NPZ file
-if haskey(config, "pos0")
-    using NPZ
-    pos0 = npzread(config["pos0"])
-else
-    # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
-    pos0 = Array(Float64, ndim, nwalkers)
-    for i=1:nwalkers
-        pos0[:,i] = starting_param .+ 3. * rand(proposal)
-    end
-end
+pos0 = npzread(config["pos0"])
+
+# # Option to load previous positions from a NPZ file
+# if haskey(config, "pos0")
+#     using NPZ
+#     pos0 = npzread(config["pos0"])
+# else
+#     # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
+#     pos0 = Array(Float64, ndim, nwalkers)
+#     for i=1:nwalkers
+#         pos0[:,i] = starting_param .+ 3. * rand(proposal)
+#     end
+# end
 
 
 run_mcmc(sampler, pos0, config["samples"])

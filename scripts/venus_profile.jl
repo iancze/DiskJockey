@@ -158,19 +158,18 @@ debug("Wrote grid")
 # end
 
 # For each channel, also calculate the interpolation closures
-# npix = cfg["npix"]
-# pixsize = cfg["pixsize"] # [cm]
-# pix_AU = pixsize/AU # [AU]
-#
-# dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
-#
-# uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-# vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-#
-# int_arr = Array(Function, length(keys))
-# for (i, dset) in enumerate(dvarr)
-#     int_arr[i] = plan_interpolate(dset, uu, vv)
-# end
+@everywhere pixsize = cfg["pixsize"] # [cm]
+@everewhere pix_AU = pixsize/AU # [AU]
+
+@everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
+
+@everewhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+@everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+
+@everywhere int_arr = Array(Function, nchan)
+@everywhere for (i, dset) in enumerate(dvarr)
+    int_arr[i] = plan_interpolate(dset, uu, vv)
+end
 
 
 # This function is fed to the EnsembleSampler
@@ -293,9 +292,9 @@ function fprob(p::Vector{Float64})
         vis_fft = transform(skim, i)
 
         # Interpolate the `vis_fft` to the same locations as the DataSet
-        # mvis = int_arr[i](dv, vis_fft)
+        mvis = int_arr[i](dv, vis_fft)
 
-        mvis = ModelVis(dv, vis_fft)
+        # mvis = ModelVis(dv, vis_fft)
 
         # Apply the phase shift here
         phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
