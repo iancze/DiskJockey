@@ -114,6 +114,9 @@ println("Mapped variables to all processes")
 
 @everywhere const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
 
+# Keep track of the current home directory
+@everywhere const global homedir = pwd() * "/"
+
 # make the internal Judith directory, if it doesn't exist
 if !ispath(basedir)
     println("Creating ", basedir)
@@ -137,8 +140,8 @@ Logging.configure(filename=logfile, level=DEBUG)
 debug("Created logfile.")
 
 # Create the model grid
-grd = config["grid"]
-global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+@everywhere grd = cfg["grid"]
+@everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
@@ -184,28 +187,36 @@ debug("Wrote grid")
 # That means, using the currently available global processes, like the data visibilities,
 # and it must create it's own temporary directory to write the necessary files for
 # RADMC to run.
-function fprob(p::Vector{Float64})
+@everywhere function fprob(p::Vector{Float64})
+
+    # println("Starting in ", pwd())
 
     # Each walker needs to create it's own temporary directory
     # where all RADMC files will reside and be driven from
     # It only needs to last for the duration of this function, so let's use a tempdir
-    keydir = mktempdir(basedir)
+    keydir = mktempdir() * "/"
 
     # Copy all relevant configuration scripts to this subdirectory
     # these are mainly setup files that will be static throughout the run
     # they were written by JudithInitialize.jl and write_grid()
-    run(`cp radmc3d.inp $keydir`)
+    for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
+        ff = homedir * fname
+        run(`cp $ff $keydir`)
+    end
+    # run(`cp radmc3d.inp $keydir`)
+    # run(`cp wavelength_micron.inp $keydir`)
+    # run(`cp lines.inp $keydir`)
+    #
     ag = basedir * "amr_grid.inp"
     run(`cp $ag $keydir`)
-    run(`cp wavelength_micron.inp $keydir`)
-    run(`cp lines.inp $keydir`)
 
-    mf = "molecule_" * molnames[species] * ".inp"
-    run(`cp $mf $keydir`)
+    # mf = "molecule_" * molnames[species] * ".inp"
+    # run(`cp $mf $keydir`)
 
     # change the subprocess to reside in this directory for the remainder of the run
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
+    println("Changed to ", pwd())
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
@@ -243,15 +254,15 @@ function fprob(p::Vector{Float64})
     # at observer; 90 means edge on; and 180 means face on, angular momentum
     # vector pointing away from observer.
     # These are the same as the RADMC-3D conventions.
-    incl = p.incl # [deg]
+    incl = pars.incl # [deg]
 
     # We also adopt the RADMC-3D convention for position angle, which defines position angle
     # by the angular momentum vector.
     # A positive PA angle means the disk angular momentum vector will be
     # rotated counter clockwise (from North towards East).
-    PA = p.PA # [deg]
+    PA = pars.PA # [deg]
 
-    vel = p.vel # [km/s]
+    vel = pars.vel # [km/s]
 
     # Doppler shift the dataset wavelengths to rest-frame wavelength
     beta = vel/c_kms # relativistic Doppler formula
@@ -262,6 +273,10 @@ function fprob(p::Vector{Float64})
 
     write_lambda(lams, keydir) # write into current directory
 
+
+    # println("Now in $keydir")
+    # run(`ls`)
+
     # Run RADMC-3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
 
@@ -269,7 +284,7 @@ function fprob(p::Vector{Float64})
     im = imread()
 
     # Convert raw images to the appropriate distance
-    skim = imToSky(im, p.dpc)
+    skim = imToSky(im, pars.dpc)
 
     # Apply the gridding correction function before doing the FFT
     # No shift needed, since we will shift the resampled visibilities
@@ -277,7 +292,7 @@ function fprob(p::Vector{Float64})
 
     lnprobs = Array(Float64, nchan)
     # Do the Fourier domain stuff per channel
-    for i=1:nkeys
+    for i=1:nchan
         dv = dvarr[i]
         # FFT the appropriate image channel
         vis_fft = transform(skim, i)
@@ -288,7 +303,7 @@ function fprob(p::Vector{Float64})
         mvis = ModelVis(dv, vis_fft)
 
         # Apply the phase shift here
-        phase_shift!(mvis, p.mu_RA, p.mu_DEC)
+        phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
 
         # Calculate chi^2 between these two
         lnprobs[i] = lnprob(dv, mvis)
@@ -296,19 +311,16 @@ function fprob(p::Vector{Float64})
 
     # remove the temporary directory in which we currently reside
     println("removing $keydir")
-    # run(`rm -rf $keydir`)
+    run(`rm -rf $keydir`)
+
 
     # Sum them all together and feed back to the master process
-    return sum(lnprobs)
+    lnp = sum(lnprobs)
+
+    return lnp
 
 end
 
-
-function fp(p::Vector)
-    val = fprob(p)
-    debug(p, " : ", val)
-    return val
-end
 
 debug("Initializing MCMC")
 using Distributions
@@ -343,7 +355,7 @@ using JudithExcalibur.EnsembleSampler
 ndim = nparam
 nwalkers = 4 * ndim
 
-sampler = Sampler(nwalkers, ndim, fp)
+sampler = Sampler(nwalkers, ndim, fprob)
 
 # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
 pos0 = Array(Float64, ndim, nwalkers)
@@ -351,7 +363,7 @@ for i=1:nwalkers
     pos0[:,i] = starting_param .+ 3. * rand(proposal)
 end
 
-run_mcmc(sampler, pos, config["samples"])
+run_mcmc(sampler, pos0, config["samples"])
 
 fchain = flatchain(sampler)
 
