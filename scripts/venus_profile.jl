@@ -159,11 +159,11 @@ debug("Wrote grid")
 
 # For each channel, also calculate the interpolation closures
 @everywhere pixsize = cfg["pixsize"] # [cm]
-@everewhere pix_AU = pixsize/AU # [AU]
+@everywhere pix_AU = pixsize/AU # [AU]
 
 @everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
 
-@everewhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+@everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
 @everywhere int_arr = Array(Function, nchan)

@@ -356,6 +356,7 @@ nwalkers = 4 * ndim
 
 sampler = Sampler(nwalkers, ndim, fprob)
 
+using NPZ
 pos0 = npzread(config["pos0"])
 
 # # Option to load previous positions from a NPZ file
