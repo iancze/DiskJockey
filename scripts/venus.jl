@@ -60,7 +60,12 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
-using JudithExcalibur.visibilities
+@everywhere using JudithExcalibur.constants
+@everywhere using JudithExcalibur.visibilities
+@everywhere using JudithExcalibur.image
+@everywhere using JudithExcalibur.gridding
+@everywhere using JudithExcalibur.model
+
 
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])
@@ -69,15 +74,10 @@ nchan = length(dvarr)
 if haskey(config, "exclude")
     exclude = config["exclude"]
     # which channels of the dset to fit
-    const global keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+    keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
 else
-    const global keylist = Int[i for i=1:nchan]
+    keylist = Int[i for i=1:nchan]
 end
-
-# Now, redo this to only load the dvarr for the keys that we need, and conjugate
-@everywhere dvarr = visibilities.conj!(DataVis(cfg["data_file"], keys))
-@everywhere nchan = length(dvarr)
-
 
 # go through any previously created directories and remove them
 function cleardirs!(keylist::Vector{Int})
@@ -97,7 +97,14 @@ println("Workers allocated ", nchild)
 for process in procs()
     @spawnat process global run_id=run_index
     @spawnat process global cfg=config
+    @spawnat process global kl=keylist
 end
+println("Mapped variables to all processes")
+
+# Now, redo this to only load the dvarr for the keys that we need, and conjugate
+@everywhere dvarr = DataVis(cfg["data_file"], kl)
+@everywhere visibilities.conj!(dvarr)
+@everywhere nchan = length(dvarr)
 
 @everywhere const global species = cfg["species"]
 
@@ -115,12 +122,6 @@ end
 
 # Clear all directories
 cleardirs!(keylist)
-
-@everywhere using JudithExcalibur.constants
-@everywhere using JudithExcalibur.visibilities
-@everywhere using JudithExcalibur.image
-@everywhere using JudithExcalibur.gridding
-@everywhere using JudithExcalibur.model
 
 # Delete the old log file (if it exists)
 const logfile = outdir * "log.log"
@@ -156,12 +157,12 @@ debug("Wrote grid")
 # Here, if we actually are going to be fixing distance, evaluate one image to get the interpolation
 # closures
 # Interpolation closures need to be global objects
-if config["fix_d"]
-    dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-    M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-else
-    M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-end
+# if config["fix_d"]
+#     dpc = cfg["parameters"]["dpc"][1] # [pc] distance
+#     M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+# else
+#     M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+# end
 
 # For each channel, also calculate the interpolation closures
 # npix = cfg["npix"]
@@ -209,7 +210,7 @@ function fprob(p::Vector{Float64})
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
 
-    if config["fix_d"]
+    if cfg["fix_d"]
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance
         M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
     else
@@ -329,6 +330,9 @@ jumps = Array(Float64, nparam)
 for i=1:nparam
     starting_param[i], jumps[i] = pp[params[i]]
 end
+
+jump_param = PDiagMat(jumps.^2)
+jump_param = full(jump_param)
 
 # Perturb the starting parameters
 proposal = MvNormal(jump_param)
