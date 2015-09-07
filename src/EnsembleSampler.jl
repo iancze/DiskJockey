@@ -80,7 +80,7 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
 
     for i=1:iterations
         sampler.iterations += 1
-
+        println("Iteration ", sampler.iterations)
         # Loop over the two ensembles, calculating the proposed positions.
 
         # Slices for the first and second halves

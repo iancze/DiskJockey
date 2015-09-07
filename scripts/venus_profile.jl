@@ -58,11 +58,11 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
-@everywhere using JudithExcalibur.constants
-@everywhere using JudithExcalibur.visibilities
-@everywhere using JudithExcalibur.image
-@everywhere using JudithExcalibur.gridding
-@everywhere using JudithExcalibur.model
+using JudithExcalibur.constants
+using JudithExcalibur.visibilities
+using JudithExcalibur.image
+using JudithExcalibur.gridding
+using JudithExcalibur.model
 
 
 # load data and figure out how many channels
@@ -87,33 +87,25 @@ function cleardirs!(keylist::Vector{Int})
     println("Removed directories")
 end
 
-# This program is meant to be started with the -p option.
-nchild = nworkers()
-println("Workers allocated ", nchild)
-
 # make the values of run_index and config available on all processes
-for process in procs()
-    @spawnat process global run_id=run_index
-    @spawnat process global cfg=config
-    @spawnat process global kl=keylist
-end
-println("Mapped variables to all processes")
+global run_id=run_index
+global cfg=config
+global kl=keylist
+
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate
-@everywhere dvarr = DataVis(cfg["data_file"], kl)
-@everywhere visibilities.conj!(dvarr)
-@everywhere nchan = length(dvarr)
+dvarr = DataVis(cfg["data_file"], kl)
+visibilities.conj!(dvarr)
+nchan = length(dvarr)
 
-@everywhere const global species = cfg["species"]
+const global species = cfg["species"]
+basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
+const global basedir = basefmt(run_id)
 
-@everywhere basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
-
-@everywhere const global basedir = basefmt(run_id)
-
-@everywhere const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
+const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
 
 # Keep track of the current home directory
-@everywhere const global homedir = pwd() * "/"
+const global homedir = pwd() * "/"
 
 # make the internal Judith directory, if it doesn't exist
 if !ispath(basedir)
@@ -138,8 +130,8 @@ Logging.configure(filename=logfile, level=DEBUG)
 debug("Created logfile.")
 
 # Create the model grid
-@everywhere grd = cfg["grid"]
-@everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+grd = cfg["grid"]
+global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
@@ -185,7 +177,7 @@ debug("Wrote grid")
 # That means, using the currently available global processes, like the data visibilities,
 # and it must create it's own temporary directory to write the necessary files for
 # RADMC to run.
-@everywhere function fprob(p::Vector{Float64})
+function fprob(p::Vector{Float64})
 
     # println("Starting in ", pwd())
 
@@ -277,7 +269,10 @@ debug("Wrote grid")
 
     # println("p ", p)
     # Run RADMC-3D, redirect output to /dev/null
+    tic()
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
+    println("RADMC3D call")
+    toc()
 
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
     im = imread()
@@ -289,6 +284,7 @@ debug("Wrote grid")
     # No shift needed, since we will shift the resampled visibilities
     corrfun!(skim)
 
+    tic()
     lnprobs = Array(Float64, nchan)
     # Do the Fourier domain stuff per channel
     for i=1:nchan
@@ -308,6 +304,8 @@ debug("Wrote grid")
         lnprobs[i] = lnprob(dv, mvis)
     end
 
+    println("Interpolation time")
+    toc()
     # remove the temporary directory in which we currently reside
     # println("removing $keydir")
     run(`rm -rf $keydir`)
@@ -342,39 +340,19 @@ for i=1:nparam
     starting_param[i], jumps[i] = pp[params[i]]
 end
 
-jump_param = PDiagMat(jumps.^2)
-jump_param = full(jump_param)
+# given these made up parameters, call fprob
+println(fprob(starting_param))
 
-# Perturb the starting parameters
-proposal = MvNormal(jump_param)
+# println("Now for the profiling.")
+#
+# clear_malloc_data()
+#
+# fprob(starting_param)
+#
+# @profile fprob(starting_param)
+# Profile.print()
 
-# Use the EnsembleSampler to do the optimization
-using JudithExcalibur.EnsembleSampler
-
-ndim = nparam
-nwalkers = 4 * ndim
-
-sampler = Sampler(nwalkers, ndim, fprob)
-
-# Option to load previous positions from a NPZ file
-if haskey(config, "pos0")
-    using NPZ
-    pos0 = npzread(config["pos0"])
-else
-    # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
-    pos0 = Array(Float64, ndim, nwalkers)
-    for i=1:nwalkers
-        pos0[:,i] = starting_param .+ 3. * rand(proposal)
-    end
-end
-
-
-run_mcmc(sampler, pos0, config["samples"])
-
-fchain = flatchain(sampler)
-
-using NPZ
-
-npzwrite(outdir * "chain.npy", sampler.chain)
-npzwrite(outdir * "flatchain.npy", fchain)
-npzwrite(outdir * "pos0.npy", sampler.chain[:, end, :])
+tic()
+fprob(starting_param)
+println("Full f Timing")
+toc()

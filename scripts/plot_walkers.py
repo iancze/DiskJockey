@@ -1,10 +1,11 @@
+#!/usr/bin/env python
+
 import numpy as np
 import matplotlib.pyplot as plt
 import triangle
 
 
 chain = np.load("chain.npy")
-
 
 ndim, niter, nwalkers = chain.shape
 
@@ -24,7 +25,7 @@ fig.savefig("walkers.png")
 
 flatchain = np.load("flatchain.npy")
 
-labels = ["a", "b"]
-figure = triangle.corner(flatchain.T, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, labels=labels, show_titles=True, truths=[1., -2.])
+# labels = ["a", "b"]
+figure = triangle.corner(flatchain.T, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
 
 figure.savefig("triangle.png")
