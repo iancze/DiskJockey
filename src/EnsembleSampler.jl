@@ -226,7 +226,7 @@ function write_samples(sampler::Sampler, outdir="")
     npzwrite(outdir * "lnprob.npy", sampler.lnprob)
 
     # Needs to be reshaped to remove singleton dimension
-    npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (ndim, nwalkers))
+    npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (ndim, nwalkers)))
 
 end
 
