@@ -101,6 +101,7 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
                 lnprob[S0[acc]] = newlnp[acc]
                 p[:, S0[acc]] = q[:, acc]
 
+
             end
 
             ind = i0 + i
@@ -226,7 +227,7 @@ function write_samples(sampler::Sampler, outdir="")
     npzwrite(outdir * "lnprob.npy", sampler.lnprob)
 
     # Needs to be reshaped to remove singleton dimension
-    npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (ndim, nwalkers)))
+    npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (sampler.ndim, sampler.nwalkers)))
 
 end
 
