@@ -355,15 +355,8 @@ else
     end
 end
 
+run_schedule(sampler, pos0, config["samples"], 3)
 
-run_mcmc(sampler, pos0, config["samples"])
+# run_mcmc(sampler, pos0, config["samples"])
 
-fchain = flatchain(sampler)
-
-using NPZ
-
-npzwrite(outdir * "chain.npy", sampler.chain)
-npzwrite(outdir * "flatchain.npy", fchain)
-
-# Needs to be reshaped
-npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (ndim, nwalkers))
+write_samples(sampler, outdir)

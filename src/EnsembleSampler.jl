@@ -1,10 +1,12 @@
 module EnsembleSampler
 
+using NPZ
+
 # This is a direct Julia port of [emcee](http://dan.iel.fm/emcee/current/), the ensemble sampler by Dan Foreman-Mackey et al.
 #
 # Right now, this is only designed to work in parallel with cores on the same node in the most straightforward example. Eventually it would be nice to incorporate Julia tasks.
 
-export Sampler, run_mcmc, flatchain, reset
+export Sampler, run_mcmc, run_schedule, flatchain, reset, write_samples
 
 # There is a type, called the sampler.
 type Sampler
@@ -213,6 +215,28 @@ end
 function run_mcmc(sampler::Sampler, pos0, N::Int)
     pos = sample(sampler, pos0, nothing, N)
     return pos
+end
+
+# Write out the samples
+function write_samples(sampler::Sampler, outdir="")
+
+    fchain = flatchain(sampler)
+    npzwrite(outdir * "chain.npy", sampler.chain)
+    npzwrite(outdir * "flatchain.npy", fchain)
+    npzwrite(outdir * "lnprob.npy", sampler.lnprob)
+
+    # Needs to be reshaped to remove singleton dimension
+    npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (ndim, nwalkers))
+
+end
+
+# Run the sampler on a periodic save schedule, to prevent losses on long-running calculations
+# run N iterations for each loop
+function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int)
+    for i=1:loops
+        pos0 = sample(sampler, pos0, nothing, N)
+    end
+    return pos0
 end
 
 
