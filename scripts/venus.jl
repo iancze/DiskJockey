@@ -355,7 +355,7 @@ else
     end
 end
 
-run_schedule(sampler, pos0, config["samples"], 3)
+run_schedule(sampler, pos0, config["samples"], 3, outdir)
 
 # run_mcmc(sampler, pos0, config["samples"])
 
