@@ -298,7 +298,7 @@ end
     # Sum them all together and feed back to the master process
     lnp = sum(lnprobs)
 
-    debug("p : ",p, " lnp: " lnp)
+    debug("p : ",p , " lnp: ", lnp)
 
     return lnp
 
