@@ -131,9 +131,9 @@ if isfile(logfile)
 end
 
 
-using Logging
+@everywhere using Logging
 # change the default logger
-Logging.configure(filename=logfile, level=DEBUG)
+@everywhere Logging.configure(filename=logfile, level=DEBUG)
 
 debug("Created logfile.")
 
@@ -185,6 +185,7 @@ end
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
 
+    debug("p :", p)
     # Each walker needs to create it's own temporary directory
     # where all RADMC files will reside and be driven from
     # It only needs to last for the duration of this function, so let's use a tempdir
@@ -295,6 +296,8 @@ end
     # Sum them all together and feed back to the master process
     lnp = sum(lnprobs)
 
+    debug("p : ",p, " lnp: " lnp)
+
     return lnp
 
 end
@@ -336,30 +339,19 @@ nwalkers = 4 * ndim
 sampler = Sampler(nwalkers, ndim, fprob)
 
 using NPZ
-pos0 = npzread(config["pos0"])
-# 
-# if haskey(config, "pos0")
-#     using NPZ
-#     pos0 = npzread(config["pos0"])
-# else
-#     # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
-#     pos0 = Array(Float64, ndim, nwalkers)
-#     for i=1:nwalkers
-#         pos0[:,i] = starting_param .+ 3. * rand(proposal)
-#     end
-# end
+# pos0 = npzread(config["pos0"])
 
 # # Option to load previous positions from a NPZ file
-# if haskey(config, "pos0")
-#     using NPZ
-#     pos0 = npzread(config["pos0"])
-# else
-#     # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
-#     pos0 = Array(Float64, ndim, nwalkers)
-#     for i=1:nwalkers
-#         pos0[:,i] = starting_param .+ 3. * rand(proposal)
-#     end
-# end
+if haskey(config, "pos0")
+    # using NPZ
+    pos0 = npzread(config["pos0"])
+else
+    # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
+    pos0 = Array(Float64, ndim, nwalkers)
+    for i=1:nwalkers
+        pos0[:,i] = starting_param .+ 3. * rand(proposal)
+    end
+end
 
 
 run_mcmc(sampler, pos0, config["samples"])
@@ -370,4 +362,6 @@ using NPZ
 
 npzwrite(outdir * "chain.npy", sampler.chain)
 npzwrite(outdir * "flatchain.npy", fchain)
-npzwrite(outdir * "pos0.npy", sampler.chain[:, end, :])
+
+# Needs to be reshaped
+npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (ndim, nwalkers))
