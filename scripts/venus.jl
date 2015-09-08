@@ -185,8 +185,6 @@ end
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
 
-    # println("Starting in ", pwd())
-
     # Each walker needs to create it's own temporary directory
     # where all RADMC files will reside and be driven from
     # It only needs to last for the duration of this function, so let's use a tempdir
@@ -199,20 +197,13 @@ end
         ff = homedir * fname
         run(`cp $ff $keydir`)
     end
-    # run(`cp radmc3d.inp $keydir`)
-    # run(`cp wavelength_micron.inp $keydir`)
-    # run(`cp lines.inp $keydir`)
-    #
+
     ag = basedir * "amr_grid.inp"
     run(`cp $ag $keydir`)
-
-    # mf = "molecule_" * molnames[species] * ".inp"
-    # run(`cp $mf $keydir`)
 
     # change the subprocess to reside in this directory for the remainder of the run
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
-    # println("Changed to ", pwd())
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
@@ -242,9 +233,6 @@ end
     # Compute parameter file using model.jl, write to disk in current directory
     write_model(pars, keydir, grid, species)
 
-    # copied from f
-    # dvarr, int_arr = data
-
     # We are using the following conventions: inclination ranges from
     # 0 to 180 degrees. 0 means face on, angular momentum vector pointing
     # at observer; 90 means edge on; and 180 means face on, angular momentum
@@ -269,11 +257,6 @@ end
 
     write_lambda(lams, keydir) # write into current directory
 
-
-    # println("Now in $keydir")
-    # run(`ls`)
-
-    # println("p ", p)
     # Run RADMC-3D, redirect output to /dev/null
     run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
 
@@ -307,9 +290,7 @@ end
     end
 
     # remove the temporary directory in which we currently reside
-    # println("removing $keydir")
     run(`rm -rf $keydir`)
-
 
     # Sum them all together and feed back to the master process
     lnp = sum(lnprobs)
@@ -354,8 +335,19 @@ nwalkers = 4 * ndim
 
 sampler = Sampler(nwalkers, ndim, fprob)
 
-using NPZ
-pos0 = npzread(config["pos0"])
+# using NPZ
+# pos0 = npzread(config["pos0"])
+
+if haskey(config, "pos0")
+    using NPZ
+    pos0 = npzread(config["pos0"])
+else
+    # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
+    pos0 = Array(Float64, ndim, nwalkers)
+    for i=1:nwalkers
+        pos0[:,i] = starting_param .+ 3. * rand(proposal)
+    end
+end
 
 # # Option to load previous positions from a NPZ file
 # if haskey(config, "pos0")
