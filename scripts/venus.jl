@@ -91,13 +91,27 @@ end
 nchild = nworkers()
 println("Workers allocated ", nchild)
 
+@everywhere using Logging
+
+# Delete the old log file (if it exists)
+logf = outdir * "log.log"
+if isfile(logf)
+    rm(logf)
+end
+
 # make the values of run_index and config available on all processes
 for process in procs()
     @spawnat process global run_id=run_index
     @spawnat process global cfg=config
     @spawnat process global kl=keylist
+    @spawnat process global logfile=logf
 end
 println("Mapped variables to all processes")
+
+# change the default logger
+@everywhere Logging.configure(filename=logfile, level=DEBUG)
+
+debug("Created logfile.")
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate
 @everywhere dvarr = DataVis(cfg["data_file"], kl)
@@ -124,18 +138,6 @@ end
 # Clear all directories
 cleardirs!(keylist)
 
-# Delete the old log file (if it exists)
-const logfile = outdir * "log.log"
-if isfile(logfile)
-    rm(logfile)
-end
-
-
-@everywhere using Logging
-# change the default logger
-@everywhere Logging.configure(filename=logfile, level=DEBUG)
-
-debug("Created logfile.")
 
 # Create the model grid
 @everywhere grd = cfg["grid"]
