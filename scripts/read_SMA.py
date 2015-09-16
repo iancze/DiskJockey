@@ -27,6 +27,9 @@ nfreq = hdr["NAXIS4"]
 
 freqs = hdr["CRVAL4"] + hdr["CDELT4"] * np.arange(nfreq)  # Hz
 
+# Assert something about the frequencies being decreasing
+print("Frequencies are", freqs)
+
 # Convert each uu, vv cordinate from light nanoseconds to kilolambda,
 # depending on which channel frequency we are using
 uu = 1e-3 * (freqs * np.tile(data["UU"], (nfreq, 1)).T).T
@@ -47,16 +50,31 @@ weight = vis[:, :, 2].T
 # Now, stuff each of these into an HDF5 file.
 fid = h5py.File(args.out, "w")
 
-# Convert the frequencies from Hz to micron.
-fid.create_dataset("lams", (nfreq,), dtype="float64")[:] = cc/freqs*1e4 #[microns]
+if freqs[-1] > freqs[0]:
+    print("Reversing to stuff in increasing wavelength.")
+    # Convert the frequencies from Hz to micron.
+    fid.create_dataset("lams", (nfreq,), dtype="float64")[:] = cc/freqs[::-1]*1e4 #[microns]
 
-fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu
-fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv
+    fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu[::-1]
+    fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv[::-1]
 
-fid.create_dataset("real", shape, dtype="float64")[:,:] = real
-fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag
+    fid.create_dataset("real", shape, dtype="float64")[:,:] = real[::-1]
+    fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag[::-1]
 
-fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)
+    fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight[::-1])
+
+else:
+    print("Stuffing in increasing wavelength.")
+    # Convert the frequencies from Hz to micron.
+    fid.create_dataset("lams", (nfreq,), dtype="float64")[:] = cc/freqs*1e4 #[microns]
+
+    fid.create_dataset("uu", shape, dtype="float64")[:,:] = uu
+    fid.create_dataset("vv", shape, dtype="float64")[:,:] = vv
+
+    fid.create_dataset("real", shape, dtype="float64")[:,:] = real
+    fid.create_dataset("imag", shape, dtype="float64")[:,:] = imag
+
+    fid.create_dataset("invsig", shape, dtype="float64")[:,:] = np.sqrt(weight)
 
 fid.close()
 

@@ -327,6 +327,13 @@ end
 # Return a function that is used to interpolate the visibilities, in the
 # spirit of interpolate_uv but *much* faster.
 # Closures save time and money!
+
+# The point is that if the distance to the source and the size of the sythesized image
+# are not changing, then we will always be interpolating from a dense Visibility grid that
+# has the exact same U and V spacings, meaning that the weighting terms used to evaluate the
+# interpolation for a specific visibility can be cached.
+
+# So, using a closure, those weighting terms are calculated once and then cached for further use.
 function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64})
 
     nvis = length(dvis.VV)
@@ -402,8 +409,8 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
     # This function inherits all of the variables just defined in this scope (uu, vv)
     function interpolate(data::DataVis, fmvis::FullModelVis)
         # Assert that we calculated the same UU and VV spacings, otherwise we did something wrong!
-        @test_approx_eq uu fmvis.uu
-        @test_approx_eq vv fmvis.vv
+        @test_approx_eq_eps uu fmvis.uu 1e-5
+        @test_approx_eq_eps vv fmvis.vv 1e-5
 
         # output array
         Vmodel = Array(Complex128, nvis)

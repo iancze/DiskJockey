@@ -11,8 +11,7 @@ parser.add_argument("--output", default="combined.hdf5", help="Output HDF5 file.
 
 parser.add_argument("--files", nargs="+", help="The HDF5 or CSV files containing the MCMC samples, separated by whitespace.")
 
-parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain "
-                                                        "for burn in.")
+parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain for burn in.")
 parser.add_argument("--thin", type=int, default=1, help="Thin the chain by this factor. E.g., --thin 100 will take every 100th sample.")
 parser.add_argument("--range", nargs=2, help="start and end ranges for chain plot, separated by WHITESPACE")
 

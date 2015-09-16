@@ -357,6 +357,4 @@ end
 
 run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
 
-# run_mcmc(sampler, pos0, config["samples"])
-
 write_samples(sampler, outdir)
