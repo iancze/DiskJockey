@@ -277,7 +277,7 @@ end
     if cfg["fix_d"]
         # After the fact, we should be able to check that the pixel size of the image is the
         # same as the one we originally calculated from the outer disk radius.
-        @test_approx_eq_eps im.pixsize_x/AU pix_AU 1e-5
+        @test_approx_eq_eps im.pixsize_x/AU pix_AU 1e-4
     end
 
     # Convert raw images to the appropriate distance
