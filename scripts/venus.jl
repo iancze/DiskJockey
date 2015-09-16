@@ -166,19 +166,26 @@ debug("Wrote grid")
 #     M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
 # end
 
+# Only calculate the interpolation closures if we are fixing distance.
 
-@everywhere pixsize = cfg["pixsize"] # [cm]
-@everywhere pix_AU = pixsize/AU # [AU]
+if cfg["fix_d"]
+    # @everywhere pixsize = cfg["pixsize"] # [cm]
+    # @everywhere pix_AU = pixsize/AU # [AU]
 
-@everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
+    # Simply calculate pix_AU as 1.1 * (2 * r_out) / npix
+    # This is assuming that RADMC always calculates the image the same
+    @everywhere pix_AU = (1.1 * 2 * grd["r_out"]) / cfg["npix"] # [AU/pixel]
 
-@everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-@everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+    @everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
 
-# For each channel, also calculate the interpolation closures
-@everywhere int_arr = Array(Function, nchan)
-@everywhere for (i, dset) in enumerate(dvarr)
-    int_arr[i] = plan_interpolate(dset, uu, vv)
+    @everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+    @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+
+    # For each channel, also calculate the interpolation closures
+    @everywhere int_arr = Array(Function, nchan)
+    @everywhere for (i, dset) in enumerate(dvarr)
+        int_arr[i] = plan_interpolate(dset, uu, vv)
+    end
 end
 
 # This function is fed to the EnsembleSampler
@@ -266,6 +273,12 @@ end
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
     im = imread()
 
+    if cfg["fix_d"]
+        # After the fact, we should be able to check that the pixel size of the image is the
+        # same as the one we originally calculated from the outer disk radius.
+        @test_approx_eq_eps im.pixsize_x/AU pix_AU 1e-5
+    end
+
     # Convert raw images to the appropriate distance
     skim = imToSky(im, pars.dpc)
 
@@ -280,10 +293,12 @@ end
         # FFT the appropriate image channel
         vis_fft = transform(skim, i)
 
-        # Interpolate the `vis_fft` to the same locations as the DataSet
-        mvis = int_arr[i](dv, vis_fft)
-
-        # mvis = ModelVis(dv, vis_fft)
+        if cfg["fix_d"]
+            # Interpolate the `vis_fft` to the same locations as the DataSet
+            mvis = int_arr[i](dv, vis_fft)
+        else
+            mvis = ModelVis(dv, vis_fft)
+        end
 
         # Apply the phase shift here
         phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
