@@ -63,6 +63,7 @@ mkdir(outdir)
 @everywhere using JudithExcalibur.image
 @everywhere using JudithExcalibur.gridding
 @everywhere using JudithExcalibur.model
+@everywhere using Base.Test
 
 
 # load data and figure out how many channels
