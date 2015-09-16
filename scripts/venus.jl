@@ -236,6 +236,10 @@ end
         return -Inf
     end
 
+    if PA < 0. || PA > 360.
+        return -Inf
+    end
+
     M_gas = 10^logM_gas
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
