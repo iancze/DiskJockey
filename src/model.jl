@@ -165,7 +165,7 @@ function Sigma(r::Float64, pars::Parameters)
     return Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
 end
 
-# No parametric type for number density, because it is a 2D function.
+# Delivers a gas density in g/cm^3
 function rho_gas(r::Float64, z::Float64, pars::Parameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)

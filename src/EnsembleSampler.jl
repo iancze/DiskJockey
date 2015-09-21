@@ -58,6 +58,7 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
 
     # If the initial log-probabilities were not provided, calculate them
     # now.
+    # This step is calculating the lnprob for the total number of walkers.
     lnprob = lnprob0
     if lnprob == nothing
         lnprob = get_lnprob(sampler, p)
@@ -101,12 +102,11 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
                 lnprob[S0[acc]] = newlnp[acc]
                 p[:, S0[acc]] = q[:, acc]
 
-
             end
 
-            ind = i0 + i
-            sampler.chain[:, ind, :] = p
-            sampler.lnprob[:, ind] = lnprob
+        ind = i0 + i
+        sampler.chain[:, ind, :] = p
+        sampler.lnprob[:, ind] = lnprob
 
         end
 
@@ -155,6 +155,7 @@ function propose_stretch(sampler::Sampler, p0, p1, lnprob0)
     # c[:, rint] is a 2D array (ndim, Ns)
     q = c[:, rint] - (reshape(zz, (1, Ns)) .*  (c[:, rint] - s))
 
+    # This get_lnprob is only calculating the lnprob for the proposed positions, which is Ns, and is probably half the total number of walkers.
     newlnprob = get_lnprob(sampler, q)
 
     # Decide whether or not the proposals should be accepted.

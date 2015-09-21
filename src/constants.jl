@@ -42,7 +42,7 @@ X_C18O = 1/557. * X_12CO
 number_ratio = Dict([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
 
 # Use this to multiply against M_gas to get n_12CO or n_13CO
-number_densities = Dict([("12CO", X_12CO/(mu_gas * m_H)), ("13CO", X_13CO/(mu_gas * m_H)), ("C18O", X_C18O/(mu_gas * m_H))])
+number_densities = Dict([("12CO", X_12CO/(mu_gas * amu)), ("13CO", X_13CO/(mu_gas * amu)), ("C18O", X_C18O/(mu_gas * amu))])
 
 molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 
