@@ -63,6 +63,7 @@ using JudithExcalibur.visibilities
 using JudithExcalibur.image
 using JudithExcalibur.gridding
 using JudithExcalibur.model
+using Base.Test
 
 
 # load data and figure out how many channels
@@ -139,36 +140,28 @@ debug("Writing grid")
 write_grid(basedir, grid)
 debug("Wrote grid")
 
-# Calculate the lnprior based upon the current parameter values
-# function lnprior(pars::Parameters)
-#     mu_d = 142. # [pc]
-#     sig_d = 6. # [pc]
-#     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
-# end
-
 
 # Here, if we actually are going to be fixing distance, evaluate one image to get the interpolation
 # closures
-# Interpolation closures need to be global objects
-# if config["fix_d"]
-#     dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-#     M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-# else
-#     M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-# end
 
-# For each channel, also calculate the interpolation closures
-@everywhere pixsize = cfg["pixsize"] # [cm]
-@everywhere pix_AU = pixsize/AU # [AU]
+if cfg["fix_d"]
+    # @everywhere pixsize = cfg["pixsize"] # [cm]
+    # @everywhere pix_AU = pixsize/AU # [AU]
 
-@everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
+    # Simply calculate pix_AU as 1.1 * (2 * r_out) / npix
+    # This is assuming that RADMC always calculates the image the same
+    @everywhere pix_AU = (1.1 * 2 * grd["r_out"]) / cfg["npix"] # [AU/pixel]
 
-@everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-@everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+    @everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
 
-@everywhere int_arr = Array(Function, nchan)
-@everywhere for (i, dset) in enumerate(dvarr)
-    int_arr[i] = plan_interpolate(dset, uu, vv)
+    @everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+    @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+
+    # For each channel, also calculate the interpolation closures
+    @everywhere int_arr = Array(Function, nchan)
+    @everywhere for (i, dset) in enumerate(dvarr)
+        int_arr[i] = plan_interpolate(dset, uu, vv)
+    end
 end
 
 
@@ -276,6 +269,12 @@ function fprob(p::Vector{Float64})
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
     im = imread()
 
+    if cfg["fix_d"]
+        # After the fact, we should be able to check that the pixel size of the image is the
+        # same as the one we originally calculated from the outer disk radius.
+        @test_approx_eq_eps im.pixsize_x/AU pix_AU 1e-4
+    end
+
     # Convert raw images to the appropriate distance
     skim = imToSky(im, pars.dpc)
 
@@ -291,10 +290,12 @@ function fprob(p::Vector{Float64})
         # FFT the appropriate image channel
         vis_fft = transform(skim, i)
 
-        # Interpolate the `vis_fft` to the same locations as the DataSet
-        mvis = int_arr[i](dv, vis_fft)
-
-        # mvis = ModelVis(dv, vis_fft)
+        if cfg["fix_d"]
+            # Interpolate the `vis_fft` to the same locations as the DataSet
+            mvis = int_arr[i](dv, vis_fft)
+        else
+            mvis = ModelVis(dv, vis_fft)
+        end
 
         # Apply the phase shift here
         phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
