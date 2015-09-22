@@ -273,6 +273,8 @@ function transform(img::SkyImage, index::Int=1)
     dl = abs(ll[2] - ll[1]) # [radians]
     dm = abs(mm[2] - mm[1]) # [radians]
 
+    println("Transform using dl ", dl)
+
     # determine uv plane coordinates in kλ
     uu = fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
     vv = fftshift(fftfreq(nm, dm)) * 1e-3 # [kλ]

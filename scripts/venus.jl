@@ -179,6 +179,8 @@ if cfg["fix_d"]
 
     @everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
 
+    println("Initi using dl ", dl)
+
     @everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
     @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
