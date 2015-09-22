@@ -196,6 +196,7 @@ function get_lnprob(sampler::Sampler, pos)
 
     # In Python, it seems like each row corresponds to a different walker.
     # For Julia, we really want each column to the parameters corresponding to a different walker.
+    println("We have ", workers(), " workers")
     lnprob = float(pmap(sampler.lnprobfn, lst))
 
     # Check for lnprob returning NaN.
