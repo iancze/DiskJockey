@@ -415,8 +415,12 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
     # This function inherits all of the variables just defined in this scope (uu, vv)
     function interpolate(data::DataVis, fmvis::FullModelVis)
         # Assert that we calculated the same UU and VV spacings for the FT'ed image, otherwise we did something wrong!
-        @test_approx_eq_eps uu fmvis.uu 1e-5
-        @test_approx_eq_eps vv fmvis.vv 1e-5
+        for i=1:nvis
+            println("uu: ", uu[i], "fmvis.uu: ", fmvis.uu[i])
+            @test_approx_eq_eps uu[i] fmvis.uu[i] 1e-5
+            println("vv: ", vv[i], "fmvis.vv: ", fmvis.vv[i])
+            @test_approx_eq_eps vv[i] fmvis.vv[i] 1e-5
+        end
 
         # output array
         Vmodel = Array(Complex128, nvis)

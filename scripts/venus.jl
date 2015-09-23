@@ -182,6 +182,8 @@ if cfg["fix_d"]
     # Ignore the sin, since we use small angle approximation
     @everywhere dl = pix_AU/cfg["parameters"]["dpc"][1] * arcsec
 
+    println("Venus using dl ", dl)
+
     @everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
     @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
