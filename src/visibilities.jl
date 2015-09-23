@@ -429,16 +429,22 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
 
         for i=1:nvis
             err = abs((uu[i] - fmvis.uu[i]) / uu[i])
-            if err >= 1e-5
+            result = err < 1e-5
+
+            if !result
                 println("uu: ", uu[i], "fmvis.uu: ", fmvis.uu[i])
             end
-            @assert err < 1e-5
+
+            @assert result
 
             err = abs((vv[i] - fmvis.vv[i]) / vv[i])
-            if err >= 1e-5
+            result = err < 1e-5
+
+            if !result
                 println("vv: ", vv[i], "fmvis.vv: ", fmvis.vv[i])
             end
-            @assert err < 1e-5
+            @assert result
+            
         end
         # output array
         Vmodel = Array(Complex128, nvis)
