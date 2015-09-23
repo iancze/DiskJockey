@@ -277,7 +277,7 @@ function transform(img::SkyImage, index::Int=1)
     dl = abs(ll[2] - ll[1]) # [radians]
     dm = abs(mm[2] - mm[1]) # [radians]
 
-    println("Transform using dl ", dl)
+    # println("Transform using dl ", dl)
 
     # determine uv plane coordinates in kλ
     uu = fftshift(fftfreq(nl, dl)) * 1e-3 # [kλ]
@@ -424,28 +424,29 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         #     @test_approx_eq_eps vv[i] fmvis.vv[i] 1e-5
         # end
 
-        # @assert all(abs((uu .- fmvis.uu) ./uu) .< tol)
-        # @assert all(abs((vv .- fmvis.vv) ./vv) .< tol)
+        # The 1e-5 addition is to prevent an undetermined error from the uu = 0.0 point.
+        @assert all(abs((uu .- fmvis.uu) ./ (uu .+ 1e-5)) .< tol)
+        @assert all(abs((vv .- fmvis.vv) ./ (vv .+ 1e-5)) .< tol)
 
-        for i=1:nvis
-            err = abs((uu[i] - fmvis.uu[i]) / uu[i])
-            result = err < 1e-5
-
-            if !result
-                println("uu: ", uu[i], "fmvis.uu: ", fmvis.uu[i])
-            end
-
-            @assert result
-
-            err = abs((vv[i] - fmvis.vv[i]) / vv[i])
-            result = err < 1e-5
-
-            if !result
-                println("vv: ", vv[i], "fmvis.vv: ", fmvis.vv[i])
-            end
-            @assert result
-            
-        end
+        # for i=1:nvis
+        #     err = abs((uu[i] - fmvis.uu[i]) / uu[i])
+        #     result = err < 1e-5
+        #
+        #     if !result
+        #         println("uu: ", uu[i], "fmvis.uu: ", fmvis.uu[i])
+        #     end
+        #
+        #     @assert result
+        #
+        #     err = abs((vv[i] - fmvis.vv[i]) / vv[i])
+        #     result = err < 1e-5
+        #
+        #     if !result
+        #         println("vv: ", vv[i], "fmvis.vv: ", fmvis.vv[i])
+        #     end
+        #     @assert result
+        #
+        # end
         # output array
         Vmodel = Array(Complex128, nvis)
 
