@@ -127,7 +127,7 @@ function imToSky(img::RawImage, dpc::Float64)
     xx = ((Float64[i for i=0:im_nx-1] + 0.5) - im_nx/2.) * img.pixsize_x
     yy = ((Float64[i for i=0:im_ny-1] + 0.5) - im_ny/2.) * img.pixsize_y
 
-    println("Image centers xx ", xx)
+    # println("Image centers xx ", xx)
     # The locations of the pixel centers in relative arcseconds
     # Note both RA and DEC increase with array index.
     ra = xx./(AU * dpc)

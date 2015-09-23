@@ -177,9 +177,10 @@ if cfg["fix_d"]
     # This is assuming that RADMC always calculates the image the same
     @everywhere pix_AU = (1.1 * 2 * grd["r_out"]) / cfg["npix"] # [AU/pixel]
 
-    @everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
+    # @everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
 
-    println("Initi using dl ", dl)
+    # Ignore the sin, since we use small angle approximation
+    @everywhere dl = pix_AU/cfg["parameters"]["dpc"][1] * arcsec
 
     @everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
     @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
@@ -283,7 +284,7 @@ end
     if cfg["fix_d"]
         # After the fact, we should be able to check that the pixel size of the image is the
         # same as the one we originally calculated from the outer disk radius.
-        @test_approx_eq_eps im.pixsize_x/AU pix_AU 1e-4
+        @test_approx_eq_eps im.pixsize_x/AU pix_AU 1e-5
     end
 
     # Convert raw images to the appropriate distance
