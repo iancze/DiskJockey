@@ -37,6 +37,19 @@ fid.close()
 shutil.copy(args.FITS, args.out_model)
 shutil.copy(args.FITS, args.out_resid)
 
+
+# Open the old file so we can check if we had the wavelengths increasing or decreasing
+# Reading SMA dataset
+f = fits.open(args.FITS)
+data = f[0].data
+hdr = f[0].header
+nfreq = hdr["NAXIS4"]
+ofreqs = hdr["CRVAL4"] + hdr["CDELT4"] * np.arange(nfreq)  # Hz
+f.close()
+
+print("Original frequencies are", ofreqs)
+
+
 # Overwrite a copy of the original dataset with these values.
 hdulist = fits.open(args.out_model, mode="update")
 
@@ -53,10 +66,17 @@ D = np.array([real, imag, weight]).T
 # Add the zombie dimensions back in
 vis = D[:, np.newaxis, np.newaxis, :, np.newaxis, :]
 
-# print(vis.shape)
+if ofreqs[-1] > ofreqs[0]:
+    print("Originally stored with decreasing wavelength, reversing model order.")
 
-# Stuff the new visibilities into the existing dataset
-hdulist[0].data["DATA"][:] = vis
+    # Stuff the new visibilities into the existing dataset
+    hdulist[0].data["DATA"][:] = vis[:, ::-1, :]
+
+else:
+    print("Originally stored with increasing wavelength, keeping model order the same.")
+
+    # Stuff the new visibilities into the existing dataset
+    hdulist[0].data["DATA"][:] = vis
 
 # Write the changes to disk
 hdulist.flush()
@@ -77,6 +97,18 @@ fid.close()
 hdulist = fits.open(args.out_resid, mode="update")
 D = np.array([real, imag, weight]).T
 vis = D[:, np.newaxis, np.newaxis, :, np.newaxis, :]
-hdulist[0].data["DATA"][:] = vis
+
+if ofreqs[-1] > ofreqs[0]:
+    print("Originally stored with decreasing wavelength, reversing residual order.")
+
+    # Stuff the new visibilities into the existing dataset
+    hdulist[0].data["DATA"][:] = vis[:, ::-1, :]
+
+else:
+    print("Originally stored with increasing wavelength, keeping residual order the same.")
+
+    # Stuff the new visibilities into the existing dataset
+    hdulist[0].data["DATA"][:] = vis
+
 hdulist.flush()
 hdulist.close()

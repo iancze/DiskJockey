@@ -1,4 +1,4 @@
-name: AKSco
+name: disk
 
 out_base: output/
 
@@ -12,51 +12,52 @@ grid:
   ntheta: 32 # if mirrored about the equator, total of 64
   nphi: 1
   r_in: 0.5 # [AU] # Inner extent of disk
-  r_out: 300. # [AU] # Outer extent of disk
+  r_out: 600. # [AU] # Outer extent of disk
 
 # Which channels of the dataset to exclude.
 # exclude: [35, 36, 37, 38]
 
-fix_d : false
+fix_d : true
 
 # parameters and starting guess
 # format is parameter : [guess, jump]
 parameters:
-  M_star: [2.487, 0.007] # [M_sun] stellar mass
-  r_c: [14.308, 0.1] # [AU] characteristic radius
+  M_star: [2.0, 0.007] # [M_sun] stellar mass
+  r_c: [80.00, 0.1] # [AU] characteristic radius
   T_10: [91.85, 0.3] # [K] temperature at 10 AU
-  q: [0.513, 0.003] # temperature gradient exponent
+  q: [0.5, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
   logM_gas: [-0.65, 0.02] # [M_Sun] disk mass of gas
-  ksi: [0.313, 0.003] # [km/s] microturbulence
-  dpc: [143.63, 0.6] # [pc] distance
-  incl: [109.35, 0.05] # [degrees] inclination
-  PA: [141.09, 0.05] # [degrees] position angle
-  vel: [-26.083, 0.001] # [km/s]
-  mu_RA: [0.0528, 0.002] # [arcsec] centroid location
-  mu_DEC: [0.0450, 0.002] # [arcsec]
+  ksi: [0.2, 0.003] # [km/s] microturbulence
+  dpc: [140., 0.6] # [pc] distance
+  incl: [45.0, 0.05] # [degrees] inclination
+  PA: [10.0, 0.05] # [degrees] position angle
+  vel: [0.00, 0.001] # [km/s]
+  mu_RA: [0.00, 0.002] # [arcsec] centroid location
+  mu_DEC: [0.00, 0.002] # [arcsec]
 
 # Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
 # specified under `parameters`
-opt_jump: data/AKSco/opt_jump.npy
+# opt_jump: data/AKSco/opt_jump.npy
 # Factor by which to scale the jumps (ie covariance matrix is multiplied by
 # this *squared*)
-jump_scale : 0.9
+# jump_scale : 0.9
+pos0: pos0.npy
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-base_dir: /scratch/
-# base_dir: /pool/cf/iczekala/scratch/
+# base_dir: /scratch/
+base_dir: /pool/cf/iczekala/scratch/
 # base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
-data_file: data/data.hdf5
+data_file: data.hdf5
 
 # Some parameters that may be helpful for making channel map plots of the model
 beam :
-  rms : 0.00785 # Jy/beam
-  BMAJ: 0.933 # arcsec
-  BMIN: 0.602 # arcsec
-  BPA: -50.54 # degrees east of North
+  rms : 0.01 # Jy/beam
+  BMAJ: 0.9 # arcsec
+  BMIN: 0.9 # arcsec
+  BPA: 1.0 # degrees east of North
 
 # Image setup
 npix: 256
@@ -66,4 +67,5 @@ npix: 256
 # This is only relevant if we fix the distance, however.
 
 # MCMC setup
-samples: 10
+samples: 50
+loops: 10
