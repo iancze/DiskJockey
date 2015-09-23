@@ -424,8 +424,8 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         #     @test_approx_eq_eps vv[i] fmvis.vv[i] 1e-5
         # end
 
-        @assert all(abs(uu - fmvis.uu) .< tol)
-        @assert all(abs(vv - fmvis.vv) .< tol)
+        @assert all(abs(uu - fmvis.uu)./uu .< tol)
+        @assert all(abs(vv - fmvis.vv)./vv .< tol)
 
         # output array
         Vmodel = Array(Complex128, nvis)
