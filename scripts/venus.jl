@@ -108,9 +108,9 @@ end
 println("Mapped variables to all processes")
 
 # change the default logger
-@everywhere Logging.configure(filename=logfile, level=DEBUG)
+# @everywhere Logging.configure(filename=logfile, level=DEBUG)
 
-debug("Created logfile.")
+# debug("Created logfile.")
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate
 @everywhere dvarr = DataVis(cfg["data_file"], kl)
@@ -144,9 +144,9 @@ cleardirs!(keylist)
 
 # Regenerate all of the static files (e.g., amr_grid.inp)
 # so that they may be later copied
-debug("Writing grid")
+# debug("Writing grid")
 write_grid(basedir, grid)
-debug("Wrote grid")
+# debug("Wrote grid")
 
 # Calculate the lnprior based upon the current parameter values
 # function lnprior(pars::Parameters)
@@ -180,7 +180,7 @@ end
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
 
-    debug("p :", p)
+    # debug("p :", p)
     # Each walker needs to create it's own temporary directory
     # where all RADMC files will reside and be driven from
     # It only needs to last for the duration of this function, so let's use a tempdir
@@ -304,14 +304,14 @@ end
     # Sum them all together and feed back to the master process
     lnp = sum(lnprobs)
 
-    debug("p : ",p , " lnp: ", lnp)
+    # debug("p : ",p , " lnp: ", lnp)
 
     return lnp
 
 end
 
 
-debug("Initializing MCMC")
+# debug("Initializing MCMC")
 using Distributions
 using PDMats
 
