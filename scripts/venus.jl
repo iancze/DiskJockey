@@ -20,9 +20,19 @@ s = ArgParseSettings()
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
+    "--cpus"
+    help = "Which CPUS to add"
+    arg_type = Array{Int, 1}
 end
 
 parsed_args = parse_args(ARGS, s)
+
+cpus = parsed_args["cpus"]
+
+if cpus != nothing
+    using ClusterManagers
+    addprocs(LocalAffinityManager(;affinities=cpus))
+end
 
 # Since we've made this a #!/usr/bin/env julia script, we can no longer specify the extra
 # processors via the julia executable, so we need to ghost this behavior back in.
