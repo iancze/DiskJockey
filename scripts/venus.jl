@@ -90,7 +90,7 @@ end
 nchild = nworkers()
 println("Workers allocated ", nchild)
 
-@everywhere using Logging
+# @everywhere using Logging
 
 # Delete the old log file (if it exists)
 logf = outdir * "log.log"
