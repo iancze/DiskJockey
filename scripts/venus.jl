@@ -258,7 +258,7 @@ end
     write_lambda(lams, keydir) # write into current directory
 
     # Run RADMC-3D, redirect output to /dev/null
-    run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
+    run(pipeline(`radmc3d image incl $incl posang $PA npix $npix loadlambda`, DevNull))
 
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
     im = imread()
