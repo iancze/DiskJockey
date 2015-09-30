@@ -5,6 +5,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Measure statistics across multiple chains.")
 parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain for burn in.")
 parser.add_argument("--draw", type=int, help="If specified, print out a random sample of N draws from the posterior, after burn in.")
+parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
 
 args = parser.parse_args()
 
@@ -28,9 +29,15 @@ flatchain = np.reshape(chain, (nsamples, ndim))
 
 if args.draw is not None:
     # draw samples from the posterior
+
+    inds = np.random.randint(nsamples, size=args.draw)
+    pos0 = flatchain[inds]
+
     for i in range(args.draw):
-        ind = np.random.randint(nsamples)
-        print(flatchain[ind])
+        print(flatchain[i])
+
+    if args.new_pos:
+        np.save(args.new_pos, pos0.T)
 
     import sys
     sys.exit()

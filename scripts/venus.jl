@@ -351,8 +351,10 @@ proposal = MvNormal(jump_param)
 # Use the EnsembleSampler to do the optimization
 using JudithExcalibur.EnsembleSampler
 
+
+
 ndim = nparam
-nwalkers = 4 * ndim
+nwalkers = config["walkers_per_dim"] * ndim
 
 sampler = Sampler(nwalkers, ndim, fprob)
 
@@ -362,6 +364,12 @@ using NPZ
 if haskey(config, "pos0")
     # using NPZ
     pos0 = npzread(config["pos0"])
+
+    # make sure that we've loaded a pos0 with the right dimensions.
+    size1, size2 = size(pos0)
+    @assert size1==ndim
+    @assert size2==nwalkers
+
 else
     # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
     pos0 = Array(Float64, ndim, nwalkers)
@@ -369,6 +377,7 @@ else
         pos0[:,i] = starting_param .+ 3. * rand(proposal)
     end
 end
+
 
 run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
 
