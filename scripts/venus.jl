@@ -1,14 +1,12 @@
 #!/usr/bin/env julia
 
-# Use the EnsembleSampler
-# This means that each likelihood evaluation is *serial*, while the walkers are parallelized.
+# Uses the EnsembleSampler to explore the posterior.
+# In contrast to codes like mach_three.jl, this architecture means that within each likelihood call, the global lnprob for all channels is evaluated in *serial*, while the walkers themselves are parallelized.
 
 using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
-    # "--opt1"
-    # help = "an option with an argument"
     "--p", "-p"
     help = "number of processes to add"
     arg_type = Int
@@ -27,7 +25,7 @@ end
 parsed_args = parse_args(ARGS, s)
 
 # Since we've made this a #!/usr/bin/env julia script, we can no longer specify the extra
-# processors via the julia prompt, so we need to ghost this behavior back in.
+# processors via the julia executable, so we need to ghost this behavior back in.
 if parsed_args["p"] > 0
     addprocs(parsed_args["p"])
 end
@@ -157,27 +155,11 @@ debug("Wrote grid")
 #     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
 # end
 
-# Here, if we actually are going to be fixing distance, evaluate one image to get the interpolation
-# closures
-# Interpolation closures need to be global objects
-# if config["fix_d"]
-#     dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-#     M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-# else
-#     M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-# end
-
 # Only calculate the interpolation closures if we are fixing distance.
-
 if cfg["fix_d"]
-    # @everywhere pixsize = cfg["pixsize"] # [cm]
-    # @everywhere pix_AU = pixsize/AU # [AU]
-
     # Simply calculate pix_AU as 1.1 * (2 * r_out) / npix
-    # This is assuming that RADMC always calculates the image the same
+    # This is assuming that RADMC always calculates the image as 110% the full extent of the grid
     @everywhere pix_AU = (1.1 * 2 * grd["r_out"]) / cfg["npix"] # [AU/pixel]
-
-    # @everywhere dl = sin(pix_AU/cfg["parameters"]["dpc"][1] * arcsec)
 
     # Ignore the sin, since we use small angle approximation
     @everywhere dl = pix_AU/cfg["parameters"]["dpc"][1] * arcsec
@@ -365,7 +347,6 @@ nwalkers = 4 * ndim
 sampler = Sampler(nwalkers, ndim, fprob)
 
 using NPZ
-# pos0 = npzread(config["pos0"])
 
 # # Option to load previous positions from a NPZ file
 if haskey(config, "pos0")

@@ -6,7 +6,7 @@ using NPZ
 #
 # Right now, this is only designed to work in parallel with cores on the same node in the most straightforward example. Eventually it would be nice to incorporate Julia tasks.
 
-export Sampler, run_mcmc, run_schedule, flatchain, reset, write_samples
+export Sampler, run_mcmc, run_schedule, reset_mcmc, write_samples, emcee_chain
 
 # There is a type, called the sampler.
 type Sampler
@@ -31,18 +31,25 @@ function Sampler(nwalkers::Int, ndim::Int, lnprobfn::Function)
     sampler = Sampler(nwalkers, ndim, lnprobfn, a, chain, lnprob, iterations)
 end
 
-# Convert the nwalkers chain into a flatchain
-function flatchain(sampler::Sampler)
-    # chain is stored as (ndim, iterations, nwalkers)
-
-    # flatchain should be stored as (ndim, iterations)
-    fchain = reshape(sampler.chain, (sampler.ndim, sampler.iterations * sampler.nwalkers))
-
-    return fchain
+# Transpose the chain order from Julia column-major to Python row-major
+function emcee_chain(sampler::Sampler)
+    # ndim, niter, nwalkers = size(sampler.chain)
+    # return reshape(sampler.chain, (nwalkers, niter, ndim))
+    return permutedims(sampler.chain, [3, 2, 1])
 end
 
+# Convert the nwalkers chain into a flatchain
+# function flatchain(sampler::Sampler)
+#     # chain is stored as (ndim, iterations, nwalkers) in Julia parlance.
+#
+#     # flatchain should be stored as (ndim, iterations)
+#     fchain = reshape(sampler.chain, (sampler.ndim, sampler.iterations * sampler.nwalkers))
+#
+#     return fchain
+# end
+
 # Clear the samples after burn in
-function reset(sampler::Sampler)
+function reset_mcmc(sampler::Sampler)
     # self.naccepted = np.zeros(self.k)
     sampler.chain = Array(Float64, (sampler.ndim, 0, sampler.nwalkers))
     sampler.lnprob = Array(Float64, (sampler.nwalkers, 0))
@@ -54,7 +61,7 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
     p = p0
 
     # What is the index to divide the number of walkers in half
-    halfk = ifloor(sampler.nwalkers / 2)
+    halfk = floor(Int, sampler.nwalkers / 2)
 
     # If the initial log-probabilities were not provided, calculate them
     # now.
@@ -196,7 +203,7 @@ function get_lnprob(sampler::Sampler, pos)
 
     # In Python, it seems like each row corresponds to a different walker.
     # For Julia, we really want each column to the parameters corresponding to a different walker.
-    lnprob = float(pmap(sampler.lnprobfn, lst))
+    lnprob = convert(Array{Float64, 1}, pmap(sampler.lnprobfn, lst))
 
     # Check for lnprob returning NaN.
     if any(isnan(lnprob))

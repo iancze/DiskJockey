@@ -106,7 +106,7 @@ end
 
 
 # Optionally write the samples to an HDF5 file
-function write(mc::MC, fname::ASCIIString)
+function write(mc::MC, fname::AbstractString)
     fid = h5open(fname, "w")
     fid["samples"] = mc.samples
 

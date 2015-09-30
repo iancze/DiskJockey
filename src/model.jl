@@ -7,7 +7,7 @@ export write_grid, write_model, write_lambda, write_dust, Parameters, Grid
 using ..constants
 
 # Write the wavelength sampling file. Only run on setup
-function write_lambda(lams::Array{Float64, 1}, basedir::String)
+function write_lambda(lams::Array{Float64, 1}, basedir::AbstractString)
     fcam = open(basedir * "camera_wavelength_micron.inp", "w")
     nlam = length(lams)
     @printf(fcam, "%d\n", nlam)
@@ -74,7 +74,7 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool)
 end
 
 #This function only needs to be run once, upon setup.
-function write_grid(basedir::String, grid::Grid)
+function write_grid(basedir::AbstractString, grid::Grid)
     #amr_grid.inp
     f = open(basedir * "amr_grid.inp", "w")
 
@@ -216,7 +216,7 @@ end
 
 microturbulence(pars::Parameters) = microturbulence(pars.ksi)
 
-function write_model(pars::Parameters, basedir::String, grid::Grid, species::ASCIIString)
+function write_model(pars::Parameters, basedir::AbstractString, grid::Grid, species::AbstractString)
 
     funcs = Dict([("12CO", n_12CO), ("13CO", n_13CO), ("C18O", n_C18O)])
     n_CO = funcs[species]
@@ -268,7 +268,7 @@ function write_model(pars::Parameters, basedir::String, grid::Grid, species::ASC
 
 end
 
-function write_dust(pars::Parameters, basedir::String, grid::Grid)
+function write_dust(pars::Parameters, basedir::AbstractString, grid::Grid)
     fdens = open(basedir * "dust_density.inp", "w")
     @printf(fdens, "%d\n", 1) #iformat
     @printf(fdens, "%d\n", grid.ncells)

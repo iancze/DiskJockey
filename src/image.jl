@@ -35,7 +35,7 @@ end
 # This convention is necessary for the FFT step
 # However, to display this image in the traditional sky convention (North up,
 # East to the left), you must set the first array element to the lower left
-# corner *and* flip the array along the RA axis: `fliplr(data)`
+# corner *and* flip the array along the RA axis: `fliplr(data)` or flipdim(data, 2)
 type SkyImage <: Image
     data::Array{Float64, 3} # [Jy/pixel]
     ra::Vector{Float64} # [arcsec]
@@ -52,19 +52,19 @@ SkyImage(reshape(data, tuple(size(data)..., 1)), ra, dec, [lam])
 function imread(file="image.out")
 
     fim = open(file, "r")
-    iformat = int(readline(fim))
+    iformat = parse(Int, readline(fim))
     im_nx, im_ny = split(readline(fim))
-    im_nx = int(im_nx)
-    im_ny = int(im_ny)
-    nlam = int(readline(fim))
+    im_nx = parse(Int, im_nx)
+    im_ny = parse(Int, im_ny)
+    nlam = parse(Int, readline(fim))
     pixsize_x, pixsize_y = split(readline(fim))
-    pixsize_x = float64(pixsize_x)
-    pixsize_y = float64(pixsize_y)
+    pixsize_x = parse(Float64, pixsize_x)
+    pixsize_y = parse(Float64, pixsize_y)
 
     # Read the wavelength array
     lams = Array(Float64, nlam)
     for i=1:nlam
-        lams[i] = float64(readline(fim))
+        lams[i] = parse(Float64, readline(fim))
     end
 
     # Create an array with the proper size, and then read the file into it
@@ -83,7 +83,7 @@ function imread(file="image.out")
         readline(fim) # Junk space
         for j=1:im_ny
             for i=1:im_nx
-                data[j,i,k] = float64(readline(fim))
+                data[j,i,k] = parse(Float64, readline(fim))
             end
         end
     end
@@ -102,7 +102,7 @@ function imToSky(img::RawImage, dpc::Float64)
     # this means that for the RawImage, the delta RA array goes from + to -
 
     # However, the SkyImage actually requires RA (ll) in increasing form.
-    # Therefore we flip along the RA axis, fliplr(data)
+    # Therefore we flip along the RA axis, fliplr(data) or flipdim(data, 2)
 
     #println("Min and max intensity ", minimum(img.data), " ", maximum(img.data))
     #println("Pixel size ", img.pixsize_x)
@@ -114,11 +114,8 @@ function imToSky(img::RawImage, dpc::Float64)
     # Conversion from erg/s/cm^2/Hz/ster to Jy/pixel at 1 pc distance.
     # conv = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2
 
-    # Flip across RA dimension, then rotate 180 degrees.
-    #dataJy = fliplr(img.data)[end:-1:1, end:-1:1, :] .* conv
-
     # Flip across RA dimension
-    dataJy = fliplr(img.data) .* conv
+    dataJy = flipdim(img.data, 2) .* conv
 
     (im_ny, im_nx) = size(dataJy)[1:2] #y and x dimensions of the image
 

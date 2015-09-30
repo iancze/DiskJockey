@@ -93,3 +93,8 @@ To run this code on a new dataset using 4 cores, you would run
     mach_three.jl -p 3
 
 where the `-p` flag specifies how many additional processes to spawn, therefore the total number of processes used is `p + 1`. For maximal performance, set `p = ncores - 1` where `ncores` is the number of cores on your machine.
+
+Please note that the code is now in the process of being migrated from Julia v0.3 to v0.4. Some of the driver scripts might be outdated to this effect.
+
+For now, running on v0.4 will require this branch of NPZ
+https://github.com/mweastwood/NPZ.jl/tree/fixdeprecations

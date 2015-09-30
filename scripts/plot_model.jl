@@ -119,9 +119,10 @@ function plot_chmaps(img::image.SkyImage, fname="channel_maps_sky.png")
 
     # Figure out how many plots we'll have.
     ncols = 8
-    nrows = iceil(nlam/ncols)
+    nrows = ceil(Int, nlam/ncols)
 
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
+    # fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
+    fig, ax = plt[:subplots](nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
 
     for row=1:nrows
         for col=1:ncols
@@ -138,18 +139,18 @@ function plot_chmaps(img::image.SkyImage, fname="channel_maps_sky.png")
             if iframe > nlam
                 # Stop if we run out of channels
                 # Plot a blank square
-                ax[row, col][:imshow](zeros((im_ny, im_nx)), cmap=plt.get_cmap("PuBu"), vmin=0, vmax=20, extent=ext, origin="lower")
+                ax[row, col][:imshow](zeros((im_ny, im_nx)), cmap=plt[:get_cmap]("PuBu"), vmin=0, vmax=20, extent=ext, origin="lower")
 
             else
                 #Flip the frame for Sky convention
-                frame = fliplr(img.data[:,:,iframe])
+                frame = flipdim(img.data[:,:,iframe], 2)
                 frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
                 lframe = log10(frame)
                 max = maximum(lframe)
                 ix,iy = ind2sub(size(lframe), indmax(lframe))
 
                 # ax[row, col][:imshow](lframe, extent=ext, interpolation="none", vmin=max - 6, vmax=max, origin="lower", cmap=plt.get_cmap("PuBu"))
-                ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=plt.get_cmap("PuBu"), norm=norm)
+                ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=plt[:get_cmap]("PuBu"), norm=norm)
 
                 # levels = linspace(max - 0.8, max, 8)
                 ax[row, col][:contour](frame, origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
@@ -164,7 +165,7 @@ function plot_chmaps(img::image.SkyImage, fname="channel_maps_sky.png")
 
     fig[:subplots_adjust](hspace=0.06, wspace=0.01, top=0.9, bottom=0.1, left=0.05, right=0.95)
 
-    plt.savefig(fname)
+    plt[:savefig](fname)
 
 end
 
@@ -220,7 +221,7 @@ end
 # Plot the spatially-integrated spectrum
 function plot_spectrum(img::image.SkyImage)
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
     spec = imToSpec(img)
@@ -232,7 +233,7 @@ function plot_spectrum(img::image.SkyImage)
 
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("spectrum.png")
+    plt[:savefig]("spectrum.png")
 end
 
 pp = config["parameters"]

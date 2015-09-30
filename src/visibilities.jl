@@ -26,7 +26,7 @@ type DataVis
 end
 
 # Read all the visibilities from an HDF5 string and return them as an array of DataVis objects
-function DataVis(fname::ASCIIString)
+function DataVis(fname::AbstractString)
     fid = h5open(fname, "r")
     lams = read(fid["lams"]) # [μm]
     uu = read(fid["uu"])
@@ -48,7 +48,7 @@ function DataVis(fname::ASCIIString)
 end
 
 # Read just one channel of visibilities from the HDF5 file
-function DataVis(fname::ASCIIString, index::Int)
+function DataVis(fname::AbstractString, index::Int)
     fid = h5open(fname, "r")
     # the indexing and `vec` are necessary here because HDF5 doesn't naturally
     # squeeze trailing dimensions of length-1
@@ -66,7 +66,7 @@ function DataVis(fname::ASCIIString, index::Int)
 end
 
 # Read just a subset of channels from the HDF5 file and return an array of DataVis
-function DataVis(fname::ASCIIString, indices::Vector{Int})
+function DataVis(fname::AbstractString, indices::Vector{Int})
     nchan = length(indices)
     out = Array(DataVis, nchan)
     for i=1:nchan
@@ -94,7 +94,7 @@ end
 # The HDF5 file actually expects multi-channel data, so instead we will need to
 # store all of this information with arrays of shape (..., 1) [an extra trailing]
 # dimension of 1
-function write(dv::DataVis, fname::ASCIIString)
+function write(dv::DataVis, fname::AbstractString)
     nvis = length(dv.uu)
     VV = reshape(dv.VV, (nvis, 1))
     fid = h5open(fname, "w")
@@ -109,7 +109,7 @@ function write(dv::DataVis, fname::ASCIIString)
 end
 
 # Write an array of DataVis to a single HDF5 file
-function write(dvarr::Array{DataVis, 1}, fname::ASCIIString)
+function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
     nvis = length(dvarr[1].VV)
     nlam = length(dvarr)
     fid = h5open(fname, "w")
@@ -417,7 +417,7 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
     # This function inherits all of the variables just defined in this scope (uu, vv)
     function interpolate(data::DataVis, fmvis::FullModelVis)
         # Assert that we calculated the same UU and VV spacings for the FT'ed image, otherwise we did something wrong!
-        
+
         # The 1e-5 addition is to prevent an undetermined error from the uu = 0.0 point.
         @assert all(abs((uu .- fmvis.uu) ./ (uu .+ 1e-5)) .< tol)
         @assert all(abs((vv .- fmvis.vv) ./ (vv .+ 1e-5)) .< tol)
@@ -545,12 +545,12 @@ end
 function fftfreq(n::Int, d::Float64)
     val = 1./(n * d)
     results = Array(Float64, (n,))
-    N = floor((n  - 1)/2) + 1
+    N = floor(Int, (n  - 1)/2) + 1
 
     p1 = Float64[i for i=0:(N-1)]
     results[1:N] = p1
 
-    p2 = Float64[i for i=-(floor(n/2)):-1]
+    p2 = Float64[i for i=-(floor(Int, n/2)):-1]
     results[N+1:end] = p2
 
     return results * val

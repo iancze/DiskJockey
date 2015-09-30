@@ -39,12 +39,12 @@ X_12CO = 7.5e-5
 X_13CO = 1/69. * X_12CO
 X_C18O = 1/557. * X_12CO
 
-number_ratio = Dict([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
+number_ratio = Dict{ASCIIString, Float64}([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
 
 # Use this to multiply against M_gas to get n_12CO or n_13CO
-number_densities = Dict([("12CO", X_12CO/(mu_gas * amu)), ("13CO", X_13CO/(mu_gas * amu)), ("C18O", X_C18O/(mu_gas * amu))])
+number_densities = Dict{ASCIIString, Float64}([("12CO", X_12CO/(mu_gas * amu)), ("13CO", X_13CO/(mu_gas * amu)), ("C18O", X_C18O/(mu_gas * amu))])
 
-molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
+molnames = Dict{ASCIIString, ASCIIString}([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 
 # Species can be "12CO", "13CO", etc.
 # Transition can be "3-2", "2-1", etc.
@@ -52,7 +52,7 @@ molnames = Dict([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 # Key to this dictionary is then species * transition
 
 # Rest frame wavelengths
-lam0s = Dict([("12CO2-1", cc/230.538e9 * 1e4 ),
+lam0s = Dict{ASCIIString, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
             ("13CO2-1", cc/220.39868e9 * 1e4),
             ("C18O2-1", cc/219.56036e9 * 1e4),
             ("12CO3-2", cc/345.79599e9 * 1e4)]) # microns

@@ -6,11 +6,9 @@ using Base.Test
 
 # Rosenbrock function
 @everywhere function lnprob(p)
-    a = 1.
-    b = 100.
     x, y = p
 
-    return -((a - x)^2 + b * (y - x^2)^2)
+    return -((1.0 - x)^2 + 100 * (y - x^2)^2)
 end
 
 
@@ -43,23 +41,17 @@ sampler = Sampler(nwalkers, ndim, lnprob)
 # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
 pos0 = Array(Float64, ndim, nwalkers)
 for i=1:nwalkers
-    pos0[:,i] = 1.0 + randn(ndim)
+    pos0[:,i] = randn(ndim)
 end
 
 # println("Starting positions ", pos0)
 
 pos = run_mcmc(sampler, pos0, 10000)
 
-reset(sampler)
+reset_mcmc(sampler)
 
 run_mcmc(sampler, pos, 10000)
 
-fchain = flatchain(sampler)
-
-println("mean ", mean(fchain, 2))
-println("std ", std(fchain, 2))
-
 using NPZ
 
-npzwrite("chain.npy", sampler.chain)
-npzwrite("flatchain.npy", fchain)
+npzwrite("chain.npy", emcee_chain(sampler))
