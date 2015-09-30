@@ -229,9 +229,9 @@ end
 # Write out the samples
 function write_samples(sampler::Sampler, outdir="")
 
-    fchain = flatchain(sampler)
-    npzwrite(outdir * "chain.npy", sampler.chain)
-    npzwrite(outdir * "flatchain.npy", fchain)
+    # fchain = flatchain(sampler)
+    npzwrite(outdir * "chain.npy", emcee_chain(sampler))
+    # npzwrite(outdir * "flatchain.npy", fchain)
     npzwrite(outdir * "lnprob.npy", sampler.lnprob)
 
     # Needs to be reshaped to remove singleton dimension
