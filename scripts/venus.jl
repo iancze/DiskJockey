@@ -159,7 +159,7 @@ write_grid(basedir, grid)
 # debug("Wrote grid")
 
 # Calculate the lnprior based upon the current parameter values
-function lnprior(pars::Parameters)
+@everywhere function lnprior(pars::Parameters)
     mu_d = 145. # [pc]
     sig_d = 20. # [pc]
     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
@@ -367,8 +367,8 @@ if haskey(config, "pos0")
 
     # make sure that we've loaded a pos0 with the right dimensions.
     size1, size2 = size(pos0)
-    @assert size1==ndim
-    @assert size2==nwalkers
+    @assert size1==ndim "pos0 array does not match number of input dimensions."
+    @assert size2==nwalkers "pos0 array does not match number of walkers."
 
 else
     # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
