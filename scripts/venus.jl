@@ -159,11 +159,11 @@ write_grid(basedir, grid)
 # debug("Wrote grid")
 
 # Calculate the lnprior based upon the current parameter values
-# function lnprior(pars::Parameters)
-#     mu_d = 142. # [pc]
-#     sig_d = 6. # [pc]
-#     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
-# end
+function lnprior(pars::Parameters)
+    mu_d = 145. # [pc]
+    sig_d = 20. # [pc]
+    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
+end
 
 # Only calculate the interpolation closures if we are fixing distance.
 if cfg["fix_d"]
@@ -312,7 +312,7 @@ end
     run(`rm -rf $keydir`)
 
     # Sum them all together and feed back to the master process
-    lnp = sum(lnprobs)
+    lnp = sum(lnprobs) + lnprior(pars)
 
     # debug("p : ",p , " lnp: ", lnp)
 

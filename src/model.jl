@@ -162,7 +162,7 @@ Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 function Sigma(r::Float64, pars::Parameters)
     r_c = pars.r_c * AU
     Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-    return Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
+    Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
 end
 
 # Delivers a gas density in g/cm^3
@@ -200,7 +200,7 @@ function rho_dust(r::Float64, z::Float64, pars::Parameters)
     nH2 = nCO / 7.e-5 # number density ratio
 
     # Convert from nH2 (assuming nH2 ~ nGas ) to mGas
-    mGas = constants.m0 * nH2 # [g]
+    mGas = mu_gas * amu * nH2 # [g]
 
     # Convert from mGas to mDust using Gas/Dust ratio of 100
     mDust = mGas * 0.01 # [g]

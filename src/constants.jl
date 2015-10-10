@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_ratio, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
+export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -39,8 +39,6 @@ X_12CO = 7.5e-5
 X_13CO = 1/69. * X_12CO
 X_C18O = 1/557. * X_12CO
 
-number_ratio = Dict{ASCIIString, Float64}([("12CO", X_12CO), ("13CO", X_13CO), ("C18O", X_C18O)])
-
 # Use this to multiply against M_gas to get n_12CO or n_13CO
 number_densities = Dict{ASCIIString, Float64}([("12CO", X_12CO/(mu_gas * amu)), ("13CO", X_13CO/(mu_gas * amu)), ("C18O", X_C18O/(mu_gas * amu))])
 
@@ -57,8 +55,6 @@ lam0s = Dict{ASCIIString, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
             ("C18O2-1", cc/219.56036e9 * 1e4),
             ("12CO3-2", cc/345.79599e9 * 1e4)]) # microns
 
-#Disk specific
-m0 = mu_gas * amu #mean molecular weight of gas
 
 # convert from arcseconds to radians
 arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec

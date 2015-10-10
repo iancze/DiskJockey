@@ -96,6 +96,20 @@ end
 
 println("Chi^2 s ", chi2s)
 N = nchan * 2 * length(dvarr[1].VV)
+
+# Only use the unmasked channels
+if haskey(config, "exclude")
+    exclude = config["exclude"]
+    # which channels of the dset to fit
+    keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+else
+    keylist = Int[i for i=1:nchan]
+end
+
+
+chi2s = chi2s[keylist]
+println("Unmasked Chi^2s", chi2s)
+
 println("Chi^2 :", sum(chi2s))
 println("Reduced Chi^2 ", sum(chi2s)/N)
 
