@@ -160,9 +160,13 @@ write_grid(basedir, grid)
 
 # Calculate the lnprior based upon the current parameter values
 @everywhere function lnprior(pars::Parameters)
+
+    # Distance prior
     mu_d = 145. # [pc]
     sig_d = 20. # [pc]
-    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2
+
+    # Geometrical inclination prior
+    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log10(0.5 * sind(pars.incl))
 end
 
 # Only calculate the interpolation closures if we are fixing distance.

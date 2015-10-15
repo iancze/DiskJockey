@@ -74,7 +74,7 @@ fig.savefig("walkers.png")
 #     # Fixed distance
 labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]",
 r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]",
-# r"$d$ [pc]",
+r"$d$ [pc]",
 r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
 r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
 if args.inc_prior:
