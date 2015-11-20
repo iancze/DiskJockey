@@ -34,13 +34,30 @@ m_C18O = 29.9992 * amu # [g]
 atomic_massses = Dict([("12CO", m_12CO), ("13CO", m_13CO), ("C18O", m_C18O)])
 
 # Using numbers from Charlie Qi
-# Number ratios measured relative to all H nuclei (unitless)
-X_12CO = 7.5e-5
+# Number ratios measured relative to all single H nuclei (not H2) [unitless]
+f_12CO = 7.5e-5
+X_12CO = 2 * f_12CO
 X_13CO = 1/69. * X_12CO
 X_C18O = 1/557. * X_12CO
 
-# Use this to multiply against M_gas to get n_12CO or n_13CO
-number_densities = Dict{ASCIIString, Float64}([("12CO", X_12CO/(mu_gas * amu)), ("13CO", X_13CO/(mu_gas * amu)), ("C18O", X_C18O/(mu_gas * amu))])
+# molecular hydrogen number ratio to gas [unitless]
+# [n_H2/n_gas] = 0.8
+X_H2 = 0.8
+
+# To go from rho_gas to n_12CO
+# n_12CO = rho_gas * X_H2 *
+
+# Old number densities calculated as
+# 12CO = 7.5e-5 / (mu_gas * amu)
+
+# New number density calculated as
+# 12CO = 0.8 * (2 * 7.5e-5)/ (mu_gas * amu)
+
+# new/old = 1.6
+# This means that the new total disk mass we use will be 1/1.6 times smaller than the old time.
+
+# Use this to multiply against rho_gas to get n_12CO or n_13CO
+number_densities = Dict{ASCIIString, Float64}([("12CO", X_H2 * X_12CO/(mu_gas * amu)), ("13CO", X_H2 * X_13CO/(mu_gas * amu)), ("C18O", X_H2 * X_C18O/(mu_gas * amu))])
 
 molnames = Dict{ASCIIString, ASCIIString}([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 

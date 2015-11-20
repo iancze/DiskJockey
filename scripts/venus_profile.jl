@@ -262,7 +262,7 @@ function fprob(p::Vector{Float64})
     # println("p ", p)
     # Run RADMC-3D, redirect output to /dev/null
     tic()
-    run(`radmc3d image incl $incl posang $PA npix $npix loadlambda` |> DevNull)
+    run(`radmc3d image incl $incl posang $PA npix $npix loadlambda`)
     println("RADMC3D call")
     toc()
 

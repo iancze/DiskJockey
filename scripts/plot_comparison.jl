@@ -49,9 +49,9 @@ function compare_maps(img1::image.RawImage, img2::image.RawImage)
 
     ext = (1, im_nx, 1, im_ny) # Python array convention for Matplotlib
 
-    fig, ax = plt.subplots(nrows=3, ncols=nlam, figsize=(1.5 * nlam, 5.))
+    fig, ax = plt[:subplots](nrows=3, ncols=nlam, figsize=(1.5 * nlam, 5.))
 
-    cm = plt.get_cmap("bwr_r")
+    cm = plt[:get_cmap]("bwr_r")
 
     for iframe=1:nlam
 
@@ -103,7 +103,7 @@ function compare_maps(img1::image.RawImage, img2::image.RawImage)
 
     fig[:subplots_adjust](hspace=0.001, wspace=0.001, top=0.95, bottom=0.05, left=0.01, right=0.99)
 
-    plt.savefig("channel_maps_compare.png")
+    fig[:savefig]("channel_maps_compare.png")
 
 end
 

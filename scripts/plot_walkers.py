@@ -69,6 +69,7 @@ ax[-1].set_xlabel("Iteration")
 
 fig.savefig("walkers.png")
 
+flatchain = np.load("flatchain.npy")
 
 # labels = ["a", "b"]
 #     # Fixed distance
