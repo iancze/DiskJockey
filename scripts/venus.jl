@@ -23,6 +23,7 @@ s = ArgParseSettings()
     "--cpus"
     help = "Which CPUS to add"
     arg_type = Array{Int, 1}
+    eval_arg = true
 end
 
 parsed_args = parse_args(ARGS, s)
