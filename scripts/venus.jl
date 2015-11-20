@@ -162,8 +162,11 @@ write_grid(basedir, grid)
 @everywhere function lnprior(pars::Parameters)
 
     # Distance prior
-    mu_d = 145. # [pc]
-    sig_d = 20. # [pc]
+    # mu_d = 145. # [pc]
+    # sig_d = 20. # [pc]
+
+    # Prior now specified from config file.
+    mu_d, sig_d = cfg["parameters"]["dpc"]
 
     # Geometrical inclination prior
     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log10(0.5 * sind(pars.incl))
