@@ -209,6 +209,7 @@ function get_lnprob(sampler::Sampler, pos)
     for (res,par) in zip(result, lst)
         if typeof(res) == RemoteException
             println("RemoteException found for parameters ", par)
+            println(res)
             throw(DomainError)
         end
     end
