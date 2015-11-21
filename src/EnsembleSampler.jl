@@ -203,7 +203,18 @@ function get_lnprob(sampler::Sampler, pos)
 
     # In Python, it seems like each row corresponds to a different walker.
     # For Julia, we really want each column to the parameters corresponding to a different walker.
-    lnprob = convert(Array{Float64, 1}, pmap(sampler.lnprobfn, lst))
+    result = pmap(sampler.lnprobfn, lst)
+
+    # The array may contain one or two RemoteExceptions, so let's check to see what caused them.
+    for (res,par) in zip(result, lst)
+        if typeof(res) == RemoteException
+            println("RemoteException found for parameters ", par)
+            throw(DomainError)
+        end
+    end
+
+    # If we've made it to here, everything's ok.
+    lnprob = convert(Array{Float64, 1}, result)
 
     # Check for lnprob returning NaN.
     if any(isnan(lnprob))
