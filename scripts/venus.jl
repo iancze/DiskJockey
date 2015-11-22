@@ -127,6 +127,7 @@ println("Mapped variables to all processes")
 @everywhere dvarr = DataVis(cfg["data_file"], kl)
 @everywhere visibilities.conj!(dvarr)
 @everywhere nchan = length(dvarr)
+@everywhere max_base = max_baseline(dvarr)
 
 @everywhere const global species = cfg["species"]
 
@@ -134,7 +135,7 @@ println("Mapped variables to all processes")
 
 @everywhere const global basedir = basefmt(run_id)
 
-@everywhere const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
+# @everywhere const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
 
 # Keep track of the current home directory
 @everywhere const global homedir = pwd() * "/"
@@ -151,13 +152,7 @@ cleardirs!(keylist)
 
 # Create the model grid
 @everywhere grd = cfg["grid"]
-@everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
-# Regenerate all of the static files (e.g., amr_grid.inp)
-# so that they may be later copied
-# debug("Writing grid")
-write_grid(basedir, grid)
-# debug("Wrote grid")
 
 # Calculate the lnprior based upon the current parameter values
 @everywhere function lnprior(pars::Parameters)
@@ -175,9 +170,14 @@ end
 
 # Only calculate the interpolation closures if we are fixing distance.
 if cfg["fix_d"]
+
+    angular_width = (1.1 * 2 * grd["r_out"])/cfg["parameters"]["dpc"][1] # [radians]
+
+    npix = get_nyquist_pixel(max_base, angular_width)
+
     # Simply calculate pix_AU as 1.1 * (2 * r_out) / npix
     # This is assuming that RADMC always calculates the image as 110% the full extent of the grid
-    @everywhere pix_AU = (1.1 * 2 * grd["r_out"]) / cfg["npix"] # [AU/pixel]
+    @everywhere pix_AU = (1.1 * 2 * grd["r_out"]) / npix # [AU/pixel]
 
     # Ignore the sin, since we use small angle approximation
     @everywhere dl = pix_AU/cfg["parameters"]["dpc"][1] * arcsec
@@ -247,6 +247,20 @@ end
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+
+    angular_width = (1.1 * 2 * grd["r_out"])/dpc # [radians]
+
+    npix = get_nyquist_pixel(max_base, angular_width)
+
+    # @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+
+    grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+    # Regenerate all of the static files (e.g., amr_grid.inp)
+    # so that they may be later copied
+    # debug("Writing grid")
+    write_grid(basedir, grid)
+    # debug("Wrote grid")
+
 
     # Compute parameter file using model.jl, write to disk in current directory
     write_model(pars, keydir, grid, species)

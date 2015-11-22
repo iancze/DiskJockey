@@ -11,7 +11,7 @@ import Base.conj! # extend this later
 
 export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis
 export plan_interpolate, interpolate_uv
-export transform, rfftfreq, fftfreq, phase_shift!
+export transform, rfftfreq, fftfreq, phase_shift!, max_baseline, get_nyquist_pixel
 export lnprob
 
 using Base.Test
@@ -123,6 +123,50 @@ function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
     fid["invsig"] = hcat([dv.invsig for dv in dvarr]...)
     close(fid)
 
+end
+
+"""
+Determine the maximum uu or vv baseline contained in the dataset, so we know at what resolution we will need to synthesize the images.
+
+returned in kilolambda.
+"""
+function max_baseline(dvarr::Array{DataVis, 1})
+    max = 0.0
+
+    for dv in dvarr
+        max_uu = maximum(dv.uu)
+        if max_uu > max
+            max = max_uu
+        end
+
+        max_vv = maximum(dv.vv)
+        if max_vv > max
+            max = max_vv
+        end
+    end
+
+    return max
+end
+
+"""
+Determine how many pixels we need at this distance to satisfy the Nyquist sampling theorem.
+
+max_base in kilolambda.
+angular_width is in radians.
+"""
+function get_nyquist_pixel(max_base::Float64, angular_width::Float64)
+    #Calculate the maximum dRA and dDEC from max_base
+    dRA_max = 1/(2 * max_base * 1e3) # [radians]
+
+    npix = 2
+    dRA = angular_width/npix
+
+    while dRA > dRA_max
+        npix *= 2
+        dRA = angular_width/npix
+    end
+
+    return npix
 end
 
 #TODO: These visibilites need to be renamed, since the are confusing with ModelVis
