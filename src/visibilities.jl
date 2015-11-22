@@ -450,6 +450,9 @@ end
 # called ModGrid in gridding.c (KR code) and in Model.for (MIRIAD)
 # Uses spheroidal wave functions to interpolate a model to a (u,v) coordinate.
 # u,v are in [kλ]
+"""
+Interpolates a dense grid of visibilities (e.g., from FFT of an image) to a specfic (u,v) point using spheroidal functions in a band-limited manner designed to reduce aliasing.
+"""
 function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
 
     # Note that vis.uu goes from positive to negative (East-West)
@@ -459,7 +462,7 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     iu0 = indmin(abs(u - vis.uu))
     iv0 = indmin(abs(v - vis.vv))
 
-    # now find the relative distance to this nearest grid point (not absolute)
+    # now find the relative distance from (u,v) to this nearest grid point (not absolute)
     u0 = u - vis.uu[iu0]
     v0 = v - vis.vv[iv0]
 
@@ -473,8 +476,12 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     # Are u0 and v0 to the left or the right of the index?
     # we want to index three to the left, three to the right
 
-    # First check that we are still in bounds of the array
-    # Check to make sure that at least three grid points exist in all directions
+    # First check that our (u,v) point still exists within the appropriate margins of the
+    # dense visibility array
+    # This is to make sure that at least three grid points exist in all directions
+    # If this fails, this means that the synthesized image is too large compared to the sampled visibilities (meaning that the dense FFT grid is too small).
+    # The max u,v sampled is 2/dRA or 2/dDec. This means that if dRA or dDEC is too large, then this
+    # will fail
     lenu = length(vis.uu)
     lenv = length(vis.vv)
     @assert iu0 >= 4
