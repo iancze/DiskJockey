@@ -212,9 +212,6 @@ end
         run(`cp $ff $keydir`)
     end
 
-    ag = basedir * "amr_grid.inp"
-    run(`cp $ag $keydir`)
-
     # change the subprocess to reside in this directory for the remainder of the run
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
@@ -248,6 +245,7 @@ end
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
+    # Fix this for now, but in the future, allow r_out to be a multiple of r_c
     angular_width = (1.1 * 2 * grd["r_out"])/dpc # [radians]
 
     npix = get_nyquist_pixel(max_base, angular_width)
@@ -255,12 +253,7 @@ end
     # @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
     grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
-    # Regenerate all of the static files (e.g., amr_grid.inp)
-    # so that they may be later copied
-    # debug("Writing grid")
     write_grid(basedir, grid)
-    # debug("Wrote grid")
-
 
     # Compute parameter file using model.jl, write to disk in current directory
     write_model(pars, keydir, grid, species)
