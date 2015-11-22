@@ -249,6 +249,7 @@ end
     angular_width = (1.1 * 2 * grd["r_out"])/dpc # [radians]
 
     npix = get_nyquist_pixel(max_base, angular_width)
+    println("using ", npix)
 
     # @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 

@@ -155,8 +155,10 @@ max_base in kilolambda.
 angular_width is in radians.
 """
 function get_nyquist_pixel(max_base::Float64, angular_width::Float64)
+
+    nyquist_factor = 4 # normally 2, but we want to be extra sure.
     #Calculate the maximum dRA and dDEC from max_base
-    dRA_max = 1/(2 * max_base * 1e3) # [radians]
+    dRA_max = 1/(nyquist_factor * max_base * 1e3) # [radians]
 
     npix = 2
     dRA = angular_width/npix
