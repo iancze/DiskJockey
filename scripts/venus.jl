@@ -246,10 +246,11 @@ end
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Fix this for now, but in the future, allow r_out to be a multiple of r_c
-    angular_width = (1.1 * 2 * grd["r_out"])/dpc / arcsec # [radians]
+    angular_width = (1.1 * 2 * grd["r_out"]) / dpc * arcsec # [radians]
 
     npix = get_nyquist_pixel(max_base, angular_width)
-    println("using ", npix)
+
+    println("max_base ", max_base, " angular_width ", angular_width, " npix ", npix)
 
     # @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
