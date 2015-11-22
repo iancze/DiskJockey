@@ -250,12 +250,12 @@ end
 
     npix = get_nyquist_pixel(max_base, angular_width)
 
-    println("max_base ", max_base, " angular_width ", angular_width, " npix ", npix)
+    # println("max_base ", max_base, " angular_width ", angular_width, " npix ", npix)
 
     # @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
     grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
-    write_grid(basedir, grid)
+    write_grid(keydir, grid)
 
     # Compute parameter file using model.jl, write to disk in current directory
     write_model(pars, keydir, grid, species)
