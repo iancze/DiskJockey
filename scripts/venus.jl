@@ -245,8 +245,10 @@ end
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
+    r_out = 8 * r_c
     # Fix this for now, but in the future, allow r_out to be a multiple of r_c
-    angular_width = (1.1 * 2 * grd["r_out"]) / dpc * arcsec # [radians]
+    # angular_width = (1.1 * 2 * grd["r_out"]) / dpc * arcsec # [radians]
+    angular_width = (1.1 * 2 * r_out) / dpc * arcsec # [radians]
 
     npix = get_nyquist_pixel(max_base, angular_width)
 
@@ -254,7 +256,8 @@ end
 
     # @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
-    grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+    # grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+    grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], r_out, true)
     write_grid(keydir, grid)
 
     # Compute parameter file using model.jl, write to disk in current directory
