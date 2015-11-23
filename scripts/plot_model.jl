@@ -23,6 +23,7 @@ config = YAML.load(open(parsed_args["config"]))
 using JudithExcalibur.constants
 using JudithExcalibur.image
 using JudithExcalibur.model
+using JudithExcalibur.visibilities
 # using constants
 # using image
 # using model
@@ -254,7 +255,17 @@ pars = Parameters(starting_param...)
 # # RADMC conventions for inclination and PA
 incl = pars.incl # [deg]
 PA = pars.PA # [deg] Position angle runs counter clockwise
-npix = config["npix"] # number of pixels
+
+dvarr = DataVis(config["data_file"])
+max_base = max_baseline(dvarr)
+
+r_out = 8 * pars.r_c
+angular_width = (1.1 * 2 * r_out) / pars.dpc * arcsec # [radians]
+npix = get_nyquist_pixel(max_base, angular_width)
+
+println("using npix ", npix)
+
+# npix = config["npix"] # number of pixels
 #
 # # Doppler shift the dataset wavelength to rest-frame wavelength
 # beta = vel/c_kms # relativistic Doppler formula

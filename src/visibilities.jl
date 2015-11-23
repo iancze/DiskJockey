@@ -160,7 +160,7 @@ function get_nyquist_pixel(max_base::Float64, angular_width::Float64)
     #Calculate the maximum dRA and dDEC from max_base
     dRA_max = 1/(nyquist_factor * max_base * 1e3) # [radians]
 
-    npix = 2
+    npix = 64
     dRA = angular_width/npix
 
     while dRA > dRA_max
