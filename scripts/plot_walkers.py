@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser(description="Measure statistics across multiple
 parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain for burn in.")
 parser.add_argument("--draw", type=int, help="If specified, print out a random sample of N draws from the posterior, after burn in.")
 parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
-parser.add_argument("--inc-prior", action="store_true", help="Account for the geometrical prior on inclination by weighting the samples.")
+
 
 args = parser.parse_args()
 
@@ -26,12 +26,6 @@ nwalkers, niter, ndim = chain.shape
 nsamples = nwalkers * niter
 # Flatchain is made after the walkers have been burned
 flatchain = np.reshape(chain, (nsamples, ndim))
-
-if args.inc_prior:
-    inc = flatchain[:,6]
-    print("inc", inc)
-    weights = 0.5 * np.sin(inc * np.pi/180)
-    print("weights", weights)
 
 # Save it again
 print("Overwriting flatchain.npy")
@@ -78,9 +72,6 @@ r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]",
 r"$d$ [pc]",
 r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
 r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
-if args.inc_prior:
-    figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True, weights=weights)
-else:
-    figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
+figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
 
 figure.savefig("triangle.png")
