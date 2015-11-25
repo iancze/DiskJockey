@@ -182,7 +182,7 @@ cleardirs!(keylist)
     r_out = 8 * pars.r_c
 
     if (1.1 * 2 * r_out) > phys_width_lim
-        println("Proposed disk r_c too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies.")
+        println("Proposed disk r_out $r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc )
         return -Inf
     end
 
