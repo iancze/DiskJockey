@@ -9,37 +9,38 @@ s = ArgParseSettings()
     "--file"
     help = "The data file."
     default = "data.hdf5"
+    "--config"
+    help = "a YAML configuration file"
+    default = "config.yaml"
 end
 
 # Load the file
 parsed_args = parse_args(ARGS, s)
+
+import YAML
+config = YAML.load(open(parsed_args["config"]))
 
 using JudithExcalibur.visibilities
 using JudithExcalibur.constants
 
 dvarr = DataVis(parsed_args["file"])
 
-max_baseline = 0.0
+max_base = max_baseline(dvarr)
 
-for dv in dvarr
-    max_uu = maximum(dv.uu)
-    if max_uu > max_baseline
-        max_baseline = max_uu
-    end
+println("Max baseline ", max_base, " kilolambda")
 
-    max_vv = maximum(dv.vv)
-    if max_vv > max_baseline
-        max_baseline = max_vv
-    end
-
-end
-
-println("Max baseline ", max_baseline, " kilolambda")
+nyquist_factor = 4.0
 
 # Convert this to dRA or dDEC
+dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec]
 
-dRA = 1/(2 * max_baseline * 1e3) # [radians]
+mu_d, sig_d = config["parameters"]["dpc"]
 
-println("max dRA ", dRA, " radians")
+dlow = mu_d - 3. * sig_d
+dhigh = mu_d + 3. * sig_d
 
-println("max dRA ", dRA /arcsec, " arcsec")
+npix = config["npix"]
+
+# These are upper limits on the total width [AU] of the image at each distance. If the disk is large enough that it exceedes these radii, then we will need to use more pixels in the image (ie, it's very resolved).
+println("dpc ", dlow, " r_out ", dlow * dRA_max * npix)
+println("dpc ", dhigh, " r_out ", dhigh * dRA_max * npix)

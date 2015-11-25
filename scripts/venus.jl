@@ -135,7 +135,7 @@ println("Mapped variables to all processes")
 
 @everywhere const global basedir = basefmt(run_id)
 
-# @everywhere const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
+@everywhere const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
 
 # Keep track of the current home directory
 @everywhere const global homedir = pwd() * "/"
@@ -164,6 +164,29 @@ cleardirs!(keylist)
     # Prior now specified from config file.
     mu_d, sig_d = cfg["parameters"]["dpc"]
 
+    dlow = mu_d - 3. * sig_d
+    dhigh = mu_d + 3. * sig_d
+
+    if (pars.dpc < dlow) || (pars.dpc > dhigh)
+        return -Inf
+    end
+
+    nyquist_factor = 4.0
+    # Convert this to dRA
+    dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec]
+
+    # Then to an upper limit on the physical width of the image
+    phys_width_lim = pars.dpc * dRA_max * npix # [AU]
+
+    # Now see if r_out is larger than this
+    r_out = 8 * r_c
+
+    if (1.1 * 2 * r_out) > phys_width_lim
+        println("Proposed disk r_c too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies.")
+        return -Inf
+    end
+
+
     # Geometrical inclination prior
     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log10(0.5 * sind(pars.incl))
 end
@@ -173,7 +196,7 @@ if cfg["fix_d"]
 
     angular_width = (1.1 * 2 * grd["r_out"])/cfg["parameters"]["dpc"][1] # [radians]
 
-    npix = get_nyquist_pixel(max_base, angular_width)
+    # npix = get_nyquist_pixel(max_base, angular_width)
 
     # Simply calculate pix_AU as 1.1 * (2 * r_out) / npix
     # This is assuming that RADMC always calculates the image as 110% the full extent of the grid
@@ -245,12 +268,17 @@ end
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
+    lnpr = lnprior(pars)
+    if lnrp == -Inf
+        return -Inf
+    end
+
     r_out = 8 * r_c
     # Fix this for now, but in the future, allow r_out to be a multiple of r_c
     # angular_width = (1.1 * 2 * grd["r_out"]) / dpc * arcsec # [radians]
-    angular_width = (1.1 * 2 * r_out) / dpc * arcsec # [radians]
+    # angular_width = (1.1 * 2 * r_out) / dpc * arcsec # [radians]
 
-    npix = get_nyquist_pixel(max_base, angular_width)
+    # npix = get_nyquist_pixel(max_base, angular_width)
 
     # println("max_base ", max_base, " angular_width ", angular_width, " npix ", npix)
 
@@ -332,7 +360,7 @@ end
     run(`rm -rf $keydir`)
 
     # Sum them all together and feed back to the master process
-    lnp = sum(lnprobs) + lnprior(pars)
+    lnp = sum(lnprobs) + lnpr
 
     # debug("p : ",p , " lnp: ", lnp)
 
