@@ -179,7 +179,7 @@ cleardirs!(keylist)
     phys_width_lim = pars.dpc * dRA_max * npix # [AU]
 
     # Now see if r_out is larger than this
-    r_out = 8 * r_c
+    r_out = 8 * pars.r_c
 
     if (1.1 * 2 * r_out) > phys_width_lim
         println("Proposed disk r_c too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies.")
