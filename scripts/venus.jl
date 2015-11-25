@@ -179,10 +179,10 @@ cleardirs!(keylist)
     phys_width_lim = pars.dpc * dRA_max * npix # [AU]
 
     # Now see if r_out is larger than this
-    r_out = 8 * pars.r_c
+    r_out = 5 * pars.r_c
 
     if (1.1 * 2 * r_out) > phys_width_lim
-        println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", r_out, " ", phys_width_lim)
+        println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
         return -Inf
     end
 
@@ -275,7 +275,7 @@ end
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
 
-    r_out = 8 * r_c
+    r_out = 5 * r_c
     # Fix this for now, but in the future, allow r_out to be a multiple of r_c
     # angular_width = (1.1 * 2 * grd["r_out"]) / dpc * arcsec # [radians]
     # angular_width = (1.1 * 2 * r_out) / dpc * arcsec # [radians]
