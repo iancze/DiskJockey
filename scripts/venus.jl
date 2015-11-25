@@ -221,23 +221,7 @@ end
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
 
-    # debug("p :", p)
-    # Each walker needs to create it's own temporary directory
-    # where all RADMC files will reside and be driven from
-    # It only needs to last for the duration of this function, so let's use a tempdir
-    keydir = mktempdir() * "/"
 
-    # Copy all relevant configuration scripts to this subdirectory
-    # these are mainly setup files that will be static throughout the run
-    # they were written by JudithInitialize.jl and write_grid()
-    for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
-        ff = homedir * fname
-        run(`cp $ff $keydir`)
-    end
-
-    # change the subprocess to reside in this directory for the remainder of the run
-    # where it will drive its own independent RADMC3D process for a subset of channels
-    cd(keydir)
 
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
@@ -272,6 +256,24 @@ end
     if lnpr == -Inf
         return -Inf
     end
+
+    # debug("p :", p)
+    # Each walker needs to create it's own temporary directory
+    # where all RADMC files will reside and be driven from
+    # It only needs to last for the duration of this function, so let's use a tempdir
+    keydir = mktempdir() * "/"
+
+    # Copy all relevant configuration scripts to this subdirectory
+    # these are mainly setup files that will be static throughout the run
+    # they were written by JudithInitialize.jl and write_grid()
+    for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
+        ff = homedir * fname
+        run(`cp $ff $keydir`)
+    end
+
+    # change the subprocess to reside in this directory for the remainder of the run
+    # where it will drive its own independent RADMC3D process for a subset of channels
+    cd(keydir)
 
     r_out = 8 * r_c
     # Fix this for now, but in the future, allow r_out to be a multiple of r_c
