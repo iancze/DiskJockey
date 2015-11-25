@@ -269,7 +269,7 @@ end
     pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     lnpr = lnprior(pars)
-    if lnrp == -Inf
+    if lnpr == -Inf
         return -Inf
     end
 
