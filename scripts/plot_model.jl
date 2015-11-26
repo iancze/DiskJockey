@@ -259,13 +259,7 @@ PA = pars.PA # [deg] Position angle runs counter clockwise
 dvarr = DataVis(config["data_file"])
 max_base = max_baseline(dvarr)
 
-r_out = 8 * pars.r_c
-angular_width = (1.1 * 2 * r_out) / pars.dpc * arcsec # [radians]
-npix = get_nyquist_pixel(max_base, angular_width)
-
-println("using npix ", npix)
-
-# npix = config["npix"] # number of pixels
+npix = config["npix"] # number of pixels
 #
 # # Doppler shift the dataset wavelength to rest-frame wavelength
 # beta = vel/c_kms # relativistic Doppler formula
