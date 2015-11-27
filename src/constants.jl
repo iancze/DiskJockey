@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s
+export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s, nyquist_factor, r_out_factor
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -75,6 +75,13 @@ lam0s = Dict{ASCIIString, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
 
 # convert from arcseconds to radians
 arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
+
+# Used when determining the necessary number of pixels in an image, given distance. Anything below
+# 2 is not Nyquist sampled. This is currently set to 4.0 to provide a degree of oversampling.
+nyquist_factor = 4.0
+
+# This is to allow for adaptive outer radius
+r_out_factor = 10.0 # times r_c
 
 # Oftentimes it is necessary to get a symmetric coordinate array that spans N
 # elements from -width to +width, but makes sure that the middle point lands

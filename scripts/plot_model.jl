@@ -122,7 +122,6 @@ function plot_chmaps(img::image.SkyImage, fname="channel_maps_sky.png")
     ncols = 8
     nrows = ceil(Int, nlam/ncols)
 
-    # fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
     fig, ax = plt[:subplots](nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
 
     for row=1:nrows
@@ -138,17 +137,17 @@ function plot_chmaps(img::image.SkyImage, fname="channel_maps_sky.png")
             end
 
             if iframe > nlam
-                # Stop if we run out of channels
-                # Plot a blank square
+                # Plot a blank square if we run out of channels
                 ax[row, col][:imshow](zeros((im_ny, im_nx)), cmap=plt[:get_cmap]("PuBu"), vmin=0, vmax=20, extent=ext, origin="lower")
 
             else
                 #Flip the frame for Sky convention
                 frame = flipdim(img.data[:,:,iframe], 2)
-                frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
-                lframe = log10(frame)
-                max = maximum(lframe)
-                ix,iy = ind2sub(size(lframe), indmax(lframe))
+
+                # frame += 1e-99 #Add a tiny bit so that we don't have log10(0)
+                # lframe = log10(frame)
+                # max = maximum(lframe)
+                # ix,iy = ind2sub(size(lframe), indmax(lframe))
 
                 # ax[row, col][:imshow](lframe, extent=ext, interpolation="none", vmin=max - 6, vmax=max, origin="lower", cmap=plt.get_cmap("PuBu"))
                 ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=plt[:get_cmap]("PuBu"), norm=norm)
@@ -297,8 +296,8 @@ global vels = c_kms * (skim.lams .- lam0)/lam0
 vmin, vmax = extrema(skim.data)
 vvmax = maxabs(skim.data)
 
-ldata = log10(skim.data + 1e-99)
-vlmax = maximum(ldata)
+# ldata = log10(skim.data + 1e-99)
+# vlmax = maximum(ldata)
 
 # if in(config, "beam")
 beam = config["beam"]
@@ -315,7 +314,8 @@ arcsec_ster = (4.25e10)
 rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
 global levels = get_levels(rms, vmax)
 
-norm = PyPlot.matplotlib[:colors][:Normalize](vlmax - 8, vlmax)
+# norm = PyPlot.matplotlib[:colors][:Normalize](vlmax - 8, vlmax)
+norm = PyPlot.matplotlib[:colors][:Normalize](0, vvmax)
 
 println("Plotting hires maps")
 plot_chmaps(skim)

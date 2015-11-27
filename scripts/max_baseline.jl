@@ -29,8 +29,6 @@ max_base = max_baseline(dvarr)
 
 println("Max baseline ", max_base, " kilolambda")
 
-nyquist_factor = 4.0
-
 # Convert this to dRA or dDEC
 dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec]
 
@@ -42,5 +40,5 @@ dhigh = mu_d + 3. * sig_d
 npix = config["npix"]
 
 # These are upper limits on the total width [AU] of the image at each distance. If the disk is large enough that it exceedes these radii, then we will need to use more pixels in the image (ie, it's very resolved).
-println("dpc ", dlow, " r_out ", dlow * dRA_max * npix/(2 * 1.1))
-println("dpc ", dhigh, " r_out ", dhigh * dRA_max * npix/(2 * 1.1))
+println("dpc ", dlow, " r_c ", dlow * dRA_max * npix/(2 * 1.1 * r_out_factor))
+println("dpc ", dhigh, " r_c ", dhigh * dRA_max * npix/(2 * 1.1 * r_out_factor))
