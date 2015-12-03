@@ -304,12 +304,12 @@ end
         imread()
     # If the synthesized image is screwed up, just say there is zero probability.
     catch SystemError
-        -Inf
+
     finally
         # remove the temporary directory in which we currently reside
         run(`rm -rf $keydir`)
+        return -Inf
     end
-
 
     if cfg["fix_d"]
         # After the fact, we should be able to check that the pixel size of the image is the
