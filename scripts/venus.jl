@@ -348,18 +348,15 @@ end
 
 end
 
+using NPZ
+
+pos0 = npzread(config["pos0"])
+ndim, nwalkers = size(pos0)
 
 # Use the EnsembleSampler to do the optimization
 using JudithExcalibur.EnsembleSampler
 
-ndim = nparam
-nwalkers = config["walkers_per_dim"] * ndim
-
 sampler = Sampler(nwalkers, ndim, fprob)
-
-using NPZ
-
-pos0 = npzread(config["pos0"])
 
 # make sure that we've loaded a pos0 with the right dimensions.
 size1, size2 = size(pos0)
