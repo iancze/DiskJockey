@@ -97,7 +97,7 @@ end
 println("Chi^2 s ", chi2s)
 N = nchan * 2 * length(dvarr[1].VV)
 
-# Only use the unmasked channels
+# Only use the unmasked channels in the chi2 calculation
 if haskey(config, "exclude")
     exclude = config["exclude"]
     # which channels of the dset to fit

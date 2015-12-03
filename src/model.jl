@@ -159,10 +159,17 @@ end
 Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 
 # Calculate the gas surface density
-function Sigma(r::Float64, pars::Parameters)
+# function Sigma(r::Float64, pars::Parameters)
+#     r_c = pars.r_c * AU
+#     Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
+#     Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
+# end
+
+# Calculate the gas surface density
+function Sigma{T}(r::T, pars::Parameters)
     r_c = pars.r_c * AU
     Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-    Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
+    Sigma_c .* (r./r_c).^(-pars.gamma) .* exp(-(r./r_c).^(2 - pars.gamma))
 end
 
 # Delivers a gas density in g/cm^3

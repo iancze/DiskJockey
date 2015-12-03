@@ -157,16 +157,13 @@ cleardirs!(keylist)
 # Calculate the lnprior based upon the current parameter values
 @everywhere function lnprior(pars::Parameters)
 
-    # Distance prior
-    # mu_d = 145. # [pc]
-    # sig_d = 20. # [pc]
-
-    # Prior now specified from config file.
+    # distance prior now specified from config file.
     mu_d, sig_d = cfg["parameters"]["dpc"]
 
     dlow = mu_d - 3. * sig_d
     dhigh = mu_d + 3. * sig_d
 
+    # and we have a hard +/- 3 sigma cutoff
     if (pars.dpc < dlow) || (pars.dpc > dhigh)
         return -Inf
     end
@@ -220,8 +217,6 @@ end
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
 
-
-
     # Fix the following arguments: gamma, dpc
     gamma = 1.0 # surface temperature gradient exponent
 
@@ -274,16 +269,8 @@ end
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
 
+    # r_out is  a multiple of r_c
     r_out = r_out_factor * r_c
-    # Fix this for now, but in the future, allow r_out to be a multiple of r_c
-    # angular_width = (1.1 * 2 * grd["r_out"]) / dpc * arcsec # [radians]
-    # angular_width = (1.1 * 2 * r_out) / dpc * arcsec # [radians]
-
-    # npix = get_nyquist_pixel(max_base, angular_width)
-
-    # println("max_base ", max_base, " angular_width ", angular_width, " npix ", npix)
-
-    # @everywhere global const grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
     # grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
     grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], r_out, true)
@@ -325,8 +312,9 @@ end
     if cfg["fix_d"]
         # After the fact, we should be able to check that the pixel size of the image is the
         # same as the one we originally calculated from the outer disk radius.
-        # @test_approx_eq_eps im.pixsize_x/AU pix_AU 1e-5
         @assert abs((im.pixsize_x/AU  - pix_AU)/pix_AU) < 1e-5
+
+        # If we aren't fixing distance, then the pixel size is read directly from the calculated image.
     end
 
     # Convert raw images to the appropriate distance
@@ -363,8 +351,6 @@ end
     # Sum them all together and feed back to the master process
     lnp = sum(lnprobs) + lnpr
 
-    # debug("p : ",p , " lnp: ", lnp)
-
     return lnp
 
 end
@@ -381,7 +367,6 @@ if config["fix_d"]
 else
     params = ["M_star", "r_c", "T_10", "q", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 end
-
 
 nparam = length(params)
 starting_param = Array(Float64, nparam)
@@ -401,7 +386,6 @@ proposal = MvNormal(jump_param)
 using JudithExcalibur.EnsembleSampler
 
 
-
 ndim = nparam
 nwalkers = config["walkers_per_dim"] * ndim
 
@@ -409,24 +393,12 @@ sampler = Sampler(nwalkers, ndim, fprob)
 
 using NPZ
 
-# # Option to load previous positions from a NPZ file
-if haskey(config, "pos0")
-    # using NPZ
-    pos0 = npzread(config["pos0"])
+pos0 = npzread(config["pos0"])
 
-    # make sure that we've loaded a pos0 with the right dimensions.
-    size1, size2 = size(pos0)
-    @assert size1==ndim "pos0 array does not match number of input dimensions."
-    @assert size2==nwalkers "pos0 array does not match number of walkers."
-
-else
-    # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
-    pos0 = Array(Float64, ndim, nwalkers)
-    for i=1:nwalkers
-        pos0[:,i] = starting_param .+ 3. * rand(proposal)
-    end
-end
-
+# make sure that we've loaded a pos0 with the right dimensions.
+size1, size2 = size(pos0)
+@assert size1==ndim "pos0 array does not match number of input dimensions."
+@assert size2==nwalkers "pos0 array does not match number of walkers."
 
 run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
 

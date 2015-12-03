@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 
-# Use plot.ly to visualize walkers.
+import argparse
+
+parser = argparse.ArgumentParser(description="Use plot.ly to visualize walkers.")
+parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain for burn in.")
+parser.add_argument("--chain", default="chain.npy", help="The name of the file storing the walker positions.")
+parser.add_argument("--name", default="walkers", help="The name of the object that we are fitting. The plot.ly plots will show up under this label.")
+
+args = parser.parse_args()
 
 import numpy as np
 
-chain = np.load("chain.npy")
+chain = np.load(args.chain)
 
 # Convention within the Julia EnsembleSampler is
 # ndim, niter, nwalkers = chain.shape
@@ -24,17 +31,32 @@ fig = tools.make_subplots(rows=ndim, cols=1, shared_xaxes=True, vertical_spacing
 
 x = np.arange(niter)
 
-# Perhaps only send the last 200 samples to see if this speeds things up?
-
+# Label the axes appropriately based upon how many parameters we have
+if ndim == 11:
+    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+elif ndim == 12:
+    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+else:
+    labels = None
 
 for i in range(ndim):
     for j in range(nwalkers):
         if niter > 500:
-            trace = go.Scatter(x=x, y=chain[j,niter-500:,i], line={"color":"black", "width":0.4}, hoverinfo="none")
+            y=chain[j,niter-500:,i]
         else:
-            trace = go.Scatter(x=x, y=chain[j,:,i], line={"color":"black", "width":0.4}, hoverinfo="none")
+            y = chain[j,:,i]
+
+        trace = go.Scatter(x=x, y=y, line={"color":"black", "width":0.4}, hoverinfo="none")
+
         fig.append_trace(trace, i + 1, 1)
 
+        fig['layout']['yaxis{}'.format(i + 1)].update(title=labels[i])
 
-fig['layout'].update(height=(200 * ndim), width=900, title='Walkers', showlegend=False)
-plot_url = py.plot(fig, filename='Walkers')
+# print(fig['layout'])
+# fig['layout']['yaxis1'].update(title='yaxis 1 title')
+
+
+fig['layout'].update(height=(200 * ndim), width=900, title=args.name, showlegend=False)
+plot_url = py.plot(fig, filename=args.name)
+
+# Now, we also want to make a triangle plot. However, to save time, let's get rid of the panels we don't really care about: PA, v_z, mu_alpha, mu_dec

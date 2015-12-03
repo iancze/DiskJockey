@@ -77,8 +77,8 @@ lam0s = Dict{ASCIIString, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
 arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
 
 # Used when determining the necessary number of pixels in an image, given distance. Anything below
-# 2 is not Nyquist sampled. This is currently set to 4.0 to provide a degree of oversampling.
-nyquist_factor = 4.0
+# 2 is not Nyquist sampled. This is currently set to 2.2 to provide a degree of oversampling.
+nyquist_factor = 2.2
 
 # This is to allow for adaptive outer radius
 r_out_factor = 10.0 # times r_c

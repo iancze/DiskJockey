@@ -25,63 +25,54 @@ using LaTeXStrings
 function plot_vel(pars::Parameters, grid)
     vels = JudithExcalibur.model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
-    ax[:plot](rr, vels)
+    ax[:semilogx](rr, vels)
+
+    # Now, go overlay small grey lines vertically
+    for cell_edge in grid.Rs/AU
+        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    end
+
     ax[:set_ylabel](L"$v_\phi$ [km/s]")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("velocity.png")
+    plt[:savefig]("velocity.png")
 end
 
 # temperature structure
 function plot_temp(pars::Parameters, grid)
     temps = JudithExcalibur.model.temperature(grid.rs, pars)
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
-    ax[:plot](rr, temps)
+    ax[:semilogx](rr, temps)
+
+    # Now, go overlay small grey lines vertically
+    for cell_edge in grid.Rs/AU
+        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    end
+
     ax[:set_ylabel](L"$T$ [K]")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("temperature.png")
+    plt[:savefig]("temperature.png")
 end
 
 # scale height
 function plot_height(pars::Parameters, grid)
     heights = JudithExcalibur.model.Hp(grid.rs, pars) ./ AU
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
-    ax[:plot](rr, heights)
+    ax[:semilogx](rr, heights)
     ax[:set_ylabel](L"$H_p$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("scale_height.png")
-end
-
-function plot_temperature_1D(pars::Parameters)
-    nz = 50
-    zs = linspace(0, 200 * AU, nz)
-    R = 10 * AU
-    temps = Array(Float64, nz)
-    for i=1:nz
-        temps[i] = JudithExcalibur.model.temperature(R, pars)
-    end
-
-    fig = plt.figure()
-    ax = fig[:add_subplot](111)
-
-    ax[:plot](zs/AU, temps)
-
-    ax[:set_ylabel]("T [K]")
-    ax[:set_xlabel](L"$z$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
-
-    plt.savefig("temperature_1D.png")
+    plt[:savefig]("scale_height.png")
 end
 
 function plot_dlnrho(pars::Parameters)
@@ -93,7 +84,7 @@ function plot_dlnrho(pars::Parameters)
         dlnrhos[i] = - G * pars.M_star * M_sun * zs[i] * mu_gas * m_H / ((R^2 + zs[i]^2)^1.5 * kB * JudithExcalibur.model.temperature(R, pars))
     end
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
     ax[:plot](zs/AU, dlnrhos)
@@ -117,9 +108,7 @@ function plot_density_1D(pars::Parameters)
 
     lngas = log(rhos) - log(mu_gas * m_H)
 
-    println("lngas ", lngas)
-
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
     ax[:plot](zs/AU, lngas)
@@ -133,12 +122,32 @@ function plot_density_1D(pars::Parameters)
     fig[:savefig]("ln_gas_slice.png")
 end
 
+function plot_surface_density(pars::Parameters, grid)
+
+    Sigmas = JudithExcalibur.model.Sigma(grid.rs, pars)
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+    ax[:loglog](rr, Sigmas)
+
+    # Now, go overlay small grey lines vertically
+    for cell_edge in grid.Rs/AU
+        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    end
+
+    ax[:set_ylabel](L"$\Sigma\, [\textrm{g/cm}^2]$")
+    ax[:set_xlabel](L"$r$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt[:savefig]("surface_density.png")
+end
+
 # density structure
 function plot_dens(pars::Parameters, grid)
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
-    zs = linspace(0, 420 * AU, nz)
+    zs = linspace(0.0, 420 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
@@ -164,18 +173,15 @@ function plot_dens(pars::Parameters, grid)
 
     nlog = log10(rhos/(mu_gas * m_H))
 
-    levels = Float64[4.0, 5, 6, 7, 8, 9]
+    levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9]
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
+
     ax[:set_ylabel](L"$z$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
 
-    img = ax[:contourf](xx, yy, nlog, levels=levels)
 
-    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
-    cb = fig[:colorbar](img, cax=cax)
 
     #ticks = np.linspace(0, np.max(cov), num=6)
     #cb.set_ticks(ticks)
@@ -206,7 +212,22 @@ function plot_dens(pars::Parameters, grid)
     #
     # ax[:set_ylim](0, maximum(zz))
 
-    plt.savefig("density.png")
+
+    img = ax[:contourf](xx, yy, nlog, levels=levels)
+
+    ax[:set_xscale]("log")
+
+    # Now, go overlay small grey lines vertically
+    for cell_edge in grid.Rs/AU
+        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    end
+
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+
+    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
+    cb = fig[:colorbar](img, cax=cax)
+
+    plt[:savefig]("density.png")
 
 end
 
@@ -225,7 +246,14 @@ starting_param[6] = 10^starting_param[6]
 pars = Parameters(starting_param...)
 
 grd = config["grid"]
-grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+
+r_out = r_out_factor * pars.r_c
+
+
+# grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], r_out, true)
+
+# The cell centers
 const global rr = grid.rs ./ AU # convert to AU
 
 plot_vel(pars, grid)
@@ -233,5 +261,5 @@ plot_temp(pars, grid)
 plot_height(pars, grid)
 plot_dens(pars, grid)
 plot_density_1D(pars)
-plot_temperature_1D(pars)
+plot_surface_density(pars, grid)
 plot_dlnrho(pars)
