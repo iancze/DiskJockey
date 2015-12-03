@@ -300,11 +300,11 @@ end
     run(pipeline(`radmc3d image incl $incl posang $PA npix $npix loadlambda`, DevNull))
 
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
-    try
-        im = imread()
+    im = try
+        imread()
     # If the synthesized image is screwed up, just say there is zero probability.
     catch SystemError
-        return -Inf
+        -Inf
     finally
         # remove the temporary directory in which we currently reside
         run(`rm -rf $keydir`)
