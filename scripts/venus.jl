@@ -128,6 +128,8 @@ println("Mapped variables to all processes")
 @everywhere visibilities.conj!(dvarr)
 @everywhere nchan = length(dvarr)
 @everywhere max_base = max_baseline(dvarr)
+# Convert this to dRA
+@everywhere dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec]
 
 @everywhere const global species = cfg["species"]
 
@@ -167,21 +169,6 @@ cleardirs!(keylist)
     if (pars.dpc < dlow) || (pars.dpc > dhigh)
         return -Inf
     end
-
-    # Convert this to dRA
-    dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec]
-
-    # Then to an upper limit on the physical width of the image
-    phys_width_lim = pars.dpc * dRA_max * npix # [AU]
-
-    # Now see if r_out is larger than this
-    r_out = r_out_factor * pars.r_c
-
-    if (1.1 * 2 * r_out) > phys_width_lim
-        println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
-        return -Inf
-    end
-
 
     # Geometrical inclination prior
     return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log10(0.5 * sind(pars.incl))
@@ -224,12 +211,12 @@ end
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance
         M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
     else
-        M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_c, r_in, r_out, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
     end
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
-    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0 || T_10 > 1500. || q < 0. || q > 1.0
+    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || r_in <= 0.0 || r_out <= 0.0 || M_star <= 0.0 || T_10 > 1500. || q < 0. || q > 1.0
         return -Inf
     end
 
@@ -251,6 +238,15 @@ end
         return -Inf
     end
 
+    # Then to an upper limit on the physical width of the image, given the current distance.
+    phys_width_lim = pars.dpc * dRA_max * npix # [AU]
+
+    # Now see if the image is larger than this
+    if (1.1 * 2 * r_out) > phys_width_lim
+        println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
+        return -Inf
+    end
+
     # debug("p :", p)
     # Each walker needs to create it's own temporary directory
     # where all RADMC files will reside and be driven from
@@ -269,11 +265,8 @@ end
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
 
-    # r_out is  a multiple of r_c
-    r_out = r_out_factor * r_c
-
     # grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
-    grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], r_out, true)
+    grid = Grid(grd["nr"], grd["ntheta"], r_in, r_out, true)
     write_grid(keydir, grid)
 
     # Compute parameter file using model.jl, write to disk in current directory
@@ -356,35 +349,8 @@ end
 end
 
 
-# debug("Initializing MCMC")
-using Distributions
-using PDMats
-
-pp = config["parameters"]
-# The parameters we'll be using
-if config["fix_d"]
-    params = ["M_star", "r_c", "T_10", "q", "logM_gas", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-else
-    params = ["M_star", "r_c", "T_10", "q", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-end
-
-nparam = length(params)
-starting_param = Array(Float64, nparam)
-jumps = Array(Float64, nparam)
-
-for i=1:nparam
-    starting_param[i], jumps[i] = pp[params[i]]
-end
-
-jump_param = PDiagMat(jumps.^2)
-jump_param = full(jump_param)
-
-# Perturb the starting parameters
-proposal = MvNormal(jump_param)
-
 # Use the EnsembleSampler to do the optimization
 using JudithExcalibur.EnsembleSampler
-
 
 ndim = nparam
 nwalkers = config["walkers_per_dim"] * ndim
