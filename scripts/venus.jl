@@ -304,7 +304,7 @@ end
         imread()
     # If the synthesized image is screwed up, just say there is zero probability.
     catch SystemError
-
+        println("Failed to read synthesized image for parameters ", p)
     finally
         # remove the temporary directory in which we currently reside
         run(`rm -rf $keydir`)
