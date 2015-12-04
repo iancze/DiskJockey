@@ -300,17 +300,19 @@ end
     run(pipeline(`radmc3d image incl $incl posang $PA npix $npix loadlambda`, DevNull))
 
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
-    im = imread()
-    # im = try
-    #     imread()
-    # # If the synthesized image is screwed up, just say there is zero probability.
-    # catch SystemError
-    #     println("Failed to read synthesized image for parameters ", p)
-    # finally
-    #     # remove the temporary directory in which we currently reside
-    #     run(`rm -rf $keydir`)
-    #     return -Inf
-    # end
+    # im = imread()
+    im = try
+        imread()
+    # If the synthesized image is screwed up, just say there is zero probability.
+    catch SystemError
+        println("Failed to read synthesized image for parameters ", p)
+        -Inf
+    end
+
+    if im == -Inf
+        run(`rm -rf $keydir`)
+        return -Inf
+    end
 
     if cfg["fix_d"]
         # After the fact, we should be able to check that the pixel size of the image is the
