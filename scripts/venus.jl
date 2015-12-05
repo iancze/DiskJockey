@@ -220,6 +220,10 @@ end
         return -Inf
     end
 
+    if r_out < r_in || r_out < r_c
+        return -Inf
+    end
+
     if incl < 0. || incl > 180.
         return -Inf
     end
