@@ -24,42 +24,35 @@ using Dierckx
 
 # velocity structure
 function plot_vel(pars::Parameters, grid)
-    vels = JudithExcalibur.hmodel.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
-    fig = plt.figure()
+    vel = Array(Float64, (nz,nr))
+    for j=1:nz
+        for i=1:nr
+            # convert from cm/s to km/s
+            vel[j, i] = JudithExcalibur.hmodel.velocity(rs[i], zs[j], pars) .* 1e-5
+        end
+    end
+
+
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
-    ax[:plot](rr, vels)
-    ax[:set_ylabel](L"$v_\phi$ [km/s]")
+
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+
+    img = ax[:contourf](xx./AU, yy./AU, vel) #, levels=levels)
+
+    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
+    cb = fig[:colorbar](img, cax=cax)
+
+    ax[:set_ylabel](L"$z$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("velocity.png")
+    plt[:savefig]("velocity.png")
 end
 
 # temperature structure
 function plot_temp(pars::Parameters, grid)
-
-    nr = grid.nr
-    nz = 64
-    rs = grid.rs
-    zq = JudithExcalibur.hmodel.z_q(rs[end], pars)
-    ped = 0.01 * AU
-    zs = (logspace(log10(ped), log10(1.5 * zq + ped), nz) - ped)
-
-    # println("rs ,", rs)
-    # println("zs ,", zs)
-
-    # z_qs = atm_height(rs);
-
-    xx = Array(Float64, (nz, nr));
-    yy = Array(Float64, (nz, nr));
-    for i=1:nz
-        xx[i, :] = rs
-    end
-
-    for j=1:nr
-        yy[:, j] = zs
-    end
 
     Ts = Array(Float64, (nz,nr));
     for j=1:nz
@@ -68,11 +61,11 @@ function plot_temp(pars::Parameters, grid)
         end
     end
 
-    fig = plt.figure(figsize=(6,4))
+    fig = plt[:figure](figsize=(6,4))
     ax = fig[:add_subplot](111)
 
     levels = logspace(0, log10(200), 50);
-    img = ax[:contourf](xx./AU, yy./AU, Ts, cmap=plt.get_cmap("Blues_r"), levels=levels)
+    img = ax[:contourf](xx./AU, yy./AU, Ts, cmap=plt[:get_cmap]("Blues_r"), levels=levels)
     # ax[:plot](rs./AU, z_qs./AU, "r--")
 
     cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
@@ -89,31 +82,70 @@ end
 # scale height
 function plot_height(pars::Parameters, grid)
 
-
     heights = JudithExcalibur.hmodel.Hp(grid.rs, pars) ./ AU
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
     ax[:plot](rr, heights)
     ax[:set_ylabel](L"$H_p$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("scale_height.png")
+    plt[:savefig]("scale_height.png")
 end
 
 # Atmospheric height
 function plot_atm_height(pars::Parameters, grid)
     heights = JudithExcalibur.hmodel.z_q(grid.rs, pars) ./ AU
 
-    fig = plt.figure()
+    fig = plt[:figure]()
     ax = fig[:add_subplot](111)
     ax[:plot](rr, heights)
     ax[:set_ylabel](L"$z_q$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
-    plt.savefig("atm_height.png")
+    plt[:savefig]("atm_height.png")
+end
+
+function plot_surface_density(pars::Parameters, grid)
+
+    Sigmas = JudithExcalibur.hmodel.Sigma(grid.rs, pars)
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+    ax[:loglog](rr, Sigmas)
+
+    # Now, go overlay small grey lines vertically
+    for cell_edge in grid.Rs/AU
+        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    end
+
+    ax[:set_ylabel](L"$\Sigma\, [\textrm{g/cm}^2]$")
+    ax[:set_xlabel](L"$r$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt[:savefig]("surface_density.png")
+end
+
+function plot_density_slice(pars::Parameters)
+
+    # Plot this at a few radii.
+    rs = Float64[10., 20., 50., 100.]
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    for r in rs
+        zs, slice = JudithExcalibur.hmodel.density_slice(r * AU, pars)
+        ax[:semilogy](zs ./AU, slice)
+    end
+    ax[:set_xlabel](L"$z$ [AU]")
+    ax[:set_ylabel](L"$\rho$ [$g/{cm{^3}}$]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt[:savefig]("density_slices.png")
+
 end
 
 function plot_density_gradient(pars::Parameters)
@@ -160,28 +192,6 @@ function plot_density_1D_unnormed(pars::Parameters)
     plt.savefig("un_ln_gas_slice.png")
 
 end
-
-function plot_temperature_1D(pars::Parameters)
-    nz = 50
-    zs = linspace(0, 200 * AU, nz)
-    R = 10 * AU
-    temps = Array(Float64, nz)
-    for i=1:nz
-        temps[i] = JudithExcalibur.hmodel.temperature(R, zs[i], pars)
-    end
-
-    fig = plt.figure()
-    ax = fig[:add_subplot](111)
-
-    ax[:plot](zs/AU, temps)
-
-    ax[:set_ylabel]("T [K]")
-    ax[:set_xlabel](L"$z$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
-
-    plt.savefig("temperature_1D.png")
-end
-
 
 function plot_dlnrho(pars::Parameters)
     nz = 50
@@ -362,7 +372,7 @@ function plot_dens(pars::Parameters, grid)
 end
 
 pp = config["parameters"]
-params = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "gamma", "h", "delta", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "r_in", "r_out", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "logM_gas", "delta_gas", "r_cav", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 
@@ -371,22 +381,46 @@ for i=1:nparam
 end
 
 # Convert logM_gas to M_gas
-starting_param[12] = 10^starting_param[12]
+starting_param[15] = 10^starting_param[15]
 
 pars = Parameters(starting_param...)
 
 grd = config["grid"]
-grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+grid = Grid(grd["nr"], grd["ntheta"], pars.r_in, pars.r_out, true)
 const global rr = grid.rs ./ AU # convert to AU
+const global nr = grid.nr
 
+global nr = grid.nr
+global nz = 64
+global rs = grid.rs
+global zq = JudithExcalibur.hmodel.z_q(rs[end], pars)
+
+global zs = cat(1, [0], logspace(log10(0.1 * AU), log10(zq), nz-1))
+
+global xx = Array(Float64, (nz, nr));
+global yy = Array(Float64, (nz, nr));
+
+for i=1:nz
+    xx[i, :] = rs
+end
+
+for j=1:nr
+    yy[:, j] = zs
+end
+
+# These work
 # plot_vel(pars, grid)
+# plot_temp(pars, grid)
 # plot_height(pars, grid)
 # plot_atm_height(pars, grid)
-# plot_temp(pars, grid)
+plot_surface_density(pars, grid)
+plot_density_slice(pars)
+
+# These have yet to be tested, or are for the old "lncorrection_factor" setup
 # # plot_density_gradient(pars)
 # plot_density_1D_unnormed(pars)
 # plot_density_1D(pars)
 # plot_interpolator(pars)
-plot_dens(pars, grid)
-# plot_temperature_1D(pars)
+# plot_dens(pars, grid)
+
 # plot_dlnrho(pars)

@@ -2,7 +2,7 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s, nyquist_factor, r_out_factor
+export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s, nyquist_factor, r_out_factor, Av_sigmaH
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -73,6 +73,9 @@ lam0s = Dict{ASCIIString, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
             ("12CO3-2", cc/345.79599e9 * 1e4)]) # microns
 
 
+# Convert from Av to hydrogen column density for interstellar dust
+Av_sigmaH = 1.59e21 # [cm^-2]
+
 # convert from arcseconds to radians
 arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
 
@@ -80,8 +83,7 @@ arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
 # 2 is not Nyquist sampled. This is currently set to 2.2 to provide a degree of oversampling.
 nyquist_factor = 2.2
 
-# This is to allow for adaptive outer radius
-r_out_factor = 10.0 # times r_c
+
 
 # Oftentimes it is necessary to get a symmetric coordinate array that spans N
 # elements from -width to +width, but makes sure that the middle point lands

@@ -111,17 +111,22 @@ end
 type Parameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
+    r_in::Float64 # [AU] inner radius of the grid
+    r_out::Float64 # [AU] outer radius of the grid
     T_10m::Float64 # [K] temperature at 10 AU, midplane
     q_m::Float64 # midplane temperature gradient exponent
     T_10a::Float64 # [K] temperature at 10 AU, atmosphere
     q_a::Float64 # atmosphere temperature gradient exponent
     T_freeze::Float64 # [K] temperature below which to reduce CO abundance
     X_freeze::Float64 # [ratio] amount to reduce CO abundance
+    sigma_s::Float64 # Photodissociation boundary in units of A_V.
     gamma::Float64 # surface temperature gradient exponent
     h::Float64 # Number of scale heights that z_q is at, currently fixed to 4
     delta::Float64 # Shape exponent, currently fixed to 2
     M_gas::Float64 # [M_Sun] disk mass of gas
-    ksi::Float64 # [cm s^{-1}] microturbulence
+    delta_gas::Float64 # Fraction by which gas is reduced inside the cavity
+    r_cav::Float64 # [AU] the radius interior to which the gas density is reduced by delta_gas
+    ksi::Float64 # [cm s^{-1}] micsroturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
     PA::Float64 # [degrees] position angle (East of North)
@@ -133,10 +138,10 @@ end
 # Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.
 # Alternate functions accept pars passed around, where pars is in M_star, AU, etc...
-function velocity{T}(r::T, M_star::Float64)
-    sqrt(G * M_star ./ r)
+function velocity(r::Float64, z::Float64, M_star::Float64)
+    sqrt(G * M_star / (r^2 + z^2)^(3./2)) * r
 end
-velocity{T}(r::T, pars::Parameters) = velocity(r, pars.M_star * M_sun)
+velocity(r::Float64, z::Float64, pars::Parameters) = velocity(r, z, pars.M_star * M_sun)
 
 # Midplane temperature
 function T_mid{T}(r::T, T_10::Float64, q::Float64)
@@ -150,19 +155,27 @@ function T_atm{T}(r::T, T_10::Float64, q::Float64)
 end
 T_atm{T}(r::T, pars::Parameters) = T_atm(r, pars.T_10a, pars.q_a)
 
-# Scale height
+# Scale height computed from midplane temperature
 function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
     temp = T_mid(r, T_10, q)
     return sqrt((kB * temp .* r.^3.)/(mu_gas * m_H * G * M_star))
 end
 Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10m, pars.q_m)
 
-# Atmosphere height
+# Calculate the gas surface density
+function Sigma{T}(r::T, pars::Parameters)
+    r_c = pars.r_c * AU
+    Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
+    Sigma_c .* (r./r_c).^(-pars.gamma) .* exp(-(r./r_c).^(2 - pars.gamma))
+end
+
+# Atmosphere height computed as multiple of scale height (computed at midplane)
 function z_q{T}(r::T, pars::Parameters)
     return pars.h * Hp(r, pars)
 end
 
 # No parametric type for temperature, because it is a 2D function.
+# This is according to the Williams and Best 14 equations
 function temperature(r::Float64, z::Float64, pars::Parameters)
     zq = z_q(r, pars)
     Ta = T_atm(r, pars)
@@ -170,7 +183,8 @@ function temperature(r::Float64, z::Float64, pars::Parameters)
         return Ta
     else
         Tm = T_mid(r, pars)
-        return Ta + (Tm - Ta) * cos(pi * z/ (2 * zq))^pars.delta
+        # return Ta + (Tm - Ta) * cos(pi * z/ (2 * zq))^pars.delta
+        return Tm + (Ta - Tm) * sin(pi * z/ (2 * zq))^(2 * pars.delta)
     end
 end
 
@@ -183,7 +197,8 @@ function dT(r::Float64, z::Float64, pars::Parameters)
         return 0.
     else
         Tm = T_mid(r, pars)
-        return - pi * pars.delta / (2 * zq) * (Tm - Ta) * (cos(pi * z/(2 * zq)))^(pars.delta - 1) * sin(pi * z / (2 * zq))
+        # return - pi * pars.delta / (2 * zq) * (Tm - Ta) * (cos(pi * z/(2 * zq)))^(pars.delta - 1) * sin(pi * z / (2 * zq))
+        return pars.delta * pi/zq * (Ta - Tm) * cos(pi * z/(2 * zq)) * (sin(pi * z/(2 * zq)))^(2 * pars.delta - 1)
     end
 end
 
@@ -198,21 +213,71 @@ function dlnrho(r::Float64, z::Float64, pars::Parameters)
 end
 
 # Delivers an unnormalized gas density. Needs to be multiplied by correction factor.
-function un_lnrho(r::Float64, z::Float64, pars::Parameters)
+function un_lnrho(r::Float64, z::Float64, ztop::Float64, pars::Parameters)
     f(x) = dlnrho(r, x, pars)
 
-    upper_reaches = 10. * z_q(r, pars) # [cm]
-
-    val, err = quadgk(f, upper_reaches, z)
+    val, err = quadgk(f, ztop, z)
     return val
 end
 
-# Calculate the gas surface density
-function Sigma(r::Float64, pars::Parameters)
-    r_c = pars.r_c * AU
-    Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-    return Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
+# Calculate a slice of density at a given radius
+function density_slice(r::Float64, pars::Parameters)
+    zq = z_q(r, pars) # The height of the disk "atmosphere"
+
+    # 10 AU is an arbitrary number, but this is to make sure that we have a high enough bound
+    # in the inner disk
+    if (10 * zq) >= 10 * AU
+        ztop = zq * 10
+    else
+        ztop = 10 * AU
+    end
+
+    # It is assumed that there is 0 gas above this upper bound, ztop.
+
+    # Create an array of heights that goes from the midplane (0, 0.01, ..., ztop)
+    nz = 64
+    zs = cat(1, [0], logspace(log10(0.01 * AU), log10(ztop), nz-1))
+
+    un_lnrhos = Array(Float64, nz)
+    # For each height, integrate dlnrho/dz to yeild a yet-to-be normalized un_lnrho
+    for i=1:nz
+        un_lnrhos[i] = un_lnrho(r, zs[i], ztop, pars)
+    end
+
+    # Subtract the largest value from this array to avoid numberical overflow in subsequent steps
+    bar_lnrho = un_lnrhos[1]
+
+    # Remove the largest value so we don't get an overflow error
+    un_lnrhos -= bar_lnrho
+
+    # Convert from ln(rho) to rho, but this is still unnormalized.
+    un_rhos = exp(un_lnrhos)
+
+    # Now that we have the shape of the density structure but not the normalization,
+    # integrate to get the normalization.
+    # The density should be unitful, so we need to exponentiate (can't do this with un_lnrhos).
+    spl = Spline1D(zs, un_rhos)
+
+    # Integral is from -inf to inf
+    tot = 2 * integrate(spl, 0., zs[end])
+
+    # The actual value of the surface density
+    S = Sigma(r, pars)
+
+    # The normalized density slices
+    rhos = S/tot * un_rhos # [g/cm^3]
+
+    # Threshold column
+    thresh = pars.sigma_s * Av_sigmaH # [g/cm^2]
+
+    # Normalize the previous spline and integrate to get zboundary
+    f(x) = S/tot * integrate(spl, x, zs[end])
+
+    # fsolve, or some other root finding algorithm to find where f(x) = thresh.
+
+    return (zs, rhos)
 end
+
 
 # Calculate the multiplicative factor needed to normalize `un_rho` based upon the boundary
 # condition that the integral of rho(r, z) with z from -inf to inf should be equal to Sigma(r)
@@ -224,7 +289,7 @@ function lncorrection_factor(r::Float64, pars::Parameters)
     nz = 50
 
     # How best to choose the outer bound? Some multiple of zq is probably a good idea, but this
-    # doesn't really work in the inner disk. Instead, let's choose a minimum threshold.
+    # doesn't really go to high enough altitude in the inner disk. Instead, let's choose a minimum threshold.
     if (10 * zq) >= 10 * AU
         outer_reaches = zq * 10
     else
@@ -336,21 +401,6 @@ function X_freeze(temp::Float64, pars::Parameters)
     end
 end
 
-
-function rho_dust(r::Float64, z::Float64, pars::Parameters)
-    nCO = n_CO(r, z, pars) # number of CO molecules per cm^3
-
-    # Convert from nCO to nH2
-    nH2 = nCO / 7.e-5 # number density ratio
-
-    # Convert from nH2 (assuming nH2 ~ nGas ) to mGas
-    mGas = constants.m0 * nH2 # [g]
-
-    # Convert from mGas to mDust using Gas/Dust ratio of 100
-    mDust = mGas * 0.01 # [g]
-
-    return mDust
-end
 
 # Ksi is microturbulent broadining width in units of km/s. Output of this function
 # is in cm/s for RADMC (RADMC manual, eqn 7.12)
