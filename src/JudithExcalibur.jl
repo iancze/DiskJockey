@@ -4,6 +4,7 @@ export constants,
     model, # normal, axisymmetric disk. Czekala et al. 15, Rosenfeld et al. 12
     emodel, # eccentric disk
     hmodel, # vertical temperature gradient
+    tmodel, # truncated powerlaw model
     image,
     gridding,
     visibilities,
@@ -19,6 +20,7 @@ include("constants.jl")
 include("model.jl")
 include("emodel.jl")
 include("hmodel.jl")
+include("tmodel.jl")
 include("image.jl")
 include("gridding.jl")
 include("visibilities.jl")
