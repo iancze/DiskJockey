@@ -138,7 +138,8 @@ function plot_density_slice(pars::Parameters)
 
     for r in rs
         zs, slice = JudithExcalibur.hmodel.density_slice(r * AU, pars)
-        ax[:semilogy](zs ./AU, slice)
+        # ax[:semilogy](zs ./AU, slice)
+        ax[:semilogy](zs ./AU, slice/(mu_gas * m_H))
     end
     ax[:set_xlabel](L"$z$ [AU]")
     ax[:set_ylabel](L"$\rho$ [$g/{cm{^3}}$]")

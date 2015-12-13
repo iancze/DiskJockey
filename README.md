@@ -34,11 +34,15 @@ The following is a description of the most important files in the package
 
 **gridding.jl**: Contains the prolate-spheroidal wave function definitions from Schwab 1984, used when doing the visibility interpolations.
 
-**parallel.jl**: A simple pipe-like parallel implementation designed to farm parameters to individual RADMC-3D processes in order to synthesize chunks of channels, as opposed to the full spectrum all at once.
+**venus.jl**: This implementation uses the Ensemble Sampler (a Julia port from DFM's `emcee` python package) to sample the posterior distribution using parallelized walkers.
 
-**LittleMC.jl**: A simple Metropolis-Hastings Markov-Chain Monte Carlo implementation designed to sample the posterior distribution of parameters.
+**parallel.jl**: (outdated for v0.3) A simple pipe-like parallel implementation designed to farm parameters to individual RADMC-3D processes in order to synthesize chunks of channels, as opposed to the full spectrum all at once.
 
-**mach_three.jl**: The driver script for performing MCMC with a disk model. The main disk-related functions are `fprob` and `f`. The organization of this file is designed so that the likelihood call can be parallelized using the framework written in `parallel.jl`.
+**LittleMC.jl**: (outdated for v0.3) A simple Metropolis-Hastings Markov-Chain Monte Carlo implementation designed to sample the posterior distribution of parameters.
+
+**mach_three.jl**: (outdated for v0.3) The driver script for performing MCMC with a disk model. The main disk-related functions are `fprob` and `f`. The organization of this file is designed so that the likelihood call can be parallelized using the framework written in `parallel.jl`.
+
+
 
 Recently, I have organized this code into a proper Julia package.
 
@@ -73,7 +77,7 @@ Note, if you would like to use the plotting scripts (`scripts/plot_model.jl`) or
 
 ## Use
 
-Now, the `JudithExcalibur` package should be installed globally on your system. Because it is likely that you will want to fit more than just one disk, or use different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. For example,
+Now, the `JudithExcalibur` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one disk, or use different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. For example,
 
     $ mkdir ExcitingDisk
     $ cd ExcitingDisk
@@ -94,7 +98,4 @@ To run this code on a new dataset using 4 cores, you would run
 
 where the `-p` flag specifies how many additional processes to spawn, therefore the total number of processes used is `p + 1`. For maximal performance, set `p = ncores - 1` where `ncores` is the number of cores on your machine.
 
-Please note that the code is now in the process of being migrated from Julia v0.3 to v0.4. Some of the driver scripts might be outdated to this effect.
-
-For now, running on v0.4 will require this branch of NPZ
-https://github.com/mweastwood/NPZ.jl/tree/fixdeprecations
+Please note that the code is now updated to Julia v0.4. Some of the driver scripts might be outdated to this effect (written for v0.3).

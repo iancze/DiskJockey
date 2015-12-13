@@ -273,9 +273,37 @@ function density_slice(r::Float64, pars::Parameters)
     # Normalize the previous spline and integrate to get zboundary
     f(x) = S/tot * integrate(spl, x, zs[end])
 
+    # Go through each of the z spacings, and use Riemann integration in a while loop to find at which z point we've finally
+    column = 0.0 # total acumulated column
+    icolumn::Int = 0 # index of the z point
+    while column <= thresh
+
+    end
+
     # fsolve, or some other root finding algorithm to find where f(x) = thresh.
 
+    # Make all rhos above this equal to zero.
+
     return (zs, rhos)
+end
+
+function make_density_interpolator(pars::Parameters, grd::Grid)
+    # Using the cell centers (in radius), go through and get a density slice.
+    # Append the slice to the current list.
+    # npoints = 64 * grd.nr
+    rs = Array(Float64, (64, grid.nr))
+    zs = Array(Float64, (64, grid.nr))
+    rhos = Array(Float64, (64, grid.nr))
+    for i=1:grid.nr
+        r = grid.rs[i]
+        rs[:,i] = r
+        zs[:,i], rhos[:,i] = density_slice(r, pars)
+    end
+
+    # Now flatten these arrays and feed them to a 2D spline with Dierckx
+
+
+
 end
 
 
