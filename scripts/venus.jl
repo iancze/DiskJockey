@@ -209,9 +209,9 @@ end
 
     if cfg["fix_d"]
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-        M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_c, r_in, r_cav, logdelta, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
     else
-        M_star, r_c, r_in, r_out, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_c, r_in, r_cav, logdelta, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
     end
 
     # Enforce hard priors on physical parameters
@@ -220,7 +220,7 @@ end
         return -Inf
     end
 
-    if r_out < r_in || r_out < r_c
+    if r_in > grd["r_out"] || r_c > grd["r_out"]
         return -Inf
     end
 
@@ -232,10 +232,11 @@ end
         return -Inf
     end
 
+    delta = 10^logdelta
     M_gas = 10^logM_gas
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    pars = Parameters(M_star, r_c, r_in, r_cav, delta, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     lnpr = lnprior(pars)
     if lnpr == -Inf
@@ -246,7 +247,7 @@ end
     phys_width_lim = pars.dpc * dRA_max * npix # [AU]
 
     # Now see if the image is larger than this
-    if (1.1 * 2 * r_out) > phys_width_lim
+    if (1.1 * 2 * grd["r_out"]) > phys_width_lim
         println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
         return -Inf
     end
@@ -269,8 +270,7 @@ end
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
 
-    # grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
-    grid = Grid(grd["nr"], grd["ntheta"], r_in, r_out, true)
+    grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
     write_grid(keydir, grid)
 
     # Compute parameter file using model.jl, write to disk in current directory

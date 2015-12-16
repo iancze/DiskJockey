@@ -111,6 +111,9 @@ end
 type Parameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
+    r_in::Float64 # [AU] hard inner radius of the disk
+    r_cav::Float64 # [AU] radius at which density is depleted by delta
+    delta::Float64 # the factor by which to deplete gas inside r_cav
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface temperature gradient exponent
@@ -176,7 +179,14 @@ end
 function rho_gas(r::Float64, z::Float64, pars::Parameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)
-    S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+    if r > pars.r_cav
+        return S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+    # If we are inside the gap, deplete the gas surface density.
+    elseif r > pars.r_in
+        return pars.delta * S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+    else
+        return 0.0
+    end
 end
 
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.
