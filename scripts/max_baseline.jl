@@ -38,7 +38,8 @@ dlow = mu_d - 3. * sig_d
 dhigh = mu_d + 3. * sig_d
 
 npix = config["npix"]
+println("For npix $npix, the maximum outer radii allowed are")
 
 # These are upper limits on the total width [AU] of the image at each distance. If the disk is large enough that it exceedes these radii, then we will need to use more pixels in the image (ie, it's very resolved).
-println("dpc ", dlow, " r_c ", dlow * dRA_max * npix/(2 * 1.1))
-println("dpc ", dhigh, " r_c ", dhigh * dRA_max * npix/(2 * 1.1))
+println("dpc ", dlow, " r_out ", dlow * dRA_max * npix/(2 * 1.1))
+println("dpc ", dhigh, " r_out ", dhigh * dRA_max * npix/(2 * 1.1))
