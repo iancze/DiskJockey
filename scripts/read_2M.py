@@ -72,6 +72,23 @@ ant2 = data["ant2"]
 same = (ant1 == ant2)
 print("There are {} autocorrelation visibilities.".format(np.sum(same)))
 
+
+same = ~same
+np.save("same.npy", same) # save the bitmask
+
+uu = uu[:,same]
+vv = vv[:,same]
+
+shape = uu.shape
+
+real = real[:,same]
+imag = imag[:,same]
+
+weight = weight[:,same]
+# We need to identify these, strip them out, and then save them to another file so we can reassemble it in the same way.
+
+# Save original bitmask to the array?
+
 # Now, stuff this into an HDF5 file.
 fid = h5py.File(args.out, "w")
 

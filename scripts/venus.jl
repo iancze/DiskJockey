@@ -220,9 +220,10 @@ end
         return -Inf
     end
 
-    if r_in > grd["r_out"] || r_c > grd["r_out"]
+    if r_in > grd["r_out"] || r_c > grd["r_out"] || r_cav > grd["r_out"] || r_in > r_cav
         return -Inf
     end
+
 
     if incl < 0. || incl > 180.
         return -Inf
@@ -234,6 +235,10 @@ end
 
     delta = 10^logdelta
     M_gas = 10^logM_gas
+
+    if delta > 10
+        return -Inf
+    end
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
     pars = Parameters(M_star, r_c, r_in, r_cav, delta, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
