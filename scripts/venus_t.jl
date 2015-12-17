@@ -216,7 +216,7 @@ end
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
-    if ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || r_in <= 0.0 || r_in > r_out || T_10 > 1500. || q < 0. || q > 1.0
+    if M_star <= 0.0 || ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || r_in <= 0.0 || r_in > r_out || T_10 > 1500. || q < 0. || q > 1.0
         return -Inf
     end
 
