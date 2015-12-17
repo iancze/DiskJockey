@@ -112,7 +112,6 @@ end
 
 type Parameters
     M_star::Float64 # [M_sun] stellar mass
-    r_c::Float64 # [AU] characteristic radius
     r_in::Float64 # [AU] hard inner radius of the disk
     r_out::Float64 # [AU] radius at which density is depleted by delta
     T_10::Float64 # [K] temperature at 10 AU
@@ -163,17 +162,9 @@ end
 Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 
 # Calculate the gas surface density
-# function Sigma(r::Float64, pars::Parameters)
-#     r_c = pars.r_c * AU
-#     Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-#     Sigma_c * (r/r_c)^(-pars.gamma) * exp(-(r/r_c)^(2 - pars.gamma))
-# end
-
-# Calculate the gas surface density
 function Sigma{T}(r::T, pars::Parameters)
-    r_c = pars.r_c * AU
-    Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-    Sigma_c .* (r./r_c).^(-pars.gamma)
+    Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * ((pars.r_out * AU)^(2 - pars.gamma) - (pars.r_in * AU)^(2 - pars.gamma)))
+    Sigma_c .* r.^(-pars.gamma)
 end
 
 # Delivers a gas density in g/cm^3
