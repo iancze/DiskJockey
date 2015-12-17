@@ -205,7 +205,7 @@ end
 @everywhere function fprob(p::Vector{Float64})
 
     # Fix the following arguments: gamma, dpc
-    gamma = 1.0 # surface temperature gradient exponent
+    gamma = cfg["parameters"]["gamma"][1] # surface temperature gradient exponent
 
     if cfg["fix_d"]
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance

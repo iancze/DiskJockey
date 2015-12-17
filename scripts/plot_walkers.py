@@ -67,11 +67,11 @@ flatchain = np.load("flatchain.npy")
 
 # labels = ["a", "b"]
 #     # Fixed distance
-labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_in$ [AU]", r"$r_out$ [AU]", r"$T_{10}$ [K]",
-r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]",
-r"$d$ [pc]",
-r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]",
-r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\textrm{in}$ [AU]",
+r"$r_\textrm{cav}$ [AU]", r"$\delta$", r"$T_{10}$ [K]", r"$q$",
+r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]",
+r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']",
+r"$\mu_\delta$ ['']"]
 figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
 
 figure.savefig("triangle.png")

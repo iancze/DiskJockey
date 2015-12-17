@@ -113,6 +113,8 @@ end
 type Parameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
+    r_in::Float64 # [AU] hard inner radius of the disk
+    r_out::Float64 # [AU] radius at which density is depleted by delta
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface temperature gradient exponent
@@ -171,14 +173,18 @@ Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 function Sigma{T}(r::T, pars::Parameters)
     r_c = pars.r_c * AU
     Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-    Sigma_c .* (r./r_c).^(-pars.gamma) .* exp(-(r./r_c).^(2 - pars.gamma))
+    Sigma_c .* (r./r_c).^(-pars.gamma)
 end
 
 # Delivers a gas density in g/cm^3
 function rho_gas(r::Float64, z::Float64, pars::Parameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)
-    S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+    if r > (pars.r_in * AU) && r < (pars.r_out * AU)
+        return S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+    else
+        return 0.0
+    end
 end
 
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.

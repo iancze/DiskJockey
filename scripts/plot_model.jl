@@ -237,7 +237,7 @@ function plot_spectrum(img::image.SkyImage)
 end
 
 pp = config["parameters"]
-params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "r_in", "r_cav", "logdelta", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 
@@ -246,7 +246,8 @@ for i=1:nparam
 end
 
 # Convert logM_gas to M_gas
-starting_param[6] = 10^starting_param[6]
+starting_param[5] = 10^starting_param[5]
+starting_param[9] = 10^starting_param[9]
 
 pars = Parameters(starting_param...)
 #

@@ -179,10 +179,10 @@ end
 function rho_gas(r::Float64, z::Float64, pars::Parameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)
-    if r > pars.r_cav
+    if r > (pars.r_cav * AU)
         return S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
     # If we are inside the gap, deplete the gas surface density.
-    elseif r > pars.r_in
+    elseif r > (pars.r_in * AU)
         return pars.delta * S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
     else
         return 0.0

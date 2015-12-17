@@ -2,7 +2,6 @@ name: disk
 
 out_base: output/
 
-
 gas: true
 species : 12CO # Possible choices: 12CO, 13CO, C18O HCN
 transition: 3-2
@@ -24,6 +23,9 @@ fix_d : true
 parameters:
   M_star: [2.0, 0.007] # [M_sun] stellar mass
   r_c: [80.00, 0.1] # [AU] characteristic radius
+  r_in: [1.0, 0.0] # [AU] inner edge
+  r_cav: [10.0, 0.0] # [AU] cavity
+  logdelta: [-1.0, 0.0] # amount to decrease gas in center
   T_10: [91.85, 0.3] # [K] temperature at 10 AU
   q: [0.5, 0.003] # temperature gradient exponent
   gamma: [1.0, 0.0] # surface density gradient
@@ -36,12 +38,7 @@ parameters:
   mu_RA: [0.00, 0.002] # [arcsec] centroid location
   mu_DEC: [0.00, 0.002] # [arcsec]
 
-# Name of the covariance matrix, if using. Otherwise comment out. Replaces jumps
-# specified under `parameters`
-# opt_jump: data/AKSco/opt_jump.npy
-# Factor by which to scale the jumps (ie covariance matrix is multiplied by
-# this *squared*)
-# jump_scale : 0.9
+# Starting positions of walkers
 pos0: pos0.npy
 
 # where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
@@ -61,10 +58,6 @@ beam :
 
 # Image setup
 npix: 256
-# pixsize : 38568201867193.242 # [cm], copied from a previous image.out
-# Calculate this number by using plot_model.jl to make a test run
-# using the same grid settings.
-# This is only relevant if we fix the distance, however.
 
 # MCMC setup
 samples: 50
