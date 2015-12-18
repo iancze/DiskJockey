@@ -209,18 +209,18 @@ end
 
     if cfg["fix_d"]
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-        M_star, r_c, r_in, r_out, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_in, r_out, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
     else
-        M_star, r_c, r_in, r_out, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_in, r_out, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
     end
 
     # Enforce hard priors on physical parameters
     # Short circuit evaluation if we know the RADMC won't be valid.
-    if M_star <= 0.0 || ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || r_in <= 0.0 || r_in > r_out || T_10 > 1500. || q < 0. || q > 1.0
+    if M_star <= 0.0 || ksi <= 0. || T_10 <= 0. || r_in <= 0.0 || r_in > r_out || T_10 > 1500. || q < 0. || q > 1.0
         return -Inf
     end
 
-    if r_in > grd["r_out"] || r_c > grd["r_out"]
+    if r_in > grd["r_out"] || r_out > grd["r_out"]
         return -Inf
     end
 
@@ -235,7 +235,7 @@ end
     M_gas = 10^logM_gas
 
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    pars = Parameters(M_star, r_c, r_in, r_out, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    pars = Parameters(M_star, r_in, r_out, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     lnpr = lnprior(pars)
     if lnpr == -Inf
@@ -247,7 +247,7 @@ end
 
     # Now see if the image is larger than this
     if (1.1 * 2 * grd["r_out"]) > phys_width_lim
-        println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
+        println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", grd["r_out"], " ", phys_width_lim)
         return -Inf
     end
 
@@ -374,9 +374,7 @@ using JudithExcalibur.EnsembleSampler
 sampler = Sampler(nwalkers, ndim, fprob)
 
 # make sure that we've loaded a pos0 with the right dimensions.
-size1, size2 = size(pos0)
-@assert size1==ndim "pos0 array does not match number of input dimensions."
-@assert size2==nwalkers "pos0 array does not match number of walkers."
+@assert ndim < nwalkers "More dimensions than walkers. Are you sure you loaded pos0 correctly?"
 
 run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
 
