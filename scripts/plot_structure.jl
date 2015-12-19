@@ -124,10 +124,17 @@ end
 
 function plot_surface_density(pars::Parameters, grid)
 
-    Sigmas = JudithExcalibur.model.Sigma(grid.rs, pars)
+    # Sigmas = JudithExcalibur.model.Sigma(grid.rs, pars)
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
+
+    Sigmas = Array(Float64, grid.nr)
+
+    for i=1:grid.nr
+        Sigmas[i] = JudithExcalibur.model.Sigma(grid.rs[i], pars)
+    end
+
     ax[:loglog](rr, Sigmas)
 
     # Now, go overlay small grey lines vertically
@@ -232,7 +239,7 @@ function plot_dens(pars::Parameters, grid)
 end
 
 pp = config["parameters"]
-params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+params = ["M_star", "r_c", "r_in", "r_cav", "logdelta", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
 starting_param = Array(Float64, nparam)
 
@@ -240,18 +247,16 @@ for i=1:nparam
     starting_param[i] = pp[params[i]][1]
 end
 
-# Convert logM_gas to M_gas
-starting_param[6] = 10^starting_param[6]
+
+starting_param[5] = 10^starting_param[5]
+starting_param[9] = 10^starting_param[9]
 
 pars = Parameters(starting_param...)
 
 grd = config["grid"]
 
-r_out = r_out_factor * pars.r_c
 
-
-# grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
-grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], r_out, true)
+grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
 # The cell centers
 const global rr = grid.rs ./ AU # convert to AU

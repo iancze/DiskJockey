@@ -169,26 +169,37 @@ Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 # end
 
 # Calculate the gas surface density
-function Sigma{T}(r::T, pars::Parameters)
+function Sigma(r::Float64, pars::Parameters)
     r_c = pars.r_c * AU
-    Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-    Sigma_c .* (r./r_c).^(-pars.gamma) .* exp(-(r./r_c).^(2 - pars.gamma))
+    r_in = pars.r_in * AU
+    r_cav = pars.r_cav * AU
+    delta = pars.delta
+    gamma = pars.gamma
+    M_gas = pars.M_gas * M_sun
+
+    # Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
+    Sigma_c = (2 - gamma) * M_gas / (2 * pi * r_c^2 * (delta * exp(-(r_in/r_c)^(2 - gamma)) + (1 - delta) * exp(-(r_cav/r_c)^(2 - gamma))))
+
+    S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
+
+    if r > r_cav
+        return S
+    # If we are inside the gap, deplete the gas surface density by an amount delta
+    elseif r > r_in
+        return delta * S
+    # If we are inside the inner physical edge of the disk, then it is zero
+    else
+        return 0.0
+    end
+
 end
 
 # Delivers a gas density in g/cm^3
 function rho_gas(r::Float64, z::Float64, pars::Parameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)
-    # If we are outside the gap, just return the normal surface density
-    if r > (pars.r_cav * AU)
-        return S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
-    # If we are inside the gap, deplete the gas surface density by an amount delta
-    elseif r > (pars.r_in * AU)
-        return pars.delta * S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
-    # If we are inside the inner physical edge of the disk, then it is zero
-    else
-        return 0.0
-    end
+
+    return S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
 end
 
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.
