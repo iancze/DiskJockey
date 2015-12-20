@@ -220,7 +220,7 @@ end
         return -Inf
     end
 
-    if r_in > grd["r_out"] || r_out > grd["r_out"]
+    if r_in > grd["r_out"] || r_out > grd["r_out"] || r_in < grd["r_in"]
         return -Inf
     end
 
