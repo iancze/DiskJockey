@@ -17,4 +17,4 @@ Which reads the HDF5 file and stores each channel in an array of `DataVis` insta
       invsig # [1/Jy] (nchan, nvis) the inverse of sigma for each visibility (1/sigma)
 
 
-and an example datafile is provided for AK Sco, available for download here (TBD). The invsig field may seem like an untraditional way to store visibility weights (typically measured in [1/Jy^2]), but enables quick computation of the `chi^2` statistic via Julia's `sumabs2` routine.
+and an example datafile is provided for AK Sco, available for download here (TBD). The invsig field may seem like an non-traditional way to store visibility weights (typically measured in `[1/Jy^2]`), but enables quick computation of the `chi^2` statistic via Julia's `sumabs2` routine.
