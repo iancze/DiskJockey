@@ -73,6 +73,13 @@ nchan, nvis = data["Re"].shape
 # dnu = 61.035e3 # [Hz]
 ####################################
 
+#####################################
+# For 2M1207
+# Multiply the weights (as provided) by a factor of 1.35 before doing any fitting.
+# nu0 = 345.782676e9 # [Hz]
+# dnu = 980.434e3 # [Hz]
+#####################################
+
 
 nu0 = args.nu0
 dnu = args.dnu
@@ -98,7 +105,7 @@ shape = uu.shape
 # Convert these to (nchan, nvis) arrays
 real = data["Re"]
 imag = data["Im"]
-weight = data["Wt"]
+weight = args.weight_factor * data["Wt"]
 
 # Test to see if there are any autocorrelation baselines present
 ant1 = data["ant1"]
