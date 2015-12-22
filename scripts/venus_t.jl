@@ -251,6 +251,9 @@ end
         return -Inf
     end
 
+    # Now that we've decided to go ahead, we need to create a temporary directory
+
+
     # debug("p :", p)
     # Each walker needs to create it's own temporary directory
     # where all RADMC files will reside and be driven from
@@ -299,9 +302,12 @@ end
 
     write_lambda(lams, keydir) # write into current directory
 
+    println("Successfully wrote files")
+
     # Run RADMC-3D, redirect output to /dev/null
     run(pipeline(`radmc3d image incl $incl posang $PA npix $npix loadlambda`, DevNull))
 
+    println("Successfully ran RADMC")
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
     # im = imread()
     im = try
