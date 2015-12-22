@@ -119,7 +119,7 @@ end
 println("Mapped variables to all processes")
 
 # Add radmc3d everywhere
-@everywhere ENV["PATH"] = ENV["PATH"] * "/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
+@everywhere ENV["PATH"] = ENV["PATH"] * ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
 
 # change the default logger
 # @everywhere Logging.configure(filename=logfile, level=DEBUG)
