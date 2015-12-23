@@ -74,6 +74,8 @@ mkdir(outdir)
 @everywhere using JudithExcalibur.model
 @everywhere using Base.Test
 
+# Add radmc3d everywhere, since SLURM seems to dislike inheriting it.
+@everywhere ENV["PATH"] = ENV["PATH"] * ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
 
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])

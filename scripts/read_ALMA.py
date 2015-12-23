@@ -105,7 +105,7 @@ shape = uu.shape
 # Convert these to (nchan, nvis) arrays
 real = data["Re"]
 imag = data["Im"]
-weight = args.weight_factor * data["Wt"]
+weight = data["Wt"]
 
 # Test to see if there are any autocorrelation baselines present
 ant1 = data["ant1"]

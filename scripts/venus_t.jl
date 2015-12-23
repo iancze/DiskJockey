@@ -305,10 +305,6 @@ end
 
     write_lambda(lams, keydir) # write into current directory
 
-    # println("Successfully wrote files")
-    # println(ENV["PATH"])
-
-
     # Run RADMC-3D, redirect output to /dev/null
     run(pipeline(`radmc3d image incl $incl posang $PA npix $npix loadlambda`, DevNull))
 
