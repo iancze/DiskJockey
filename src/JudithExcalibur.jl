@@ -8,6 +8,7 @@ export constants,
     image,
     gridding,
     visibilities,
+    debug,
     parallel,
     LittleMC,
     EnsembleSampler,
@@ -26,6 +27,7 @@ include("image.jl")
 include("gridding.jl")
 include("visibilities.jl")
 include("parallel.jl")
+include("debug.jl")
 include("LittleMC.jl")
 include("EnsembleSampler.jl")
 include("ImportanceSampler.jl")

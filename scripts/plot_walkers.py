@@ -7,7 +7,6 @@ parser.add_argument("--burn", type=int, default=0, help="How many samples to dis
 parser.add_argument("--draw", type=int, help="If specified, print out a random sample of N draws from the posterior, after burn in.")
 parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
 
-
 args = parser.parse_args()
 
 import numpy as np

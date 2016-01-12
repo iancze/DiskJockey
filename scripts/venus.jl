@@ -153,10 +153,8 @@ end
 # Clear all directories
 cleardirs!(keylist)
 
-
 # Create the model grid
 @everywhere grd = cfg["grid"]
-
 
 # Calculate the lnprior based upon the current parameter values
 @everywhere function lnprior(pars::Parameters)
@@ -211,21 +209,20 @@ end
 
     if cfg["fix_d"]
         dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-        M_star, r_c, r_in, r_cav, logdelta, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
     else
-        M_star, r_c, r_in, r_cav, logdelta, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+        M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
     end
 
     # Enforce hard priors on physical parameters
-    # Short circuit evaluation if we know the RADMC won't be valid.
-    if M_star <= 0.0 || ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || r_in <= 0.0 || r_cav <= 0.0 || M_star <= 0.0 || T_10 > 1500. || q < 0. || q > 1.0
+    # Short circuit evaluation if we know the parameters are not valid and we won't run RADMC3D
+    if M_star <= 0.0 || ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0 || T_10 > 1500. || q < 0. || q > 1.0
         return -Inf
     end
 
     if r_in > grd["r_out"] || r_c > grd["r_out"] || r_cav > grd["r_out"] || r_in > r_cav || r_cav > r_c
         return -Inf
     end
-
 
     if incl < 0. || incl > 180.
         return -Inf
@@ -235,15 +232,10 @@ end
         return -Inf
     end
 
-    delta = 10^logdelta
     M_gas = 10^logM_gas
 
-    if delta > 10
-        return -Inf
-    end
-
     # If we are going to fit with some parameters dropped out, here's the place to do it
-    pars = Parameters(M_star, r_c, r_in, r_cav, delta, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     lnpr = lnprior(pars)
     if lnpr == -Inf
@@ -269,8 +261,7 @@ end
     # these are mainly setup files that will be static throughout the run
     # they were written by JudithInitialize.jl and write_grid()
     for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
-        ff = homedir * fname
-        run(`cp $ff $keydir`)
+        run(`cp $(homedir)$fname $keydir`)
     end
 
     # change the subprocess to reside in this directory for the remainder of the run
@@ -283,23 +274,8 @@ end
     # Compute parameter file using model.jl, write to disk in current directory
     write_model(pars, keydir, grid, species)
 
-    # We are using the following conventions: inclination ranges from
-    # 0 to 180 degrees. 0 means face on, angular momentum vector pointing
-    # at observer; 90 means edge on; and 180 means face on, angular momentum
-    # vector pointing away from observer.
-    # These are the same as the RADMC-3D conventions.
-    incl = pars.incl # [deg]
-
-    # We also adopt the RADMC-3D convention for position angle, which defines position angle
-    # by the angular momentum vector.
-    # A positive PA angle means the disk angular momentum vector will be
-    # rotated counter clockwise (from North towards East).
-    PA = pars.PA # [deg]
-
-    vel = pars.vel # [km/s]
-
     # Doppler shift the dataset wavelengths to rest-frame wavelength
-    beta = vel/c_kms # relativistic Doppler formula
+    beta = pars.vel/c_kms # relativistic Doppler formula
     lams = Array(Float64, nchan)
     for i=1:nchan
         lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
@@ -308,10 +284,9 @@ end
     write_lambda(lams, keydir) # write into current directory
 
     # Run RADMC-3D, redirect output to /dev/null
-    run(pipeline(`radmc3d image incl $incl posang $PA npix $npix loadlambda`, DevNull))
+    run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda`, DevNull))
 
     # Read the RADMC-3D images from disk (we should already be in sub-directory)
-    # im = imread()
     im = try
         imread()
     # If the synthesized image is screwed up, just say there is zero probability.
@@ -320,6 +295,7 @@ end
         -Inf
     end
 
+    # The image synthesis faild for some reason or another
     if im == -Inf
         run(`rm -rf $keydir`)
         return -Inf

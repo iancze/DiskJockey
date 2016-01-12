@@ -7,7 +7,7 @@ export write_grid, write_model, write_lambda, write_dust, Parameters, Grid
 using ..constants
 
 # Write the wavelength sampling file. Only run on setup
-function write_lambda(lams::Array{Float64, 1}, basedir::AbstractString)
+function write_lambda(lams::AbstractArray, basedir::AbstractString)
     fcam = open(basedir * "camera_wavelength_micron.inp", "w")
     nlam = length(lams)
     @printf(fcam, "%d\n", nlam)
@@ -111,9 +111,9 @@ end
 type Parameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
-    r_in::Float64 # [AU] hard inner radius of the disk
-    r_cav::Float64 # [AU] radius at which density is depleted by delta
-    delta::Float64 # the factor by which to deplete gas inside r_cav
+    # r_in::Float64 # [AU] hard inner radius of the disk
+    # r_cav::Float64 # [AU] radius at which density is depleted by delta
+    # delta::Float64 # the factor by which to deplete gas inside r_cav
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface temperature gradient exponent
@@ -171,26 +171,28 @@ Hp{T}(r::T,  pars::Parameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 # Calculate the gas surface density
 function Sigma(r::Float64, pars::Parameters)
     r_c = pars.r_c * AU
-    r_in = pars.r_in * AU
-    r_cav = pars.r_cav * AU
-    delta = pars.delta
+    # r_in = pars.r_in * AU
+    # r_cav = pars.r_cav * AU
+    # delta = pars.delta
     gamma = pars.gamma
     M_gas = pars.M_gas * M_sun
 
-    # Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2)
-    Sigma_c = (2 - gamma) * M_gas / (2 * pi * r_c^2 * (delta * exp(-(r_in/r_c)^(2 - gamma)) + (1 - delta) * exp(-(r_cav/r_c)^(2 - gamma))))
+    Sigma_c = M_gas * (2 - pars.gamma) / (2 * pi * r_c^2)
+    # Sigma_c = (2 - gamma) * M_gas / (2 * pi * r_c^2 * (delta * exp(-(r_in/r_c)^(2 - gamma)) + (1 - delta) * exp(-(r_cav/r_c)^(2 - gamma))))
 
     S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
 
-    if r > r_cav
-        return S
-    # If we are inside the gap, deplete the gas surface density by an amount delta
-    elseif r > r_in
-        return delta * S
-    # If we are inside the inner physical edge of the disk, then it is zero
-    else
-        return 0.0
-    end
+    # if r > r_cav
+    #     return S
+    # # If we are inside the gap, deplete the gas surface density by an amount delta
+    # elseif r > r_in
+    #     return delta * S
+    # # If we are inside the inner physical edge of the disk, then it is zero
+    # else
+    #     return 0.0
+    # end
+
+    return S
 
 end
 
