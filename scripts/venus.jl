@@ -171,7 +171,7 @@ cleardirs!(keylist)
     end
 
     # Geometrical inclination prior
-    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log10(0.5 * sind(pars.incl))
+    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log(0.5 * sind(pars.incl))
 end
 
 # Only calculate the interpolation closures if we are fixing distance.

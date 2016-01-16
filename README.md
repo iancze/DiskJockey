@@ -22,44 +22,34 @@ There are several stages to evaluating the best-fitting parameters of a disk str
 3. visibility interpolation
 4. likelihood evaluation
 
-Because spectral line datasets are large, and synthesizing models is computationally expensive, I have designed this package to work in a parallel environment, where the calculations for each frequency channel can be distributed to independent processors. Therefore, please keep this architecture in mind when navigating the source code.
+I have organized the code in this package into source (in the `src` directory) and scripts (in the `scripts`) directory. After installation (see below), if you do
 
-The following is a description of the most important files in the package
+    using JudithExcalibur
 
-**model.jl**: Contains the actual specification of the parametric disk model, as well as the tools to write to disk the synthesis files RADMC-3D requires.
+You will be able to access any of the modules within `src`. These provide the base functionality for the package in common tasks, such as reading in images produced by RADMC-3D, Fourier transforms, and visibility interpolation. My hope is to make these components as general as possible so if you would like to extend this package to fit a novel type of disk, it will be easy to reuse many of the core functionality.
 
-**image.jl**: Contains type definitions to read images produced by RADMC-3D, as well as convert from physical coordinates to sky coordinates.
+The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `plot_model.jl` synthesizes and plots channel maps for your current model. These are run from your system shell after adding them to your `PATH`
 
-**visibilities.jl**: Contains type definitions to hold the dataset and the model visibilities. Additionally contains functions to apply phase shifts to the visibilities corresponding to shifts in the image plane. Also contains functions to FFT images to the visibility plane.
+    $ plot_model.jl
 
-**gridding.jl**: Contains the prolate-spheroidal wave function definitions from Schwab 1984, used when doing the visibility interpolations.
+## Computational demand
 
-**venus.jl**: This implementation uses the Ensemble Sampler (a Julia port from DFM's `emcee` python package) to sample the posterior distribution using parallelized walkers.
-
-**parallel.jl**: (outdated for v0.3) A simple pipe-like parallel implementation designed to farm parameters to individual RADMC-3D processes in order to synthesize chunks of channels, as opposed to the full spectrum all at once.
-
-**LittleMC.jl**: (outdated for v0.3) A simple Metropolis-Hastings Markov-Chain Monte Carlo implementation designed to sample the posterior distribution of parameters.
-
-**mach_three.jl**: (outdated for v0.3) The driver script for performing MCMC with a disk model. The main disk-related functions are `fprob` and `f`. The organization of this file is designed so that the likelihood call can be parallelized using the framework written in `parallel.jl`.
-
-
-
-Recently, I have organized this code into a proper Julia package.
+Because spectral line datasets are large, and synthesizing models is computationally expensive, I have designed this package to work in a parallel environment, where the calculations for each frequency channel can be distributed to independent processors. Therefore, please keep this architecture in mind when navigating the source code. Due to the computationally expensive nature of the radiative synthesis, fitting sizable datasets (e.g., SMA and ALMA) will *require a moderately sized number of CPU cores for computation in a reasonable timeframe*. For example, to fully explore the posterior for the AK Sco example dataset will require a few days of computing time on ~32 cores or more.
 
 ## Installation
 
-First, make sure you have installed RADMC-3D and you can successfully run one of the example scripts.
+First, make sure you have installed RADMC-3D and you can successfully run one of the example scripts contained within this package. My current RADMC-3D installation is v0.38, although I expect that everything should work well on other recent versions of the package. Second, I have now migrated this package to run on Julia v0.4+, and I plan to keep it up to date with current Julia releases.
 
-Because `JudithExcalibur` isn't yet an official Julia package (nor will it likely be), for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
+Because `JudithExcalibur` is not an official Julia package (nor will it likely be), for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
 
     julia> Pkg.clone("https://github.com/iancze/JudithExcalibur.git")
 
-Lastly, I have written several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your PATH. To figure out where the package is installed
+As mentioned previously, there are several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your PATH. To figure out where the package is installed
 
     julia> Pkg.dir("JudithExcalibur")
     "/home/ian/.julia/JudithExcalibur"
 
-Your PATH will vary. The scripts are located inside of a `scripts` directory, so if you are using bash or Z-shell, you will want to add the PATH that looks something like
+Your PATH will vary. The scripts are located inside of the `scripts` directory, so if you are using bash or Z-shell, you will want to add the PATH that looks something like
 
     export PATH="/home/ian/.julia/JudithExcalibur/scripts:$PATH"
 
@@ -67,35 +57,12 @@ inside of your `.bashrc` or `.zshrc` file. Finally,
 
     $ source ~/.zshrc
 
-To check that you have properly added the scripts, you can try
+To check that you have properly added the scripts, you can try in your system shell
 
     $ JudithInitialize.jl --test
     Your JudithExcalibur scripts are successfully linked.
     Exiting
 
-Note, if you would like to use the plotting scripts (`scripts/plot_model.jl`) or the IO routines for SMA and ALMA data (`scripts/read_SMA.py`), you will need a Python installation with the following packages installed: `numpy`, `scipy`, `matplotlib`, `h5py`, and `astropy`. The anaconda Python distribution would be a great way to take care of this.
+Note, if you would like to use the plotting scripts (`scripts/plot_model.jl`) or the IO routines for SMA and ALMA data (`scripts/read_SMA.py`), you will also need a Python installation with the following packages installed: `numpy`, `scipy`, `matplotlib`, `h5py`, and `astropy`. The anaconda Python distribution is a great way to take care of these dependencies.
 
-## Use
-
-Now, the `JudithExcalibur` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one disk, or use different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. For example,
-
-    $ mkdir ExcitingDisk
-    $ cd ExcitingDisk
-
-Once you've created a working directory for your project, then you'll want to initialize this directory with a config file
-
-    $ JudithInitialize.jl --new-config
-    Copied default config.yaml file to current working directory.
-    Exiting
-
-Now, open up `config.yaml` with your favorite text editor and change the fields as you see fit. Next, we'll need to initialize the directory with the appropriate RADMC-3D files specific to your dataset.
-
-    $ JudithInitialize.jl
-
-To run this code on a new dataset using 4 cores, you would run
-
-    mach_three.jl -p 3
-
-where the `-p` flag specifies how many additional processes to spawn, therefore the total number of processes used is `p + 1`. For maximal performance, set `p = ncores - 1` where `ncores` is the number of cores on your machine.
-
-Please note that the code is now updated to Julia v0.4. Some of the driver scripts might be outdated to this effect (written for v0.3).
+With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific disk.

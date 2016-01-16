@@ -64,10 +64,50 @@ fig.savefig("walkers.png")
 
 flatchain = np.load("flatchain.npy")
 
+# Let's simply do this numerically
+def hdi(samples, bins=80):
+
+    hist, bin_edges = np.histogram(samples, bins=bins, density=True)
+    # convert bin_edges into bin centroids
+    bin_centers = bin_edges[:-1] + np.diff(bin_edges)
+
+    # Find the maximum from the histogram
+    # indmax = np.argmax(hist)
+    # binmax = bin_centers[indmax]
+
+    dbin = bin_edges[1] - bin_edges[0]
+
+    nbins = len(bin_centers)
+
+    # Now, sort all of the bin heights in decreasing order
+    indsort = np.argsort(hist)[::-1]
+    histsort = hist[indsort]
+
+    binmax = bin_centers[indsort][0]
+
+    prob = histsort[0] * dbin
+    i = 0
+    while prob < 0.683:
+        i += 1
+        prob = np.sum(histsort[:i] * dbin)
+
+    level = hist[i]
+
+    indHDI = hist > level
+    binHDI = bin_centers[indHDI]
+
+    print("Ranges: low: {}, max: {}, high: {}".format(binHDI[0], binmax, binHDI[-1]))
+    print("Diffs: max:{}, low:{}, high:{}, dbin:{}".format(binmax, binmax - binHDI[0], binHDI[-1]-binmax, dbin))
+    print()
+
+# for i in range(flatchain.shape[1]):
+#     hdi(flatchain[:,i])
+
 # labels = ["a", "b"]
 #     # Fixed distance
-labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\textrm{in}$ [AU]",
-r"$r_\textrm{cav}$ [AU]", r"$\delta$", r"$T_{10}$ [K]", r"$q$",
+labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]",
+# r"$r_\textrm{in}$ [AU]", r"$r_\textrm{cav}$ [AU]", r"$\delta$", 
+r"$T_{10}$ [K]", r"$q$",
 r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]",
 r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']",
 r"$\mu_\delta$ ['']"]
