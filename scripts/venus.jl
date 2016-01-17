@@ -74,9 +74,6 @@ mkdir(outdir)
 @everywhere using JudithExcalibur.model
 @everywhere using Base.Test
 
-# Add radmc3d everywhere, since SLURM seems to dislike inheriting it.
-@everywhere ENV["PATH"] = ENV["PATH"] * ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
-
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
@@ -89,97 +86,54 @@ else
     keylist = Int[i for i=1:nchan]
 end
 
-# go through any previously created directories and remove them
-function cleardirs!(keylist::Vector{Int})
-    println("Removing old directories")
-    for key in keylist
-        keydir = basedir * "jud$key"
-        run(`rm -rf $keydir`)
-    end
-    println("Removed directories")
-end
-
 # This program is meant to be started with the -p option.
 nchild = nworkers()
 println("Workers allocated ", nchild)
-
-# @everywhere using Logging
-
-# Delete the old log file (if it exists)
-logf = outdir * "log.log"
-if isfile(logf)
-    rm(logf)
-end
 
 # make the values of run_index and config available on all processes
 for process in procs()
     @spawnat process global run_id=run_index
     @spawnat process global cfg=config
     @spawnat process global kl=keylist
-    @spawnat process global logfile=logf
 end
 println("Mapped variables to all processes")
 
-# change the default logger
-# @everywhere Logging.configure(filename=logfile, level=DEBUG)
+# Add radmc3d everywhere, since SLURM seems to dislike inheriting it from the system PATH
+@everywhere ENV["PATH"] = ENV["PATH"] * cfg["RADMC_PATH"]
 
-# debug("Created logfile.")
+# Set the correct model
+@everywhere function convert_p(p::Vector{Float64})
+    gamma = cfg["parameters"]["gamma"][1]
+    if cfg["fix_d"]
+        return convert_vector(p, cfg["model"], cfg["parameters"]["dpc"], gamma)
+    else
+        return convert_vector(p, cfg["model"], -1.0, gamma)
+    end
+end
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate
 @everywhere dvarr = DataVis(cfg["data_file"], kl)
 @everywhere visibilities.conj!(dvarr)
 @everywhere nchan = length(dvarr)
-@everywhere max_base = max_baseline(dvarr)
-# Convert this to dRA
-@everywhere dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec]
 
 @everywhere const global species = cfg["species"]
-
-@everywhere basefmt(id::Int) = cfg["base_dir"] * @sprintf("run%02d/", id)
-
-@everywhere const global basedir = basefmt(run_id)
 
 @everywhere const global npix = cfg["npix"] # number of pixels, can alternatively specify x and y separately
 
 # Keep track of the current home directory
 @everywhere const global homedir = pwd() * "/"
 
-# make the internal Judith directory, if it doesn't exist
-if !ispath(basedir)
-    println("Creating ", basedir)
-    mkdir(basedir)
-end
-
-# Clear all directories
-cleardirs!(keylist)
-
 # Create the model grid
 @everywhere grd = cfg["grid"]
+@everywhere grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
-# Calculate the lnprior based upon the current parameter values
-@everywhere function lnprior(pars::Parameters)
-
-    # distance prior now specified from config file.
-    mu_d, sig_d = cfg["parameters"]["dpc"]
-
-    dlow = mu_d - 3. * sig_d
-    dhigh = mu_d + 3. * sig_d
-
-    # and we have a hard +/- 3 sigma cutoff
-    if (pars.dpc < dlow) || (pars.dpc > dhigh)
-        return -Inf
-    end
-
-    # Geometrical inclination prior
-    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log(0.5 * sind(pars.incl))
-end
+@everywhere dpc_mu = cfg["dpc_prior"]["mu"]
+@everywhere dpc_sig = cfg["dpc_prior"]["sig"]
 
 # Only calculate the interpolation closures if we are fixing distance.
 if cfg["fix_d"]
 
     angular_width = (1.1 * 2 * grd["r_out"])/cfg["parameters"]["dpc"][1] # [radians]
-
-    # npix = get_nyquist_pixel(max_base, angular_width)
 
     # Simply calculate pix_AU as 1.1 * (2 * r_out) / npix
     # This is assuming that RADMC always calculates the image as 110% the full extent of the grid
@@ -204,60 +158,20 @@ end
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
 
-    # Fix the following arguments: gamma, dpc
-    gamma = cfg["parameters"]["gamma"][1] # surface temperature gradient exponent
+    # Convert the vector to a specific type of pars, e.g. ParametersStandard, ParametersTruncated, etc, which will be used for multiple dispatch from here on out.
+    pars = convert_p(p)
 
-    if cfg["fix_d"]
-        dpc = cfg["parameters"]["dpc"][1] # [pc] distance
-        M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-    else
-        M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-    end
-
-    # Enforce hard priors on physical parameters
-    # Short circuit evaluation if we know the parameters are not valid and we won't run RADMC3D
-    if M_star <= 0.0 || ksi <= 0. || T_10 <= 0. || r_c <= 0.0 || M_star <= 0.0 || T_10 > 1500. || q < 0. || q > 1.0
-        return -Inf
-    end
-
-    if (7 * r_c) > grd["r_out"]
-        return -Inf
-    end
-
-    if incl < 0. || incl > 180.
-        return -Inf
-    end
-
-    if PA < 0. || PA > 360.
-        return -Inf
-    end
-
-    M_gas = 10^logM_gas
-
-    # If we are going to fit with some parameters dropped out, here's the place to do it
-    pars = Parameters(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-
-    lnpr = lnprior(pars)
+    lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
     if lnpr == -Inf
         return -Inf
     end
 
-    # Then to an upper limit on the physical width of the image, given the current distance.
-    phys_width_lim = pars.dpc * dRA_max * npix # [AU]
-
-    # Now see if the image is larger than this
-    if (1.1 * 2 * grd["r_out"]) > phys_width_lim
-        println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
-        return -Inf
-    end
-
-    # debug("p :", p)
     # Each walker needs to create it's own temporary directory
-    # where all RADMC files will reside and be driven from
-    # It only needs to last for the duration of this function, so let's use a tempdir
+    # where all RADMC-3D files will reside and be driven from
+    # It only needs to last for the duration of this function, so we use a tempdir
     keydir = mktempdir() * "/"
 
-    # Copy all relevant configuration scripts to this subdirectory
+    # Copy all relevant configuration scripts to this subdirectory so that RADMC-3D can run.
     # these are mainly setup files that will be static throughout the run
     # they were written by JudithInitialize.jl and write_grid()
     for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
@@ -268,10 +182,10 @@ end
     # where it will drive its own independent RADMC3D process for a subset of channels
     cd(keydir)
 
-    grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
     write_grid(keydir, grid)
 
-    # Compute parameter file using model.jl, write to disk in current directory
+    # Compute disk structure files using model.jl, write to disk in current directory
+    # Based upon typeof(pars), the subroutines within this function will dispatch to the correct model.
     write_model(pars, keydir, grid, species)
 
     # Doppler shift the dataset wavelengths to rest-frame wavelength
@@ -286,16 +200,16 @@ end
     # Run RADMC-3D, redirect output to /dev/null
     run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda`, DevNull))
 
-    # Read the RADMC-3D images from disk (we should already be in sub-directory)
+    # Read the RADMC-3D images from disk
     im = try
-        imread()
+        imread() # we should already be in the sub-directory, no path required
     # If the synthesized image is screwed up, just say there is zero probability.
     catch SystemError
         println("Failed to read synthesized image for parameters ", p)
         -Inf
     end
 
-    # The image synthesis faild for some reason or another
+    # The image synthesis faild for some reason or another. Clean up by deleting the director and returning -Inf.
     if im == -Inf
         run(`rm -rf $keydir`)
         return -Inf
@@ -333,7 +247,7 @@ end
         # Apply the phase shift here
         phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
 
-        # Calculate chi^2 between these two
+        # Calculate the likelihood between these two using our chi^2 function.
         lnprobs[i] = lnprob(dv, mvis)
     end
 

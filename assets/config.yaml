@@ -1,64 +1,70 @@
 name: disk
 
 out_base: output/
+# where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
+base_dir: /scratch/
+# Normally, we should not need to add the RADMC_PATH if it is already on your system PATH. However, due to some HPC quirks it is sometimes necessary to add this in the running script.
+RADMC_PATH: ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
+
 
 gas: true
-species : 12CO # Possible choices: 12CO, 13CO, C18O HCN
-transition: 3-2
+species : 12CO # Possible choices: 12CO, 13CO, C18O. Future may include HCN, etc...
+transition: 3-2 # J =
 
 grid:
   nr: 64
   ntheta: 32 # if mirrored about the equator, total of 64
   nphi: 1
-  r_in: 0.5 # [AU] # Inner extent of disk
-  r_out: 600. # [AU] # Outer extent of disk
+  r_in: 0.5 # [AU] # Inner edge of model grid
+  r_out: 600. # [AU] # Outer edge of model grid
 
-# Which channels of the dataset to exclude.
+# Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
 # exclude: [35, 36, 37, 38]
 
-fix_d : true
+# Distance prior setup
+fix_d : false
 
-# parameters and starting guess
-# format is parameter : [guess, jump]
+dpc_prior:
+  mu : 140.
+  sig : 20.
+
+# What type of model will we be fitting? This also affects which parameters to include.
+model : standard # choices of {standard, truncated, vertical, cavity, etc..}
+
+# parameters, either used for model synthesis or visualization. Be careful that all of these are Float64 and not Int
 parameters:
-  M_star: [2.0, 0.007] # [M_sun] stellar mass
-  r_c: [80.00, 0.1] # [AU] characteristic radius
-  r_in: [1.0, 0.0] # [AU] inner edge
-  r_cav: [10.0, 0.0] # [AU] cavity
-  logdelta: [-1.0, 0.0] # amount to decrease gas in center
-  T_10: [91.85, 0.3] # [K] temperature at 10 AU
-  q: [0.5, 0.003] # temperature gradient exponent
-  gamma: [1.0, 0.0] # surface density gradient
-  logM_gas: [-0.65, 0.02] # [M_Sun] disk mass of gas
-  ksi: [0.2, 0.003] # [km/s] microturbulence
-  dpc: [140., 0.6] # [pc] distance
-  incl: [45.0, 0.05] # [degrees] inclination
-  PA: [10.0, 0.05] # [degrees] position angle
-  vel: [0.00, 0.001] # [km/s]
-  mu_RA: [0.00, 0.002] # [arcsec] centroid location
-  mu_DEC: [0.00, 0.002] # [arcsec]
+  M_star: 2.0 # [M_sun] stellar mass
+  r_c: 80.00 # [AU] characteristic radius
+  T_10: 91.85 # [K] temperature at 10 AU
+  q: 0.5 # temperature gradient exponent
+  gamma: 1.0 # surface density gradient
+  logM_gas: -0.65 # [M_Sun] disk mass of gas
+  ksi: 0.2 # [km/s] microturbulence
+  dpc: 140. # [pc] distance
+  incl: 45.0 # [degrees] inclination
+  PA: 10.0 # [degrees] position angle
+  vel: 0.00 # [km/s]
+  mu_RA: 0.00 # [arcsec] centroid location
+  mu_DEC: 0.00 # [arcsec]
 
-# Starting positions of walkers
-pos0: pos0.npy
-
-# where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-# base_dir: /scratch/
-base_dir: /pool/cf/iczekala/scratch/
-# base_dir : /home/ian/Grad/Research/Disks/JudithExcalibur/testrun/
 
 # The HDF5 file containing the visibilities
 data_file: data.hdf5
 
-# Some parameters that may be helpful for making channel map plots of the model
-beam :
-  rms : 0.01 # Jy/beam
-  BMAJ: 0.9 # arcsec
-  BMIN: 0.9 # arcsec
-  BPA: 1.0 # degrees east of North
-
 # Image setup
 npix: 256
+
+# Starting positions of walkers
+pos0: pos0.npy
 
 # MCMC setup
 samples: 50
 loops: 10
+
+# Some parameters that may be helpful for making more realistic channel map plots of the model.
+# You will likely need to change these to correspond to the parameters of your observation.
+beam :
+  rms : 0.01 # Jy/beam
+  BMAJ: 0.9 # arcsec
+  BMIN: 0.9 # arcsec
+  BPA: 1.0 # degrees east of North of the semi-major axis.

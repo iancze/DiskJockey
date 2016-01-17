@@ -43,3 +43,12 @@ println("For npix $npix, the maximum outer radii allowed are")
 # These are upper limits on the total width [AU] of the image at each distance. If the disk is large enough that it exceedes these radii, then we will need to use more pixels in the image (ie, it's very resolved).
 println("dpc ", dlow, " r_out ", dlow * dRA_max * npix/(2 * 1.1))
 println("dpc ", dhigh, " r_out ", dhigh * dRA_max * npix/(2 * 1.1))
+
+# Then to an upper limit on the physical width of the image, given the current distance.
+phys_width_lim = pars.dpc * dRA_max * npix # [AU]
+
+# Now see if the image is larger than this
+# if (1.1 * 2 * grd["r_out"]) > phys_width_lim
+#     println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
+#     return -Inf
+# end

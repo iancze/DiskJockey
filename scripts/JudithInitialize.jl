@@ -36,12 +36,14 @@ parsed_args = parse_args(ARGS, s)
 
 assets_dir = Pkg.dir("JudithExcalibur") * "/assets/"
 
+# This is just for new users to test that the package is successfully installed.
 if parsed_args["test"]
     println("Your JudithExcalibur scripts are successfully linked.")
     println("Exiting")
     quit()
 end
 
+# The user is going to start modeling a new disk, so copy in the new configuration file.
 if parsed_args["new-config"]
     cp(assets_dir * "config.yaml", pwd() * "/config.yaml")
     println("Copied default config.yaml file to current working directory.")
@@ -57,9 +59,6 @@ using HDF5
 using JudithExcalibur.constants
 using JudithExcalibur.model
 
-# To initialize, we basically want to do everything that would be necessary to then go in and
-# run a RADMC-3D model.
-
 # Create an output directory that will be useful for the results.
 out_base = config["out_base"]
 if !ispath(out_base)
@@ -71,12 +70,10 @@ end
 
 # gas
 if config["gas"]
-    ff = assets_dir * "radmc3d.inp.gas"
-    run(`cp $ff radmc3d.inp`)
+    run(`cp $(assets_dir)radmc3d.inp.gas radmc3d.inp`)
 
     # Need this as a dummy file, apparently.
-    ff = assets_dir * "wavelength_micron.inp"
-    run(`cp $ff .`)
+    run(`cp $(assets_dir)wavelength_micron.inp .`)
 
     # Copy appropriate molecule files.
 
@@ -84,50 +81,22 @@ if config["gas"]
     species = config["species"]
     transition = config["transition"]
     if species == "12CO"
-        ff = assets_dir * "molecule_co.inp"
-        run(`cp $ff .`)
-        ff = assets_dir * "lines_co.inp"
-        run(`cp $ff lines.inp`)
+        run(`cp $(assets_dir)molecule_co.inp .`)
+        run(`cp $(assets_dir)lines_co.inp lines.inp`)
     elseif species ==  "13CO"
-        ff = assets_dir * "molecule_13co.inp"
-        run(`cp $ff .`)
-        ff = assets_dir * "lines_13co.inp"
-        run(`cp $ff lines.inp`)
+        run(`cp $(assets_dir)molecule_13co.inp .`)
+        run(`cp $(assets_dir)lines_13co.inp lines.inp`)
     elseif species == "C18O"
-        ff = assets_dir * "molecule_c18o.inp"
-        run(`cp $ff .`)
-        ff = assets_dir * "lines_c18o.inp"
-        run(`cp $ff lines.inp`)
+        run(`cp $(assets_dir)molecule_c18o.inp .`)
+        run(`cp $(assets_dir)lines_c18o.inp lines.inp`)
     end
 
     println("Copied over RADMC-3D gas input files.")
 
-    # Now run the correct setup for the grid
-
-    # If we want just want to generate a model without fitting to data, we can specify
-    # the wavelengths arbitrarily and then use `plot_model.jl`
-
-    # Load the starting parameters
-    pp = config["parameters"]
-    params = ["M_star", "r_c", "r_in", "r_cav", "logdelta", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-    nparam = length(params)
-    starting_param = Array(Float64, nparam)
-
-    for i=1:nparam
-        starting_param[i] = pp[params[i]][1]
-    end
-
-    # Convert logM_gas to M_gas
-    starting_param[5] = 10^starting_param[5]
-    starting_param[9] = 10^starting_param[9]
-
-
-    pars = Parameters(starting_param...)
-
+    pars = convert_dict(config["parameters"], config["model"])
     vel = pars.vel # [km/s]
-    # RADMC conventions for inclination and PA
     incl = pars.incl # [deg]
-    PA = pars.PA # [deg] Position angle runs counter clockwise
+    PA = pars.PA # [deg]
     npix = config["npix"] # number of pixels
 
     vstart = parsed_args["vstart"]
@@ -155,27 +124,26 @@ if config["gas"]
 
     grd = config["grid"]
     grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
-    # grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], r_out_factor * pars.r_c, true)
 
     # Write everything to the current working directory
     write_grid("", grid)
     write_model(pars, "", grid, species)
     write_lambda(shift_lams, "")
-
     println("Wrote gas model input files for RADMC-3D.")
 
 # dust
 else
-    ff = assets_dir * "radmc3d.inp.dust"
-    run(`cp $ff radmc3d.inp`)
-    ff = assets_dir * "stars.inp"
-    run(`cp $ff .`)
-    ff = assets_dir * "wavelength_micron.inp"
-    run(`cp $ff .`)
-    ff = assets_dir * "dustkappa_silicate.inp"
-    run(`cp $ff .`)
-    ff = assets_dir * "dustopac.inp"
-    run(`cp $ff .`)
-
-    println("Copied over RADMC-3D dust input files.")
+    throw(ErrorException("Dust features not yet implemented. Only gas."))
+    # ff = assets_dir * "radmc3d.inp.dust"
+    # run(`cp $ff radmc3d.inp`)
+    # ff = assets_dir * "stars.inp"
+    # run(`cp $ff .`)
+    # ff = assets_dir * "wavelength_micron.inp"
+    # run(`cp $ff .`)
+    # ff = assets_dir * "dustkappa_silicate.inp"
+    # run(`cp $ff .`)
+    # ff = assets_dir * "dustopac.inp"
+    # run(`cp $ff .`)
+    #
+    # println("Copied over RADMC-3D dust input files.")
 end
