@@ -385,14 +385,14 @@ end
 
 function Sigma(r::Float64, pars::ParametersCavity)
     r_c = pars.r_c * AU
-    r_in = pars.r_in * AU
+    r_cav = pars.r_cav * AU
 
     gamma = pars.gamma
     M_gas = pars.M_gas * M_sun
 
     Sigma_c = M_gas * (2 - pars.gamma) / (2 * pi * r_c^2)
 
-    inner_taper = exp(-(r_in/r)^(2 - gamma))
+    inner_taper = exp(-(r_cav/r)^(2 - gamma))
     outer_taper = exp(-(r/r_c)^(2 - gamma))
     power_law = (r/r_c)^(-gamma)
 
