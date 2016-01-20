@@ -18,6 +18,13 @@ config = YAML.load(open(parsed_args["config"]))
 
 using JudithExcalibur.model
 using JudithExcalibur.constants
+
+species = config["species"]
+transition = config["transition"]
+lam0 = lam0s[species*transition]
+model = config["model"]
+pars = convert_dict(config["parameters"], config["model"])
+
 import PyPlot.plt
 using LaTeXStrings
 

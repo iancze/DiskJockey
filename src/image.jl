@@ -25,7 +25,7 @@ abstract Image
 # with array index. This means that to display the image as RADMC intends it,
 # you must set the first array element to the lower left corner.
 type RawImage <: Image
-    data::Array{Float64, 3} # [ergs/s/cm^2]
+    data::Array{Float64, 3} # [ergs/s/cm^2/Hz/ster]
     pixsize_x::Float64
     pixsize_y::Float64
     lams::Vector{Float64}
@@ -182,23 +182,17 @@ function imToSpec(img::SkyImage)
     return spec
 end
 
+# Storage for zeroth moment map
+type ZerothMoment <: Image
+   data::Array{Float64, 2} # [Jy · Hz / pixel]
+   ra::Vector{Float64} # [arcsec]
+   dec::Vector{Float64} # [arcsec]
 end
 
-# Move it into Images.jl format.
+function convert(::Type{ZerothMoment}, img::SkyImage)
+    # Sum along the frequency axis
+    data = squeeze(sum(img.data, (3)), 3)
+    return ZerothMoment(data, img.ra, img.dec)
+end
 
-# subclass AbstractImageDirect
-
-# Or, might be able to store this directly in an Image
-
-# Add a new type to Images.jl, `RADMC3D` to read `image.out` files
-
-# using Images
-
-#type RADMC3D <: Images.ImageFileType end
-#add_image_file_format(".out", b"RADMC3D Image", RADMC3D)
-
-#import Images.imread
-#function imread{S<:IO}(stream::S, ::Type{RADMC3D})
-#    seek(stream, 0)
-#    l = strip(readline(stream))
-#    l == "RADMC3D Image" || error("Not a RADMC3D file: " * l)
+end #model
