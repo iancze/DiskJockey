@@ -1,8 +1,6 @@
 name: disk
 
 out_base: output/
-# where the run%02/jud01, run%02/jud02, temporary subdirectories will be written
-base_dir: /scratch/
 # Normally, we should not need to add the RADMC_PATH if it is already on your system PATH. However, due to some HPC quirks it is sometimes necessary to add this in the running script.
 RADMC_PATH: ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
 

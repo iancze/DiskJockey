@@ -278,8 +278,8 @@ function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float6
     end
 
     # Impose distance prior
-    dlow = mu_d - 3. * sig_d
-    dhigh = mu_d + 3. * sig_d
+    dlow = dpc_mu - 3. * dpc_sig
+    dhigh = dpc_mu + 3. * dpc_sig
 
     # hard +/- 3 sigma cutoff
     if (pars.dpc < dlow) || (pars.dpc > dhigh)
@@ -287,7 +287,7 @@ function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float6
     end
 
     # If we've passed all the hard-cut offs by this point, return the sum of the distance prior and the geometrical inclination prior.
-    return -0.5 * (pars.dpc - mu_d)^2 / sig_d^2 + log(0.5 * sind(pars.incl))
+    return -0.5 * (pars.dpc - dpc_mu)^2 / dpc_sig^2 + log(0.5 * sind(pars.incl))
 
 end
 

@@ -4,7 +4,7 @@ After you have installed both `RADMC-3D` and `JudithExcalibur`, it's time to get
 
 ## Initialization
 
-Now, the `JudithExcalibur` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one protoplanetary disk, or perhaps try different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. As an example to get you started, we have included the AK Sco dataset from ALMA. You can download the dataset in HDF5 format here.
+Now, the `JudithExcalibur` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one protoplanetary disk, or perhaps try different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. As an example to get you started, we have included the AK Sco dataset from ALMA. You can download the dataset in HDF5 format [here](https://figshare.com/articles/ALMA_AK_Sco_12CO_J_2_1_Visibilities/2066022).
 
     $ mkdir AKSco
     $ cd AKSco
