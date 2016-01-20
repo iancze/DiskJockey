@@ -1,7 +1,7 @@
 module model
 
 export write_grid, write_model, write_lambda, write_dust, Grid
-export AbstractParameters, ParametersStandard, ParametersTruncated, convert_vector, convert_dict
+export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, convert_vector, convert_dict
 export lnprior
 
 # The double dot is because we are now inside the model module, and we want to import the
@@ -143,6 +143,23 @@ type ParametersTruncated <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+type ParametersCavity <: AbstractParameters
+    M_star::Float64 # [M_sun] stellar mass
+    r_c::Float64 # [AU] characteristic radius
+    r_cav::Float64 # [AU] inner radius of the disk, where an exponentially depleted cavity starts
+    T_10::Float64 # [K] temperature at 10 AU
+    q::Float64 # temperature gradient exponent
+    gamma::Float64 # surface temperature gradient exponent
+    M_gas::Float64 # [M_Sun] disk mass of gas
+    ksi::Float64 # [cm s^{-1}] microturbulence
+    dpc::Float64 # [pc] distance to system
+    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
+    PA::Float64 # [degrees] position angle (East of North)
+    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
+    mu_RA::Float64 # [arcsec] central offset in RA
+    mu_DEC::Float64 # [arcsec] central offset in DEC
+end
+
 type ParametersVertical <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
@@ -200,6 +217,20 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, dpc::Float64=
 
             return ParametersTruncated(M_star, r_in, r_out, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
         end
+    elseif model == "cavity"
+        if dpc < 0.0
+            # we are fitting with distance as a parameter
+            M_star, r_c, r_cav, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+            M_gas = 10^logM_gas
+
+            return ParametersCavity(M_star, r_c, r_cav, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        else
+            # distance is fixed and provided by the function parameter
+            M_star, r_c, r_cav, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+            M_gas = 10^logM_gas
+
+            return ParametersCavity(M_star, r_c, r_cav, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        end
     else
         # Raise an error that we don't know this model.
         throw(ErrorException("Model type $model not yet implemented in model.jl"))
@@ -225,7 +256,14 @@ function convert_dict(p::Dict, model::AbstractString)
 
         # Unroll these into an actual parameter
         return ParametersTruncated(vec...)
+    elseif model == "cavity"
+        names = ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
+        vec = Float64[p[name] for name in names]
+        vec[7] = 10^vec[7]# 10^ gas
+
+        # Unroll these into an actual parameter
+        return ParametersCavity(vec...)
     else
         # Raise an error that we don't know this model.
         throw(ErrorException("Model type $model not yet implemented in model.jl"))
@@ -282,6 +320,23 @@ function lnprior(pars::ParametersTruncated, dpc_mu::Float64, dpc_sig::Float64, g
 
 end
 
+function lnprior(pars::ParametersCavity, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+    lnp = lnprior_base(pars, dpc_mu, dpc_sig)
+
+    r_in = grid.Rs[1]/AU # [AU]
+    r_out = grid.Rs[end]/AU # [AU]
+    # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
+    # to fit on the model grid.
+
+    # Also check to make sure that r_cav is less than r_c but larger than r_in.
+    if (7 * pars.r_c) > r_out || pars.r_cav < r_in || pars.r_cav > pars.r_c
+        return -Inf
+    else
+        return lnp
+    end
+
+end
+
 # Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.
 # Alternate functions accept pars passed around, where pars is in M_star, AU, etc...
@@ -315,7 +370,6 @@ function Sigma(r::Float64, pars::ParametersStandard)
     return S
 end
 
-# Calculate the gas surface density
 function Sigma(r::Float64, pars::ParametersTruncated)
     r_c = 1. * AU # [cm]
     r_in = pars.r_in * AU
@@ -327,6 +381,24 @@ function Sigma(r::Float64, pars::ParametersTruncated)
     else
         return 0.0
     end
+end
+
+function Sigma(r::Float64, pars::ParametersCavity)
+    r_c = pars.r_c * AU
+    r_in = pars.r_in * AU
+
+    gamma = pars.gamma
+    M_gas = pars.M_gas * M_sun
+
+    Sigma_c = M_gas * (2 - pars.gamma) / (2 * pi * r_c^2)
+
+    inner_taper = exp(-(r_in/r)^(2 - gamma))
+    outer_taper = exp(-(r/r_c)^(2 - gamma))
+    power_law = (r/r_c)^(-gamma)
+
+    S = Sigma_c * inner_taper * power_law * outer_taper
+
+    return S
 end
 
 # For the cavity

@@ -68,6 +68,6 @@ To check that you have properly added the scripts, you can try in your system sh
     Your JudithExcalibur scripts are successfully linked.
     Exiting
 
-Note, if you would like to use the plotting scripts (`scripts/plot_model.jl`) or the IO routines for SMA and ALMA data (`scripts/read_SMA.py`), you will also need a Python installation with the following packages installed: `numpy`, `scipy`, `matplotlib`, `h5py`, and `astropy`. The anaconda Python distribution is a great way to take care of these dependencies.
+Second, to use the plotting scripts (`scripts/plot_chmaps.jl`) or the IO routines for SMA and ALMA data (`scripts/read_SMA.py`), you will also need a Python installation with the following packages installed: `numpy`, `scipy`, `matplotlib`, `Jupyter/IPython`, `Jupyter/IJulia`, `h5py`, and `astropy`. The anaconda Python distribution is a great way to take care of these dependencies.
 
-With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific disk.
+With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source.

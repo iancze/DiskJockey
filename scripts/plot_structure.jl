@@ -14,7 +14,6 @@ parsed_args = parse_args(ARGS, s)
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-# Make some diagnostic plots to show what the model looks like in analytic terms
 
 using JudithExcalibur.model
 using JudithExcalibur.constants
@@ -29,7 +28,7 @@ import PyPlot.plt
 using LaTeXStrings
 
 # velocity structure
-function plot_vel(pars::Parameters, grid)
+function plot_vel(pars::AbstractParameters, grid::Grid)
     vels = JudithExcalibur.model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
     fig = plt[:figure]()
@@ -49,7 +48,7 @@ function plot_vel(pars::Parameters, grid)
 end
 
 # temperature structure
-function plot_temp(pars::Parameters, grid)
+function plot_temp(pars::AbstractParameters, grid::Grid)
     temps = JudithExcalibur.model.temperature(grid.rs, pars)
 
     fig = plt[:figure]()
@@ -68,8 +67,12 @@ function plot_temp(pars::Parameters, grid)
     plt[:savefig]("temperature.png")
 end
 
+# This new stub is for plotting temperature for more complex models
+# function plot_temp()
+# end
+
 # scale height
-function plot_height(pars::Parameters, grid)
+function plot_height(pars::AbstractParameters, grid::Grid)
     heights = JudithExcalibur.model.Hp(grid.rs, pars) ./ AU
 
     fig = plt[:figure]()
@@ -82,56 +85,54 @@ function plot_height(pars::Parameters, grid)
     plt[:savefig]("scale_height.png")
 end
 
-function plot_dlnrho(pars::Parameters)
-    nz = 50
-    zs = linspace(0, 200 * AU, nz)
-    R = 10 * AU
-    dlnrhos = Array(Float64, nz)
-    for i=1:nz
-        dlnrhos[i] = - G * pars.M_star * M_sun * zs[i] * mu_gas * m_H / ((R^2 + zs[i]^2)^1.5 * kB * JudithExcalibur.model.temperature(R, pars))
-    end
+# function plot_dlnrho(pars::Parameters)
+#     nz = 50
+#     zs = linspace(0, 200 * AU, nz)
+#     R = 10 * AU
+#     dlnrhos = Array(Float64, nz)
+#     for i=1:nz
+#         dlnrhos[i] = - G * pars.M_star * M_sun * zs[i] * mu_gas * m_H / ((R^2 + zs[i]^2)^1.5 * kB * JudithExcalibur.model.temperature(R, pars))
+#     end
+#
+#     fig = plt[:figure]()
+#     ax = fig[:add_subplot](111)
+#
+#     ax[:plot](zs/AU, dlnrhos)
+#
+#     ax[:set_ylabel](L"$d \ln \rho$")
+#     ax[:set_xlabel](L"$z$ [AU]")
+#     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+#
+#     fig[:savefig]("dlnrhos.png")
+# end
+#
+# function plot_density_1D(pars::Parameters)
+#     nz = 50
+#     zs = linspace(0, 30 * AU, nz)
+#     println("zs ", zs/AU)
+#     R = 100 * AU
+#     rhos = Array(Float64, nz)
+#     for i=1:nz
+#         rhos[i] = JudithExcalibur.model.rho_gas(R, zs[i], pars)
+#     end
+#
+#     lngas = log(rhos) - log(mu_gas * m_H)
+#
+#     fig = plt[:figure]()
+#     ax = fig[:add_subplot](111)
+#
+#     ax[:plot](zs/AU, lngas)
+#
+#     # ax[:set_ylabel](L"$\log_{10} n_\textrm{gas} \quad [\log_{10}$ 1/cm^3]")
+#     ax[:set_ylabel](L"$\ln n_\textrm{gas}$")
+#     ax[:set_xlabel](L"$z$ [AU]")
+#     ax[:set_xlim](0, 30)
+#     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+#
+#     fig[:savefig]("ln_gas_slice.png")
+# end
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
-
-    ax[:plot](zs/AU, dlnrhos)
-
-    ax[:set_ylabel](L"$d \ln \rho$")
-    ax[:set_xlabel](L"$z$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
-
-    fig[:savefig]("dlnrhos.png")
-end
-
-function plot_density_1D(pars::Parameters)
-    nz = 50
-    zs = linspace(0, 30 * AU, nz)
-    println("zs ", zs/AU)
-    R = 100 * AU
-    rhos = Array(Float64, nz)
-    for i=1:nz
-        rhos[i] = JudithExcalibur.model.rho_gas(R, zs[i], pars)
-    end
-
-    lngas = log(rhos) - log(mu_gas * m_H)
-
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
-
-    ax[:plot](zs/AU, lngas)
-
-    # ax[:set_ylabel](L"$\log_{10} n_\textrm{gas} \quad [\log_{10}$ 1/cm^3]")
-    ax[:set_ylabel](L"$\ln n_\textrm{gas}$")
-    ax[:set_xlabel](L"$z$ [AU]")
-    ax[:set_xlim](0, 30)
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
-
-    fig[:savefig]("ln_gas_slice.png")
-end
-
-function plot_surface_density(pars::Parameters, grid)
-
-    # Sigmas = JudithExcalibur.model.Sigma(grid.rs, pars)
+function plot_surface_density(pars::AbstractParameters, grid::Grid)
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -144,7 +145,7 @@ function plot_surface_density(pars::Parameters, grid)
 
     ax[:loglog](rr, Sigmas)
 
-    # Now, go overlay small grey lines vertically
+    # Now, go overlay small grey lines vertically for the radial cells
     for cell_edge in grid.Rs/AU
         ax[:axvline](cell_edge, color="0.5", lw=0.4)
     end
@@ -157,7 +158,7 @@ function plot_surface_density(pars::Parameters, grid)
 end
 
 # density structure
-function plot_dens(pars::Parameters, grid)
+function plot_dens(pars::AbstractParameters, grid)
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
@@ -245,33 +246,16 @@ function plot_dens(pars::Parameters, grid)
 
 end
 
-pp = config["parameters"]
-params = ["M_star", "r_c", "r_in", "r_cav", "logdelta", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-nparam = length(params)
-starting_param = Array(Float64, nparam)
-
-for i=1:nparam
-    starting_param[i] = pp[params[i]][1]
-end
-
-
-starting_param[5] = 10^starting_param[5]
-starting_param[9] = 10^starting_param[9]
-
-pars = Parameters(starting_param...)
-
 grd = config["grid"]
-
-
 grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 
-# The cell centers
+# The cell centers for plotting purposes
 const global rr = grid.rs ./ AU # convert to AU
 
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)
-plot_dens(pars, grid)
-plot_density_1D(pars)
 plot_surface_density(pars, grid)
-plot_dlnrho(pars)
+# plot_dens(pars, grid)
+# plot_density_1D(pars)
+# plot_dlnrho(pars)

@@ -6,14 +6,14 @@
 
 using ArgParse
 
-s = ArgParseSettings()
+s = ArgParseSettings(description="Initialize a new project directory with the appropriate files. Can also be used to update RADMC-3D input files after making changes to config.yaml")
 @add_arg_table s begin
     "--test"
     help = "Print a test message to see you linked things correctly"
     action = :store_true
-    "--new-config"
-    help = "Copy a stock configuration file to this directory."
-    action = :store_true
+    "--new-project"
+    help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity'"
+    default = "no"
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
@@ -44,9 +44,13 @@ if parsed_args["test"]
 end
 
 # The user is going to start modeling a new disk, so copy in the new configuration file.
-if parsed_args["new-config"]
-    cp(assets_dir * "config.yaml", pwd() * "/config.yaml")
-    println("Copied default config.yaml file to current working directory.")
+if parsed_args["new-project"] != "no"
+    model = parsed_args["new-project"]
+
+    cp(assets_dir * "config.$(model).yaml", pwd() * "/config.yaml")
+    cp(assets_dir * "InitializeWalkers.$(model).ipynb", pwd() * "/InitializeWalkers.ipynb")
+
+    println("Copied default model specific config.yaml and InitializeWalkers.ipynb to current working directory.")
     println("Exiting")
     quit()
 end
