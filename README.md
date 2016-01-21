@@ -70,4 +70,14 @@ To check that you have properly added the scripts, you can try in your system sh
 
 Second, to use the plotting scripts (`scripts/plot_chmaps.jl`) or the IO routines for SMA and ALMA data (`scripts/read_SMA.py`), you will also need a Python installation with the following packages installed: `numpy`, `scipy`, `matplotlib`, `Jupyter/IPython`, `Jupyter/IJulia`, `h5py`, and `astropy`. The anaconda Python distribution is a great way to take care of these dependencies.
 
-With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source.
+With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source. For those interested in the source code, the most important files to start browsing are
+
+**model.jl**: Contains the actual specification of the parametric disk model, as well as the tools to write to disk the synthesis files RADMC-3D requires.
+
+**image.jl**: Contains type definitions to read images produced by RADMC-3D, as well as convert from physical coordinates to sky coordinates.
+
+**visibilities.jl**: Contains type definitions to hold the dataset and the model visibilities. Additionally contains functions to apply phase shifts to the visibilities corresponding to shifts in the image plane. Also contains functions to FFT images to the visibility plane.
+
+**gridding.jl**: Contains the prolate-spheroidal wave function definitions from Schwab 1984, used when doing the visibility interpolations.
+
+**venus.jl**: This implementation uses the Ensemble Sampler (a Julia port from Dan Foreman-Mackey's `emcee` python package) to sample the posterior distribution using parallelized walkers.

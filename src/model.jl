@@ -297,7 +297,7 @@ function lnprior(pars::ParametersStandard, dpc_mu::Float64, dpc_sig::Float64, gr
     r_out = grid.Rs[end]/AU # [AU]
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
     # to fit on the model grid.
-    if (7 * pars.r_c) > r_out
+    if (3 * pars.r_c) > r_out
         return -Inf
     else
         return lnp
@@ -329,7 +329,7 @@ function lnprior(pars::ParametersCavity, dpc_mu::Float64, dpc_sig::Float64, grid
     # to fit on the model grid.
 
     # Also check to make sure that r_cav is less than r_c but larger than r_in.
-    if (7 * pars.r_c) > r_out || pars.r_cav < r_in || pars.r_cav > pars.r_c
+    if (3 * pars.r_c) > r_out || pars.r_cav < r_in || pars.r_cav > pars.r_c
         return -Inf
     else
         return lnp
@@ -400,32 +400,6 @@ function Sigma(r::Float64, pars::ParametersCavity)
 
     return S
 end
-
-# For the cavity
-# function Sigma(r::Float64, pars::ParametersCavity)
-#     r_c = pars.r_c * AU
-#     r_in = pars.r_in * AU
-#     r_cav = pars.r_cav * AU
-#     delta = pars.delta
-#     gamma = pars.gamma
-#     M_gas = pars.M_gas * M_sun
-#
-#     Sigma_c = (2 - gamma) * M_gas / (2 * pi * r_c^2 * (delta * exp(-(r_in/r_c)^(2 - gamma)) + (1 - delta) * exp(-(r_cav/r_c)^(2 - gamma))))
-#
-#     S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
-#
-#     # if r > r_cav
-#     #     return S
-#     # # If we are inside the gap, deplete the gas surface density by an amount delta
-#     # elseif r > r_in
-#     #     return delta * S
-#     # # If we are inside the inner physical edge of the disk, then it is zero
-#     # else
-#     #     return 0.0
-#     # end
-#
-#     return S
-# end
 
 # Delivers a gas density in g/cm^3
 function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)

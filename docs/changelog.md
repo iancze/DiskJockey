@@ -22,6 +22,8 @@ Streamlined various model implementations into the `venus.jl` code.
 
 `model.jl` now handles the implementation of priors. This greatly streamlines the function `fprob` in `venus.jl`.
 
+`plot_walkers.py` now includes ability to determine highest density interval for quoting credible intervals.
+
 
 
 # Version 0.1.0
