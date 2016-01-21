@@ -8,8 +8,8 @@ using ArgParse
 
 s = ArgParseSettings(description="Initialize a new project directory with the appropriate files. Can also be used to update RADMC-3D input files after making changes to config.yaml")
 @add_arg_table s begin
-    "--test"
-    help = "Print a test message to see you linked things correctly"
+    "--version"
+    help = "Print a the version number and exit."
     action = :store_true
     "--new-project"
     help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity'"
@@ -36,12 +36,6 @@ parsed_args = parse_args(ARGS, s)
 
 assets_dir = Pkg.dir("JudithExcalibur") * "/assets/"
 
-# This is just for new users to test that the package is successfully installed.
-if parsed_args["test"]
-    println("Your JudithExcalibur scripts are successfully linked.")
-    println("Exiting")
-    quit()
-end
 
 # The user is going to start modeling a new disk, so copy in the new configuration file.
 if parsed_args["new-project"] != "no"
@@ -62,6 +56,14 @@ using HDF5
 
 using JudithExcalibur.constants
 using JudithExcalibur.model
+
+# This is just for new users to test that the package is successfully installed.
+if parsed_args["version"]
+    println("Your JudithExcalibur scripts are successfully linked.")
+    println("You are running JudithExcalibur $JUDITHEXCALIBUR_VERSION")
+    println("Exiting")
+    quit()
+end
 
 # Create an output directory that will be useful for the results.
 out_base = config["out_base"]

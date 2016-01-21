@@ -62,11 +62,13 @@ inside of your `.bashrc` or `.zshrc` file. Finally,
 
     $ source ~/.zshrc
 
-To check that you have properly added the scripts, you can try in your system shell
+To check that you have properly added the scripts (and check that you installed the correct version), you can try in your system shell
 
-    $ JudithInitialize.jl --test
+    $ JudithInitialize.jl --version
     Your JudithExcalibur scripts are successfully linked.
+    You are running JudithExcalibur 0.1.1
     Exiting
+
 
 Second, most of the scripts and IO routines require Python and several Python packages. Please install the following packages via your own package manager or a distribution like anaconda:
 
