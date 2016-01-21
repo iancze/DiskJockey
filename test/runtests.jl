@@ -51,11 +51,16 @@ end
 
 # run_mcmc(sampler, pos, 10000)
 
-function f(sampler::Sampler)
+function f(sampler::Sampler, outdir::AbstractString)
     println("calling function")
+    try
+        spawn(`plotly_walkers.py --name test`)
+    catch
+        println("Couldn't reach plotly server.")
+    end
 end
 
-run_schedule(sampler, pos0, 10, 10, "", f)
+run_schedule(sampler, pos0, 10, 1, "", f)
 
 
 # using NPZ

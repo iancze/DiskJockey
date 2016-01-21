@@ -259,7 +259,7 @@ function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int, outdir, func::
         println("Finished loop ", i, " of ", loops)
         write_samples(sampler, outdir)
         if func != nothing
-            func(sampler)
+            func(sampler, outdir)
         end
 
     end

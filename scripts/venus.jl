@@ -277,7 +277,7 @@ size1, size2 = size(pos0)
 @assert size2==nwalkers "pos0 array does not match number of walkers."
 
 if parsed_args["plotly"]
-    function f(sampler::Sampler)
+    function f(sampler::Sampler, outdir::AbstractString)
         # Run the chain to plotly
         println("Called function.")
     end

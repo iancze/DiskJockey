@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser(description="Use plot.ly to visualize walkers."
 parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain for burn in.")
 parser.add_argument("--chain", default="chain.npy", help="The name of the file storing the walker positions.")
 parser.add_argument("--name", default="walkers", help="The name of the object that we are fitting. The plot.ly plots will show up under this label.")
+parser.add_argument("--config", help="name of the config file used for the run.", default="../../config.yaml")
 
 args = parser.parse_args()
 
@@ -22,7 +23,6 @@ nwalkers, niter, ndim = chain.shape
 # Flatchain is made after the walkers have been burned
 # flatchain = np.reshape(chain, (nsamples, ndim))
 
-
 from plotly import tools
 import plotly.plotly as py
 import plotly.graph_objs as go
@@ -31,13 +31,39 @@ fig = tools.make_subplots(rows=ndim, cols=1, shared_xaxes=True, vertical_spacing
 
 x = np.arange(niter)
 
-# Label the axes appropriately based upon how many parameters we have
-if ndim == 11:
-    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
-elif ndim == 12:
-    labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
-else:
-    labels = None
+# If we can tell what type of model we were sampling, we can give everything appropriate labels.
+# Otherwise, we'll just use default indexes.
+import yaml
+try:
+    f = open(args.config)
+    config = yaml.load(f)
+    f.close()
+
+    model = config["model"]
+    fix_d = config["fix_d"]
+
+    if model == "standard":
+        if fix_d:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+        else:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+    elif model == "truncated":
+        if fix_d:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_in$ [AU]", r"$r_out$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+        else:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_in$ [AU]", r"$r_out$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+    elif model == "cavity":
+        if fix_d:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\textrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+        else:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\textrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+    else:
+        print("Model type not found, using default labels.")
+        labels = ["par {}".format(i) for i in range(ndim)]
+
+except:
+    print("No appropriate config file found, using default labels.")
+    labels = ["par {}".format(i) for i in range(ndim)]
 
 for i in range(ndim):
     for j in range(nwalkers):
@@ -46,7 +72,7 @@ for i in range(ndim):
         else:
             y = chain[j,:,i]
 
-        trace = go.Scatter(x=x, y=y, line={"color":"black", "width":0.4}, hoverinfo="none")
+        trace = go.Scattergl(x=x, y=y, line={"color":"black", "width":0.4}, hoverinfo="none", mode="lines")
 
         fig.append_trace(trace, i + 1, 1)
 
@@ -58,5 +84,3 @@ for i in range(ndim):
 
 fig['layout'].update(height=(200 * ndim), width=900, title=args.name, showlegend=False)
 plot_url = py.plot(fig, filename=args.name)
-
-# Now, we also want to make a triangle plot. However, to save time, let's get rid of the panels we don't really care about: PA, v_z, mu_alpha, mu_dec
