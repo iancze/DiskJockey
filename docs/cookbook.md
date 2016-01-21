@@ -83,6 +83,12 @@ To get a first pass glimpse at what the model will look like, you can make plots
 
 will create plots in your current working directory of velocity, temperature, and surface density.
 
+![Temperature](temperature.png)
+
+![Surface Density](surface_density.png)
+
+![Velocity](velocity.png)
+
 ## Synthesizing a model image
 
 Next, we'll need to initialize the directory with the appropriate RADMC-3D files specific to your dataset and config parameters.
@@ -119,6 +125,12 @@ the `&&` ensures that the previous command completes before moving on to the nex
 C. Inspect the resulting plots of the data, and if I am not satisfied go back to A.
 
 It is a very good idea to inspect your channel maps to make sure that there isn't any weird structure, that you have enough pixels to resolve the disk structure, and that your model grid appears to be at high enough resolution. **A few extra minutes or hours spent debugging your images during this step can save you days (of supercomputer time) in the steps ahead.**
+
+![High Resolution Image of AK Sco](chmaps_hires_linear.png)
+
+![Blurred Image of AK Sco](chmaps_blur_linear.png)
+
+![Spectrum of AK Sco](spectrum.png)
 
 ## Setting up a parallelized MCMC exploration of the parameters
 
