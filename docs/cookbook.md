@@ -4,7 +4,7 @@ After you have installed both `RADMC-3D` and `JudithExcalibur`, it's time to get
 
 ## Initialization
 
-Now the `JudithExcalibur` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one protoplanetary disk, or perhaps try different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each run. The following is an example to get you started fitting AK Sco.
+Now the `JudithExcalibur` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one protoplanetary disk, or perhaps try different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each disk model. The following is an example to get you started fitting AK Sco.
 
     $ mkdir AKSco
     $ cd AKSco
@@ -115,14 +115,9 @@ And, if you'd like to plot up a zeroth-moment map
 
 **Important**: Note that if you make changes to `config.yaml`, you'll need to *rerun* `JudithInitialize.jl` to recreate the input files for RADMC-3D before running `synthesize_model.jl`, otherwise you'll be synthesizing stale input files. For me, a typical workflow for playing around with channel maps is
 
-A. Edit `config.yaml` to parameters that might make sense
-
-B. at the command line, run
-
-    $ JudithInitialize.jl && synthesize_model.jl && plot_chmaps.jl && plot_moments.jl
-
-the `&&` ensures that the previous command completes before moving on to the next command.
-C. Inspect the resulting plots of the data, and if I am not satisfied go back to A.
+1. Edit `config.yaml` to parameters that might make sense
+2. at the command line, run `$ JudithInitialize.jl && synthesize_model.jl && plot_chmaps.jl && plot_moments.jl`. The `&&` ensures that the previous command completes before moving on to the next command.
+3. Inspect the resulting plots of the data, and if I am not satisfied go back to 1.
 
 It is a very good idea to inspect your channel maps to make sure that there isn't any weird structure, that you have enough pixels to resolve the disk structure, and that your model grid appears to be at high enough resolution. **A few extra minutes or hours spent debugging your images during this step can save you days (of supercomputer time) in the steps ahead.**
 
@@ -155,6 +150,8 @@ To save you some computational time otherwise spent on burn-in, I found that the
 
 Then finish evaluating the rest of the cells so that you save the file `pos0.npy` into your current working directory.
 
+How many walkers should I use? Due the the way the Ensemble Sampler advances, you can only evaluate half of the walkers simultaneously. That means that if you are running with more cores than `nwalkers/2`, you will have several cores idle throughout the sampling. Of course, you could now increase the number of walkers to be `2 * ncores`.
+
 ## Launching the run
 
 The exploration of the posterior is done via the `scripts/venus.jl` script. It is worth exploring this piece of code to see the various moving parts. How you invoke this script depends on your cluster environment. For a dataset the size of AK Sco, it's not worth your time to start run this script (except for debugging purposes) unless you have access to 20 or more cores.
@@ -165,16 +162,16 @@ If you have your own 20-core machine, you can launch the script via
 
     $ venus.jl -p 19
 
-Much like Julia itself, the `-p` argument will add an addition 19 workers to the master process for a total of 20 workers.
+Much like the Julia interpreter itself, the `-p` argument will add an addition 19 workers to the master process for a total of 20 workers.
 
 ### High Performance Cluster
 
-These Julia scripts can take advantage many possible cores spread across multiple nodes. This may require some custom script writing for your specific cluster situation, but the main ideas are as files
+These Julia scripts can take advantage many possible cores spread across multiple nodes. This may require some custom script writing for your specific cluster situation, but the main ideas are as follows
 
-A. write a submission script that specifies total number of cores, time, memory, etc
-B. upon submission, determine how many cores you have been allocated on which nodes
-C. create a hosts.txt file which contains this information, following the Julia spec here.
-D. then start your job with
+1. write a submission script that specifies total number of cores, time, memory, etc
+2. upon submission, determine how many cores you have been allocated on which nodes
+3. create a hosts.txt file which contains this information, following the Julia spec here.
+4. then start your job with
 
     julia --machinefile hosts.txt venus.jl
 

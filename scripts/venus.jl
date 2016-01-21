@@ -14,8 +14,8 @@ s = ArgParseSettings()
     "--run_index", "-r"
     help = "Output run index"
     arg_type = Int
-    "--chain"
-    help = "Write the chain to ~/web/ directory?"
+    "--plotly"
+    help = "Send the chain samples to plot.ly?"
     action = :store_true
     "--config"
     help = "a YAML configuration file"
@@ -276,6 +276,14 @@ size1, size2 = size(pos0)
 @assert size1==ndim "pos0 array does not match number of input dimensions."
 @assert size2==nwalkers "pos0 array does not match number of walkers."
 
-run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
+if parsed_args["plotly"]
+    function f(sampler::Sampler)
+        # Run the chain to plotly
+        println("Called function.")
+    end
+    run_schedule(sampler, pos0, config["samples"], config["loops"], outdir, f)
+else
+    run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
+end
 
 write_samples(sampler, outdir)

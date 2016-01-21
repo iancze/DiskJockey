@@ -2,11 +2,9 @@
 
 Interferometric data from reduction software like CASA or MIRIAD is generally stored in measurement sets (`*.ms`) or FITS files (`*.fits`), and usually contains a lot of ancillary data unnecessary for a dynamical mass measurement (or fitting in the UV plane in general). To reduce dependency on these outside programs and overall memory footprint, we have made it so that all of the Julia code only interfaces with the minimal necessary visibility data stored in an HDF5 file.
 
-The key Julia code used to read this file is provided in `/src/visibilities.jl`
+The key Julia code used to read this file is provided in `/src/visibilities.jl` which reads the HDF5 file and stores each channel in an array of `DataVis` instances. For example, this `data.hdf5` file contains the following datasets in arrays of (nrows, ncols) form. `nchan` is the number of channels in the dataset, `nvis` is the number of complex visibilities in the measurement set.
 
 The format of this datafile is as follows:
-
-Which reads the HDF5 file and stores each channel in an array of `DataVis` instances. For example, this `data.hdf5` file contains the following datasets in arrays of (nrows, ncols) form. `nchan` is the number of channels in the dataset, `nvis` is the number of complex visibilities in the measurement set.
 
     data.hdf5
       lams # [μm] (nchan) Wavelength (in microns) corresponding to channel

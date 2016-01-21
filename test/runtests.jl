@@ -44,14 +44,20 @@ for i=1:nwalkers
     pos0[:,i] = randn(ndim)
 end
 
-# println("Starting positions ", pos0)
 
-pos = run_mcmc(sampler, pos0, 10000)
+# pos = run_mcmc(sampler, pos0, 10000)
 
-reset_mcmc(sampler)
+# reset_mcmc(sampler)
 
-run_mcmc(sampler, pos, 10000)
+# run_mcmc(sampler, pos, 10000)
 
-using NPZ
+function f(sampler::Sampler)
+    println("calling function")
+end
 
-npzwrite("chain.npy", emcee_chain(sampler))
+run_schedule(sampler, pos0, 10, 10, "", f)
+
+
+# using NPZ
+
+# npzwrite("chain.npy", emcee_chain(sampler))

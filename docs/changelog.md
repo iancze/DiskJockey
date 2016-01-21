@@ -2,6 +2,28 @@
 
 The following are the changes that have been implemented since the previous version. All versions are tagged as releases.
 
+# Version 0.1.2
+
+## EnsembleSampler
+
+Now takes an optional function, to be called at the end of each loop as `func(sampler)`
+
+    function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int, outdir, func::Function=nothing)
+
+See the `src/EnsembleSampler.jl` file for more details. This is primarily in support of the next feature...
+
+## Plotly script
+
+If you run the sampling script as
+
+    $ venus.jl --chain
+
+After each loop, creates/updates a plotly walkers plot corresponding to the `name` entry in `config.yaml`. This allows easy monitoring of many different chains that might be running on a cluster.
+
+## Cavity model
+
+Is the cavity model working?
+
 # Version 0.1.1
 
 ## Model specification
