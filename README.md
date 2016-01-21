@@ -33,9 +33,9 @@ I have organized the code in this package into source (in the `src` directory) a
 
 You will be able to access any of the modules within `src`. These provide the base functionality for the package in common tasks, such as reading in images produced by RADMC-3D, Fourier transforms, and visibility interpolation. My hope is to make these components as general as possible so if you would like to extend this package to fit a novel type of disk, it will be easy to reuse many of the core functionality.
 
-The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `plot_model.jl` synthesizes and plots channel maps for your current model. These are run from your system shell after adding them to your `PATH`
+The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `sythesize_model.jl` synthesizes and a model for your current parameters. These are run from your system shell after adding them to your `PATH`
 
-    $ plot_model.jl
+    $ sythesize_model.jl
 
 ## Computational demand
 
@@ -68,9 +68,19 @@ To check that you have properly added the scripts, you can try in your system sh
     Your JudithExcalibur scripts are successfully linked.
     Exiting
 
-Second, to use the plotting scripts (`scripts/plot_chmaps.jl`) or the IO routines for SMA and ALMA data (`scripts/read_SMA.py`), you will also need a Python installation with the following packages installed: `numpy`, `scipy`, `matplotlib`, `Jupyter/IPython`, `Jupyter/IJulia`, `h5py`, and `astropy`. The anaconda Python distribution is a great way to take care of these dependencies.
+Second, most of the scripts and IO routines require Python and several Python packages. Please install the following packages via your own package manager or a distribution like anaconda:
 
-With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source. For those interested in the source code, the most important files to start browsing are
+* numpy
+* scipy
+* matplotlib
+* Jupyter/IPython
+* h5py
+* astropy
+* Jupyter/IJulia
+
+With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source, in particular the [cookbook](docs/cookbook.md).
+
+For those interested in the source code, the most important files to start browsing are
 
 **model.jl**: Contains the actual specification of the parametric disk model, as well as the tools to write to disk the synthesis files RADMC-3D requires.
 
