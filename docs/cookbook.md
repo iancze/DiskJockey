@@ -140,7 +140,7 @@ Much like `emcee`, starting out requires deciding upon the positions of the walk
 
 To save you some computational time otherwise spent on burn-in, I found that the following walker starting positions worked well for AK Sco
 
-p0 = np.array([np.random.uniform(2.4, 2.5, nwalkers), # mass [M_sun]
+    p0 = np.array([np.random.uniform(2.4, 2.5, nwalkers), # mass [M_sun]
               np.random.uniform(14., 15.0, nwalkers), #r_c [AU]
               np.random.uniform(92., 93., nwalkers), #T_10 [K]
               np.random.uniform(0.51, 0.55, nwalkers), # q
