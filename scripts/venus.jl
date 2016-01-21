@@ -279,7 +279,15 @@ size1, size2 = size(pos0)
 if parsed_args["plotly"]
     function f(sampler::Sampler, outdir::AbstractString)
         # Run the chain to plotly
-        println("Called function.")
+        println("Called plotly.")
+        chain_file = "$(outdir)chain.npy"
+        config_file = "config.yaml"
+        name = config["name"]
+        try
+            spawn(`plotly_walkers.py --name $name --chain $chain_file --config $config_file`)
+        catch
+            println("Couldn't reach plotly server.")
+        end
     end
     run_schedule(sampler, pos0, config["samples"], config["loops"], outdir, f)
 else

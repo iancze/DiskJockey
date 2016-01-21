@@ -7,6 +7,7 @@ parser.add_argument("--burn", type=int, default=0, help="How many samples to dis
 parser.add_argument("--chain", default="chain.npy", help="The name of the file storing the walker positions.")
 parser.add_argument("--name", default="walkers", help="The name of the object that we are fitting. The plot.ly plots will show up under this label.")
 parser.add_argument("--config", help="name of the config file used for the run.", default="../../config.yaml")
+parser.add_argument("--open", help="Pop up the graph when finished in your browser?", action="store_true")
 
 args = parser.parse_args()
 
@@ -28,8 +29,6 @@ import plotly.plotly as py
 import plotly.graph_objs as go
 
 fig = tools.make_subplots(rows=ndim, cols=1, shared_xaxes=True, vertical_spacing=0.005)
-
-x = np.arange(niter)
 
 # If we can tell what type of model we were sampling, we can give everything appropriate labels.
 # Otherwise, we'll just use default indexes.
@@ -65,14 +64,25 @@ except:
     print("No appropriate config file found, using default labels.")
     labels = ["par {}".format(i) for i in range(ndim)]
 
-for i in range(ndim):
-    for j in range(nwalkers):
-        if niter > 500:
-            y=chain[j,niter-500:,i]
-        else:
-            y = chain[j,:,i]
+# Only plot 12 walkers per dimension
+nlines = 12 if nwalkers > 12 else nwalkers
 
-        trace = go.Scattergl(x=x, y=y, line={"color":"black", "width":0.4}, hoverinfo="none", mode="lines")
+# Only plot every 10th sample.
+stride = 10
+if niter > 100:
+    chain = chain[:,::stride,:]
+    # Iteration #
+    x = stride * np.arange(chain.shape[1])
+else:
+    x = np.arange(chain.shape[1])
+
+for i in range(ndim):
+    # To save memory, at most plot 12 walkers per dimension.
+
+    for j in range(nlines):
+        y = chain[j,:,i]
+
+        trace = go.Scatter(x=x, y=y, line={"color":"black", "width":0.4}, hoverinfo="none", mode="lines")
 
         fig.append_trace(trace, i + 1, 1)
 
@@ -83,4 +93,5 @@ for i in range(ndim):
 
 
 fig['layout'].update(height=(200 * ndim), width=900, title=args.name, showlegend=False)
-plot_url = py.plot(fig, filename=args.name)
+
+plot_url = py.plot(fig, filename=args.name, auto_open=args.open)
