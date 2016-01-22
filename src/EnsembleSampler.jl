@@ -253,7 +253,7 @@ end
 
 # Run the sampler on a periodic save schedule, to prevent losses on long-running calculations
 # run N iterations for each loop
-function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int, outdir, func::Function=nothing)
+function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int, outdir, func=nothing)
     for i=1:loops
         pos0 = sample(sampler, pos0, nothing, N)
         println("Finished loop ", i, " of ", loops)
