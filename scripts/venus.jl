@@ -46,7 +46,7 @@ config = YAML.load(open(parsed_args["config"]))
 
 outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
 
-# This code is necessary for multiple simultaneous runs on odyssey
+# This code is necessary for multiple simultaneous runs on a high performance cluster
 # so that different runs do not write into the same output directory
 if parsed_args["run_index"] == nothing
     run_index = 0
@@ -56,14 +56,13 @@ if parsed_args["run_index"] == nothing
         run_index += 1
         outdir = outfmt(run_index)
     end
+    # are we starting in a fresh directory?
+    fresh = true
 else
     run_index = parsed_args["run_index"]
     outdir = outfmt(run_index)
-    while ispath(outdir)
-        println(outdir, " exists")
-        run_index += 1
-        outdir = outfmt(run_index)
-    end
+    # we are not starting in a fresh directory, so try loading pos0.npy from this directory.
+    fresh = false
 end
 
 # make the output directory
@@ -266,7 +265,12 @@ end
 
 using NPZ
 
-pos0 = npzread(config["pos0"])
+if fresh
+    pos0 = npzread(config["pos0"])
+else
+    pos0 = npzread(outdir * config["pos0"])
+end
+
 ndim, nwalkers = size(pos0)
 
 # Use the EnsembleSampler to do the optimization
