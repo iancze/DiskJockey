@@ -59,8 +59,11 @@ if parsed_args["run_index"] == nothing
 else
     run_index = parsed_args["run_index"]
     outdir = outfmt(run_index)
-    println("Deleting old $outdir")
-    run(`rm -rf $outdir`)
+    while ispath(outdir)
+        println(outdir, " exists")
+        run_index += 1
+        outdir = outfmt(run_index)
+    end
 end
 
 # make the output directory

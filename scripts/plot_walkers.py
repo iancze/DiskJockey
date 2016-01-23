@@ -7,6 +7,7 @@ parser.add_argument("--burn", type=int, default=0, help="How many samples to dis
 parser.add_argument("--draw", type=int, help="If specified, print out a random sample of N draws from the posterior, after burn in.")
 parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
 parser.add_argument("--config", help="name of the config file used for the run.", default="../../config.yaml")
+parser.add_argument("--tri", help="Plot the triangle too.", action="store_true")
 
 args = parser.parse_args()
 import numpy as np
@@ -167,5 +168,8 @@ def plot_hdis(flatchain, fname="hdi.png"):
 plot_hdis(flatchain)
 
 # Make the triangle plot
-figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
-figure.savefig("triangle.png")
+if args.tri:
+    figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
+    figure.savefig("triangle.png")
+else:
+    print("Not plotting triangle, no --tri flag.")
