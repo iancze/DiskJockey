@@ -61,13 +61,22 @@ if parsed_args["run_index"] == nothing
 else
     run_index = parsed_args["run_index"]
     outdir = outfmt(run_index)
-    # we are not starting in a fresh directory, so try loading pos0.npy from this directory.
-    fresh = false
+    if ispath(outdir)
+        # we are not starting in a fresh directory, so try loading pos0.npy from this directory.
+        fresh = false
+    else
+        fresh = true
+    end
 end
 
-# make the output directory
-println("Creating ", outdir)
-mkdir(outdir)
+if fresh
+    # make the output directory
+    println("Creating ", outdir)
+    mkdir(outdir)
+else
+    println("$outdir exists, using current.")
+end
+
 
 @everywhere using JudithExcalibur.constants
 @everywhere using JudithExcalibur.visibilities
