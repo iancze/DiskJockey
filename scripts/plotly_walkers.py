@@ -88,7 +88,7 @@ for i in range(ndim):
 
     fig['layout']['yaxis{}'.format(i + 1)].update(title=labels[i])
 
-fig['layout']['xaxis{}'.format(ndim)].update(title="iteration")
+# fig['layout']['xaxis{}'.format(ndim)].update(title="iteration")
 
 fig['layout'].update(height=(200 * ndim), width=900, title=args.name, showlegend=False)
 

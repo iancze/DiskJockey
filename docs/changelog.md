@@ -24,6 +24,18 @@ After each loop, creates/updates a plotly walkers plot corresponding to the `nam
 
 Is the cavity model working?
 
+## Overwrites
+
+Now `venus.jl` should guard against overwriting previous MCMC samples in the case of a job restart on HPC. This requires changing
+
+    run_schedule() to include a write to chain.npy file.
+
+Anyway, not actually implemented yet.
+
+## Channel maps
+
+plots a circle over the image at the radius of the grid. If emission gets close, you're in trouble.
+
 # Version 0.1.1
 
 ## Model specification
