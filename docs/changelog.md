@@ -36,6 +36,18 @@ Anyway, not actually implemented yet.
 
 plots a circle over the image at the radius of the grid. If emission gets close, you're in trouble.
 
+## corrfun
+
+`gridding.jl` now exports a `corrfun(img::SkyImage)` routine, in contrast to `corrfun!(img::SkyImage)`. This new function returns a corrected image as a copy, leaving the original image in the arguments unchanged. This is useful for plotting and debugging scripts so that you don't need to copy the image manually.
+
+## visibilities
+
+`FullModelVis` now has a `-` method.
+
+## image
+
+`Image` now has a `-` method.
+
 # Version 0.1.1
 
 ## Model specification

@@ -146,10 +146,6 @@ function corrfun!(img::SkyImage)
     maxra = abs(img.ra[2] - img.ra[1]) * nx/2
     maxdec = abs(img.dec[2] - img.dec[1]) * ny/2
 
-    # If the image will be later offset via a phase shift, then this means that
-    # the corrfunction will need to be applied *as if the image were already
-    # offset.*
-
     for k=1:nlam
         for i=1:nx
             for j=1:ny
@@ -167,6 +163,13 @@ function corrfun!(img::SkyImage)
     end
 end
 
+"""Do the same thing as corrfun!, but return a copy of the image, leaving the original unchanged."""
+function corrfun(img::SkyImage)
+    im = deepcopy(img)
+    corrfun!(im)
+    return im
+end
+
 # Apply the correction function to the image, with an offset
 function corrfun!(img::SkyImage, mu_RA, mu_DEC)
     ny, nx, nlam = size(img.data)
@@ -180,6 +183,8 @@ function corrfun!(img::SkyImage, mu_RA, mu_DEC)
     # If the image will be later offset via a phase shift, then this means that
     # the corrfunction will need to be applied *as if the image were already
     # offset.*
+    # Update 1/23/16: Although this is still mathematically correct, it's better
+    # to operation using `corrfun!` without any original shift, and simply shift the visibilities
 
     for k=1:nlam
         for i=1:nx

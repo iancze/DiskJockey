@@ -7,12 +7,14 @@ using ..image
 using ..gridding
 using ..constants
 
-import Base.conj! # extend this later
+import Base.conj! # extend this for DataVis
+import Base.- # extend this for FullModelVis
 
 export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis
 export plan_interpolate, interpolate_uv
 export transform, rfftfreq, fftfreq, phase_shift!, max_baseline, get_nyquist_pixel
 export lnprob
+export -
 
 using Base.Test
 
@@ -186,6 +188,14 @@ type FullModelVis
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
     vv::Vector{Float64} # [kλ]
     VV::Matrix{Complex128} # Output from rfft
+end
+
+function -(vis1::FullModelVis, vis2::FullModelVis)
+    @assert vis1.lam == vis2.lam "Visibilities must have the same wavelengths."
+    @assert vis1.uu == vis2.uu "Visibilities must have same uu sampling."
+    @assert vis1.vv == vis2.vv "Visibilities must have same vv sampling."
+    VV = vis1.VV - vis2.VV
+    return FullModelVis(vis1.lam, vis1.uu, vis1.vv, VV)
 end
 
 # Produced by gridding a RawModelVis to match the data

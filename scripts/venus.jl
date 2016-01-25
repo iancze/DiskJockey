@@ -73,6 +73,8 @@ if fresh
     # make the output directory
     println("Creating ", outdir)
     mkdir(outdir)
+    # Copy the config.yaml file here for future reference
+    cp(parsed_args["config"], outdir * parsed_args["config"])
 else
     println("$outdir exists, using current.")
 end
