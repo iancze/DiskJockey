@@ -1,5 +1,8 @@
 using Base.Test
 
+# check to see what's on our path
+run(`echo $PATH`)
+
 include("simple_math.jl")
 include("ensemble_sampler.jl")
 

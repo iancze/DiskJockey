@@ -5,4 +5,5 @@ do
   rm -v $f
 done
 
+rm -v *png
 rm -rf output

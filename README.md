@@ -18,7 +18,7 @@ Papers published using JudithExcalibur:
 
 JudithExcalibur is designed to forward model inteferometric observations of protoplanetary disks, for the purpose of deriving a precise measurement of the central (sub-)stellar mass.
 
-This package relies upon the excellent radiative synthesis package RADMC-3D to perform the radiative transfer of the disk model. Comprehensive documentation for RADMC-3D can be found [here](http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/). Before using JudithExcalibur, you (obviously) need to [install](http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/) RADMC-3D first.
+This package relies upon the excellent radiative synthesis package RADMC-3D to perform the radiative transfer of the disk model. Comprehensive documentation for RADMC-3D can be found [here](http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/). For package versions after v0.1.2, RADMC-3D is installed locally within the JudithExcalibur package. This means that you should be able to run all of the examples without needing to install RADMC-3D separately. If you already use RADMC-3D for other synthesis, this will leave your current installation alone, it's just that JudithExcalibur will use the version it installed for itself.
 
 There are several stages to evaluating the best-fitting parameters of a disk structure model:
 
