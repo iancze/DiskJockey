@@ -39,17 +39,19 @@ The scripts are not technically part of the Julia package (you cannot import the
 
 ## Computational demand
 
-Because spectral line datasets are large, and synthesizing models is computationally expensive, I have designed this package to work in a parallel environment, where the calculations for each frequency channel can be distributed to independent processors. Therefore, please keep this architecture in mind when navigating the source code. Due to the computationally expensive nature of the radiative synthesis, fitting sizable datasets (e.g., SMA and ALMA) will *require a moderately sized number of CPU cores for computation in a reasonable timeframe*. For example, to fully explore the posterior for the AK Sco example dataset will require a few days of computing time on ~32 cores or more.
+Because spectral line datasets are large, and synthesizing models is computationally expensive, I have designed this package to work in a parallel environment where the calculations for each frequency channel can be distributed to independent processors. Therefore, please keep this architecture in mind when navigating the source code. Due to the computationally expensive nature of the radiative synthesis, fitting sizable datasets (e.g., SMA and ALMA) will **require a substantial amount of CPU cores to explore a posterior distribution in a reasonable timeframe**. For example, to fully explore the posterior for the AK Sco example dataset will require a **few days** of computing time on ~32 cores or more.
 
 ## Installation
 
-First, make sure you have installed RADMC-3D and you can successfully run one of the example scripts contained within this package. My current RADMC-3D installation is v0.38, although I expect that everything should work well on other recent versions of the package. Second, I have now migrated this package to run on Julia v0.4+, and I plan to keep it up to date with current Julia releases.
+First, make sure you have installed RADMC-3D and you can successfully run one of the example scripts contained within that package. My current RADMC-3D installation is v0.38, although I expect that everything should work well on other recent versions of the package. Second, I have now migrated this package to run on Julia v0.4+, and I plan to keep it up to date with current Julia releases.
 
-Because `JudithExcalibur` is not an official Julia package (nor will it likely be), for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
+Because `JudithExcalibur` is not yet an official Julia package, for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
 
     julia> Pkg.clone("https://github.com/iancze/JudithExcalibur.git")
 
-As mentioned previously, there are several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your PATH. To figure out where the package is installed
+You can also download the releases [here](). However, due to the ongoing development of this package, it will be easier to keep your version current by installing off of the git master branch as described above.
+
+As mentioned previously, there are several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your system PATH. To figure out where the package is installed
 
     julia> Pkg.dir("JudithExcalibur")
     "/home/ian/.julia/JudithExcalibur"
@@ -70,7 +72,7 @@ To check that you have properly added the scripts (and check that you installed 
     Exiting
 
 
-Second, most of the scripts and IO routines require Python and several Python packages. Please install the following packages via your own package manager or a distribution like anaconda:
+Second, most of the scripts and IO routines require Python and several Python packages. I have only tested the scripts on Python 3.x, although they may work on Python 2.7. Please install the following packages via your own package manager or a distribution like anaconda:
 
 * numpy
 * scipy
@@ -92,4 +94,4 @@ For those interested in the source code, the most important files to start brows
 
 **gridding.jl**: Contains the prolate-spheroidal wave function definitions from Schwab 1984, used when doing the visibility interpolations.
 
-**venus.jl**: This implementation uses the Ensemble Sampler (a Julia port from Dan Foreman-Mackey's `emcee` python package) to sample the posterior distribution using parallelized walkers.
+**venus.jl**: This implementation uses the Ensemble Sampler (a Julia port of Dan Foreman-Mackey's `emcee` python package) to sample the posterior distribution using parallelized walkers.

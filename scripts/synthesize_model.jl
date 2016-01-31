@@ -34,4 +34,7 @@ max_base = max_baseline(dvarr)
 npix = config["npix"] # number of pixels
 
 # lambda should have already been written by JudithInitialize.jl
+tic()
 run(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda`)
+println("Synthesis runtime")
+toc()

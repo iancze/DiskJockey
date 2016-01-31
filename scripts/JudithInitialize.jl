@@ -14,6 +14,10 @@ s = ArgParseSettings(description="Initialize a new project directory with the ap
     "--new-project"
     help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity'"
     default = "no"
+    "--fit-every"
+    help = "Print out an exclude array that should be manually copied to config.yaml so that only every n-th channel is fit in venus.jl"
+    arg_type = Int
+    default = 0
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
@@ -56,11 +60,29 @@ using HDF5
 
 using JudithExcalibur.constants
 using JudithExcalibur.model
+using JudithExcalibur.visibilities
 
 # This is just for new users to test that the package is successfully installed.
 if parsed_args["version"]
     println("Your JudithExcalibur scripts are successfully linked.")
     println("You are running JudithExcalibur $JUDITHEXCALIBUR_VERSION")
+    println("Exiting")
+    quit()
+end
+
+fit_every = parsed_args["fit-every"]
+if fit_every != 0
+    dvarr = DataVis(config["data_file"])
+    nchan = length(dvarr)
+    println("Dataset contains a total of $nchan channels.")
+
+    to_fit = Int[i for i=1:fit_every:nchan]
+
+    # which channels of the dset to exclude
+    exclude = filter(x->(!in(x, to_fit)), Int[i for i=1:nchan])
+
+    println("To fit only every $(fit_every)-nd/rd/th channel, place the following line in your `config.yaml file.`")
+    println("exclude : $exclude")
     println("Exiting")
     quit()
 end
@@ -73,7 +95,6 @@ if !ispath(out_base)
 end
 
 # Are we using dust or gas?
-
 # gas
 if config["gas"]
     run(`cp $(assets_dir)radmc3d.inp.gas radmc3d.inp`)
@@ -101,8 +122,6 @@ if config["gas"]
 
     pars = convert_dict(config["parameters"], config["model"])
     vel = pars.vel # [km/s]
-    incl = pars.incl # [deg]
-    PA = pars.PA # [deg]
     npix = config["npix"] # number of pixels
 
     vstart = parsed_args["vstart"]

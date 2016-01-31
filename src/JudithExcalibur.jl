@@ -5,7 +5,8 @@ export constants,
     image,
     gridding,
     visibilities,
-    EnsembleSampler
+    EnsembleSampler,
+    RADMC3D_PATH
 
 # These statements just straight up dump the source code directly here, making JudithExcalibur.jl
 # act as one giant file.
@@ -15,5 +16,11 @@ include("image.jl")
 include("gridding.jl")
 include("visibilities.jl")
 include("EnsembleSampler.jl")
+
+# Add RADMC-3D to the executable path
+unixpath = "../deps/src/radmc-3d/version_0.39/src"
+# @__FILE__ gives us an absolute path to the location where the user installed JudithExcalibur
+const RADMC3D_PATH = normpath(joinpath(dirname(@__FILE__), unixpath))
+ENV["PATH"] = RADMC3D_PATH * ":" * ENV["PATH"]  
 
 end

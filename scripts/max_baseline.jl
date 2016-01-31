@@ -2,13 +2,12 @@
 
 # Read the HDF5 file and calculate the largest baseline in u and v, separately.
 
+# Also calculate the mean velocity of the dataset.
+
 using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
-    "--file"
-    help = "The data file."
-    default = "data.hdf5"
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
@@ -23,7 +22,28 @@ config = YAML.load(open(parsed_args["config"]))
 using JudithExcalibur.visibilities
 using JudithExcalibur.constants
 
-dvarr = DataVis(parsed_args["file"])
+species = config["species"]
+transition = config["transition"]
+lam0 = lam0s[species*transition]
+
+function wl_to_vel{T}(wl::T)
+    return c_kms * (wl - lam0)/lam0
+end
+
+function vel_to_wl{T}(vel::T)
+    beta = vel/c_kms # relativistic Doppler formula
+    return lam0 * sqrt((1. - beta) / (1. + beta)) # [microns]
+end
+
+dvarr = DataVis(config["data_file"])
+
+lam_start = dvarr[1].lam
+lam_end = dvarr[end].lam
+
+vmin = wl_to_vel(lam_start)
+vmax = wl_to_vel(lam_end)
+println("Dataset channels are velocities from $vmin to $vmax and span ", vmax - vmin, " km/s.")
+println("Midpoint is ", (vmax + vmin)/2, " km/s.")
 
 max_base = max_baseline(dvarr)
 
@@ -53,3 +73,6 @@ println("dpc ", dhigh, " r_out ", dhigh * dRA_max * npix/(2 * 1.1))
 #     println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
 #     return -Inf
 # end
+
+
+# Calculate the mean velocity

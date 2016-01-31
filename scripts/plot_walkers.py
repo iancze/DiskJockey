@@ -12,7 +12,6 @@ parser.add_argument("--tri", help="Plot the triangle too.", action="store_true")
 args = parser.parse_args()
 import numpy as np
 
-
 # This first bit of code is run for every invocation of the script
 chain = np.load("chain.npy")
 

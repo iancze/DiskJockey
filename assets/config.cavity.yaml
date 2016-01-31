@@ -1,7 +1,7 @@
 name: disk
 
 out_base: output/
-# Normally, we should not need to add the RADMC_PATH if it is already on your system PATH. However, due to some HPC quirks it is sometimes necessary to add this in the running script.
+# Normally, we should not need to add the RADMC_PATH if it is already on your system PATH. However, due to some HPC quirks it is sometimes necessary to add manually after the script has started running.
 RADMC_PATH: ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
 
 
@@ -10,20 +10,20 @@ species : 12CO # Possible choices: 12CO, 13CO, C18O. Future may include HCN, etc
 transition: 3-2 # J =
 
 grid:
-  nr: 64
-  ntheta: 32 # if mirrored about the equator, total of 64
+  nr: 128
+  ntheta: 46 # if mirrored about the equator, total of 64
   nphi: 1
-  r_in: 0.5 # [AU] # Inner edge of model grid
+  r_in: 0.1 # [AU] # Inner edge of model grid
   r_out: 600. # [AU] # Outer edge of model grid
 
 # Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
 # exclude: [35, 36, 37, 38]
 
 # Distance prior setup
-fix_d : false
+fix_d : true
 
 dpc_prior:
-  mu : 140.
+  mu : 145.
   sig : 20.
 
 # What type of model will we be fitting? This also affects which parameters to include.
@@ -37,7 +37,7 @@ parameters:
   T_10: 91.85 # [K] temperature at 10 AU
   q: 0.5 # temperature gradient exponent
   gamma: 1.0 # surface density gradient
-  logM_gas: -0.65 # [M_Sun] disk mass of gas
+  logM_gas: -2.65 # [M_Sun] disk mass of gas
   ksi: 0.2 # [km/s] microturbulence
   dpc: 140. # [pc] distance
   incl: 45.0 # [degrees] inclination

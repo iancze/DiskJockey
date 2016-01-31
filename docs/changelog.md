@@ -4,6 +4,10 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.2
 
+## Installation
+
+Now provides installation instructions for tagged releases.
+
 ## EnsembleSampler
 
 Now takes an optional function, to be called at the end of each loop as `func(sampler, outdir)`
@@ -20,9 +24,17 @@ If you run the sampling script as
 
 After each loop, creates/updates a plotly walkers plot corresponding to the `name` entry in `config.yaml`. This allows easy monitoring of many different chains that might be running on a cluster.
 
+## JudithInitialize.jl
+
+Now can easily spit out an `exclude` array so that fewer channels can be fit during initial testing.
+
 ## Cavity model
 
-Is the cavity model working?
+By initializing a directory with
+
+    $ JudithInitialize.jl --new-project=cavity
+
+you can start exploring the `cavity` model, which has an exponential taper inside of some radius, `r_cav`.
 
 ## Overwrites
 
@@ -36,17 +48,27 @@ Anyway, not actually implemented yet.
 
 plots a circle over the image at the radius of the grid. If emission gets close, you're in trouble.
 
-## corrfun
+## gridding.jl
 
 `gridding.jl` now exports a `corrfun(img::SkyImage)` routine, in contrast to `corrfun!(img::SkyImage)`. This new function returns a corrected image as a copy, leaving the original image in the arguments unchanged. This is useful for plotting and debugging scripts so that you don't need to copy the image manually.
 
-## visibilities
+## visibilities.jl
 
-`FullModelVis` now has a `-` method.
+`FullModelVis` now has a `-` method, which can be used to subtract two sets of dense visibilities.
 
-## image
+## image.jl
 
-`Image` now has a `-` method.
+`Image` now has a `-` method, which can be used to subtract two images.
+
+## config.yaml copied to output directory
+
+Now `venus.jl` will move a copy of your `config.yaml` file to the output directory. This creates an automatic record of what parameters you ran with, which will undoubtedly be useful when reviewing previous runs sometime in the near future.
+
+Also, default values in the initial `config.yaml` files have been updated.
+
+## plot_baselines.jl
+
+Will generate a plot of where your dataset has sampled the UV plane. Also will print out an average velocity of the dataset, to allow a good starting guess for the `vel` parameter.
 
 # Version 0.1.1
 
