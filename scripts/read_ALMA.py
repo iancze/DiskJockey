@@ -148,19 +148,3 @@ else:
 
 
 fid.close()
-
-if args.plot:
-
-    # Plot the UV samples for the first channel
-    import matplotlib.pyplot as plt
-
-    fig = plt.figure(figsize=(6,6))
-    ax = fig.add_subplot(111)
-    ax.plot(uu[0], vv[0], ".")
-    ax.set_xlabel(r"UU [k$\lambda$]")
-    ax.set_ylabel(r"VV [k$\lambda$]")
-    ax.set_xlim(max(uu[0]), min(uu[0]))
-    # ax.set_ylim(-75, 75)
-    fig.subplots_adjust(left=0.2, right=0.8, bottom=0.15)
-
-    plt.savefig("uv_spacings.png")

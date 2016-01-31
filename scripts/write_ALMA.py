@@ -12,8 +12,6 @@ parser.add_argument("--out-model", default="model.vis.npz", help="The output fil
 parser.add_argument("--out-resid", default="resid.vis.npz", help="The output file for the residuals.")
 args = parser.parse_args()
 
-
-from astropy.io import fits
 import h5py
 import numpy as np
 import shutil

@@ -155,6 +155,7 @@ skim = imToSky(im, pars.dpc)
 global nlam = length(skim.lams)
 # convert wavelengths to velocities
 global vels = c_kms * (skim.lams .- lam0)/lam0
+println("Vels are ", vels)
 
 
 println("Plotting hires maps")

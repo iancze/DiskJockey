@@ -6,7 +6,11 @@ The following are the changes that have been implemented since the previous vers
 
 ## Installation
 
-Now provides installation instructions for tagged releases.
+Now provides installation instructions for tagged releases. RADMC-3D is installed automatically as a local version.
+
+## fake_dataset.jl
+
+Creation of fake data for plotting and testing purposes.
 
 ## EnsembleSampler
 
