@@ -4,6 +4,11 @@ julia:
   - nightly
   - 0.4
 
+# Need to install a Fortran compiler for Dierckx and RADMC-3D depedency
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install gfortran g77
+
 # This the default script that is run
 # julia -e 'Pkg.clone(pwd())'
 # julia -e 'Pkg.build("$name")'

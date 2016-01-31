@@ -112,7 +112,7 @@ end
 println("Mapped variables to all processes")
 
 # Add radmc3d everywhere, since SLURM seems to dislike inheriting it from the system PATH
-@everywhere ENV["PATH"] = ENV["PATH"] * cfg["RADMC_PATH"]
+# @everywhere ENV["PATH"] = ENV["PATH"] * cfg["RADMC_PATH"]
 
 # Set the correct model
 @everywhere function convert_p(p::Vector{Float64})
