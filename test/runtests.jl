@@ -3,7 +3,7 @@ using Base.Test
 # check to see what's on our path
 println(ENV["PATH"])
 
-include("simple_math.jl")
+# include("simple_math.jl")
 include("ensemble_sampler.jl")
 
 # Make a fake model so we can test off of it.

@@ -8,7 +8,7 @@ julia:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install gfortran
-  - export PATH=$PATH:$PWD/JudithExcalibur/scripts # add the scripts/ directory
+  - export PATH=$PATH:$PWD/scripts # add the scripts/ directory to the PATH
 
 # This the default script that is run
 # julia -e 'Pkg.clone(pwd())'
