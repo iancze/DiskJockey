@@ -15,7 +15,7 @@ script:
   - julia --color=yes -e 'Pkg.clone(pwd())'
   - julia --color=yes -e 'Pkg.build("JudithExcalibur")'
   - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
-  - julia --coler=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot' # Necessary to install Matplotlib
+  - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot' # Necessary to install Matplotlib
   - julia --check-bounds=yes -e 'Pkg.test("JudithExcalibur", coverage=true)'
 
 # This the default script that is run
