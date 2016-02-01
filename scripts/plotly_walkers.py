@@ -43,19 +43,19 @@ try:
 
     if model == "standard":
         if fix_d:
-            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\textrm{AU}]$", r"$T_{10} [\textrm{K}]$", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi [\textrm{km/s}]$", r"$i_d \quad [{}^\circ]$", r"$\textrm{PA}\;[{}^\circ]$", r"$v_r [\textrm{km/s}]$", r"$\mu_\alpha\;[\textrm{''}]$", r"$\mu_\delta \; ['']$"]
+            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\mathrm{AU}]$", r"$T_{10} [\mathrm{K}]$", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi [\mathrm{km/s}]$", r"$i_d \quad [{}^\circ]$", r"$\mathrm{PA}\;[{}^\circ]$", r"$v_r [\mathrm{km/s}]$", r"$\mu_\alpha\;[\mathrm{''}]$", r"$\mu_\delta \; ['']$"]
         else:
-            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\textrm{AU}]$", r"$T_{10} [\textrm{K}]$", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi [\textrm{km/s}]$", r"$d \; [\textrm{pc}]$", r"$i_d \quad [{}^\circ]$", r"$\textrm{PA}\;[{}^\circ]$", r"$v_r [\textrm{km/s}]$", r"$\mu_\alpha\;[\textrm{''}]$", r"$\mu_\delta \; ['']$"]
+            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\mathrm{AU}]$", r"$T_{10} [\mathrm{K}]$", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi [\mathrm{km/s}]$", r"$d \; [\mathrm{pc}]$", r"$i_d \quad [{}^\circ]$", r"$\mathrm{PA}\;[{}^\circ]$", r"$v_r [\mathrm{km/s}]$", r"$\mu_\alpha\;[\mathrm{''}]$", r"$\mu_\delta \; ['']$"]
     elif model == "truncated":
         if fix_d:
-            labels = [r"$M_\ast\; [M_\odot]$", r"$r_in\; [\textrm{AU}]$", r"$r_out\; [\textrm{AU}]$", r"$T_{10} [\textrm{K}]$", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi [\textrm{km/s}]$", r"$i_d \quad [{}^\circ]$", r"$\textrm{PA}\;[{}^\circ]$", r"$v_r [\textrm{km/s}]$", r"$\mu_\alpha\;[\textrm{''}]$", r"$\mu_\delta \; ['']$"]
+            labels = [r"$M_\ast\; [M_\odot]$", r"$r_in\; [\mathrm{AU}]$", r"$r_out\; [\mathrm{AU}]$", r"$T_{10} [\mathrm{K}]$", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi [\mathrm{km/s}]$", r"$i_d \quad [{}^\circ]$", r"$\mathrm{PA}\;[{}^\circ]$", r"$v_r [\mathrm{km/s}]$", r"$\mu_\alpha\;[\mathrm{''}]$", r"$\mu_\delta \; ['']$"]
         else:
-            labels = [r"$M_\ast\; [M_\odot]$", r"$r_in\; [\textrm{AU}]$", r"$r_out\; [\textrm{AU}]$", r"$T_{10} [\textrm{K}]$", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi [\textrm{km/s}]$", r"$d \; [\textrm{pc}]$", r"$i_d \quad [{}^\circ]$", r"$\textrm{PA}\;[{}^\circ]$", r"$v_r [\textrm{km/s}]$", r"$\mu_\alpha\;[\textrm{''}]$", r"$\mu_\delta \; ['']$"]
+            labels = [r"$M_\ast\; [M_\odot]$", r"$r_in\; [\mathrm{AU}]$", r"$r_out\; [\mathrm{AU}]$", r"$T_{10} [\mathrm{K}]$", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi [\mathrm{km/s}]$", r"$d \; [\mathrm{pc}]$", r"$i_d \quad [{}^\circ]$", r"$\mathrm{PA}\;[{}^\circ]$", r"$v_r [\mathrm{km/s}]$", r"$\mu_\alpha\;[\mathrm{''}]$", r"$\mu_\delta \; ['']$"]
     elif model == "cavity":
         if fix_d:
-            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\textrm{AU}]$", r"$r_\textrm{cav}\; [AU]$", r"$T_{10} [\textrm{K}]$", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi [\textrm{km/s}]$", r"$i_d \quad [{}^\circ]$", r"$\textrm{PA}\;[{}^\circ]$", r"$v_r [\textrm{km/s}]$", r"$\mu_\alpha\;[\textrm{''}]$", r"$\mu_\delta \; ['']$"]
+            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\mathrm{AU}]$", r"$r_\mathrm{cav}\; [AU]$", r"$T_{10} [\mathrm{K}]$", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi [\mathrm{km/s}]$", r"$i_d \quad [{}^\circ]$", r"$\mathrm{PA}\;[{}^\circ]$", r"$v_r [\mathrm{km/s}]$", r"$\mu_\alpha\;[\mathrm{''}]$", r"$\mu_\delta \; ['']$"]
         else:
-            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\textrm{AU}]$", r"$r_\textrm{cav}\; [AU]$", r"$T_{10} [\textrm{K}]$", r"$q$", r"$\log M_\textrm{gas} \quad \log [M_\odot]$",  r"$\xi [\textrm{km/s}]$", r"$d \; [\textrm{pc}]$", r"$i_d \quad [{}^\circ]$", r"$\textrm{PA}\;[{}^\circ]$", r"$v_r [\textrm{km/s}]$", r"$\mu_\alpha\;[\textrm{''}]$", r"$\mu_\delta \; ['']$"]
+            labels = [r"$M_\ast\; [M_\odot]$", r"$r_c \; [\mathrm{AU}]$", r"$r_\mathrm{cav}\; [AU]$", r"$T_{10} [\mathrm{K}]$", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi [\mathrm{km/s}]$", r"$d \; [\mathrm{pc}]$", r"$i_d \quad [{}^\circ]$", r"$\mathrm{PA}\;[{}^\circ]$", r"$v_r [\mathrm{km/s}]$", r"$\mu_\alpha\;[\mathrm{''}]$", r"$\mu_\delta \; ['']$"]
     else:
         print("Model type not found, using default labels.")
         labels = ["par {}".format(i) for i in range(ndim)]

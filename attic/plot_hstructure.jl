@@ -121,7 +121,7 @@ function plot_surface_density(pars::Parameters, grid)
         ax[:axvline](cell_edge, color="0.5", lw=0.4)
     end
 
-    ax[:set_ylabel](L"$\Sigma\, [\textrm{g/cm}^2]$")
+    ax[:set_ylabel](L"$\Sigma\, [\mathrm{g/cm}^2]$")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
@@ -164,7 +164,7 @@ function plot_density_gradient(pars::Parameters)
 
     ax[:plot](zs/AU, y * AU)
 
-    ax[:set_ylabel](L"$\partial \ln \rho_\textrm{gas} / \partial z$ [1/AU]")
+    ax[:set_ylabel](L"$\partial \ln \rho_\mathrm{gas} / \partial z$ [1/AU]")
     ax[:set_xlabel](L"$z$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
@@ -186,7 +186,7 @@ function plot_density_1D_unnormed(pars::Parameters)
 
     ax[:plot](zs/AU, y)
 
-    ax[:set_ylabel](L"$\ln \rho_\textrm{gas}$ unnormalized")
+    ax[:set_ylabel](L"$\ln \rho_\mathrm{gas}$ unnormalized")
     ax[:set_xlabel](L"$z$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
@@ -234,7 +234,7 @@ function plot_density_1D(pars::Parameters)
 
     ax[:plot](zs/AU, lngas)
 
-    ax[:set_ylabel](L"$\ln n_\textrm{gas}$")
+    ax[:set_ylabel](L"$\ln n_\mathrm{gas}$")
     ax[:set_xlabel](L"$z$ [AU]")
     ax[:set_xlim](0,30)
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)

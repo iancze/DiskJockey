@@ -95,7 +95,7 @@ function plot_surface_density(pars::Parameters, grid)
         ax[:axvline](cell_edge, color="0.5", lw=0.4)
     end
 
-    ax[:set_ylabel](L"$\Sigma\, [\textrm{g/cm}^2]$")
+    ax[:set_ylabel](L"$\Sigma\, [\mathrm{g/cm}^2]$")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 

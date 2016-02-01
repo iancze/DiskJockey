@@ -123,8 +123,8 @@ end
 #
 #     ax[:plot](zs/AU, lngas)
 #
-#     # ax[:set_ylabel](L"$\log_{10} n_\textrm{gas} \quad [\log_{10}$ 1/cm^3]")
-#     ax[:set_ylabel](L"$\ln n_\textrm{gas}$")
+#     # ax[:set_ylabel](L"$\log_{10} n_\mathrm{gas} \quad [\log_{10}$ 1/cm^3]")
+#     ax[:set_ylabel](L"$\ln n_\mathrm{gas}$")
 #     ax[:set_xlabel](L"$z$ [AU]")
 #     ax[:set_xlim](0, 30)
 #     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
@@ -150,7 +150,7 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
         ax[:axvline](cell_edge, color="0.5", lw=0.4)
     end
 
-    ax[:set_ylabel](L"$\Sigma\, [\textrm{g/cm}^2]$")
+    ax[:set_ylabel](L"$\Sigma\, [\mathrm{g/cm}^2]$")
     ax[:set_xlabel](L"$r$ [AU]")
     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
 
