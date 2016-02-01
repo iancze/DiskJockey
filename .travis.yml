@@ -10,6 +10,9 @@ before_install:
   - sudo apt-get install gfortran
   - export PATH=$PATH:$PWD/scripts # add the scripts/ directory to the PATH
 
+before_script:
+  - julia -e 'Pkg.build("PyCall")'
+
 # This the default script that is run
 # julia -e 'Pkg.clone(pwd())'
 # julia -e 'Pkg.build("$name")'

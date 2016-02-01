@@ -12,6 +12,11 @@ include("initialize.jl")
 
 # Now, see if we can run venus.jl with d fixed
 
+# Edit config.yaml (how?) to un-fix d
+# Use pyyaml to do the edits.
+
+# Edit config.yaml to exclude most channels.
+
 
 # Now, with d floating
 

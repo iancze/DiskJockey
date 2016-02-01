@@ -77,9 +77,10 @@ Second, most of the scripts and IO routines require Python and several Python pa
 * numpy
 * scipy
 * matplotlib
-* Jupyter/IPython
 * h5py
 * astropy
+* PyYAML
+* Jupyter/IPython
 * Jupyter/IJulia
 
 With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source, in particular the [cookbook](docs/cookbook.md).
