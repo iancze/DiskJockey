@@ -11,10 +11,11 @@ before_install:
   - export PATH=$PATH:$PWD/scripts # add the scripts/ directory to the PATH
 
 script:
-  - julia -e 'Pkg.clone(pwd())'
-  - julia -e 'Pkg.build("$name")'
-  - julia -e 'Pkg.build("PyCall")'
-  - julia --check-bounds=yes -e 'Pkg.test("$name", coverage=true)'
+  - git fetch --unshallow
+  - julia --color=yes -e 'Pkg.clone(pwd())'
+  - julia --color=yes -e 'Pkg.build("JudithExcalibur")'
+  - julia --color=yes -e 'Pkg.build("PyCall")'
+  - julia --check-bounds=yes -e 'Pkg.test("JudithExcalibur", coverage=true)'
 
 # This the default script that is run
 # julia -e 'Pkg.clone(pwd())'
