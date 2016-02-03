@@ -2,7 +2,9 @@ using Base.Test
 
 # check to see what's on our path and what directory we are in
 println(ENV["PATH"])
-
+println("Current working directory ", pwd())
+println("Files in this directory ")
+run(`ls`)
 
 ###################################
 ### Basic unit tests
@@ -18,16 +20,8 @@ include("ensemble_sampler.jl")
 ######################################
 ### Standard model, fixed distance
 
-println("Current working directory ", pwd())
-println("Files in this directory ")
-run(`ls`)
-
-run(`bash clean.sh`)
-
-println("ran bash clean.sh")
-
 # Just make sure the directory is clean
-run(`./clean.sh`)
+run(`bash clean.sh`)
 
 # Make a fake model so we can test off of it.
 println("Initializing directory with a new standard project.")
@@ -49,7 +43,7 @@ run(`venus.jl --test`)
 ### Standard model, floating distance
 
 # Just make sure the directory is clean
-run(`./clean.sh`)
+run(`bash clean.sh`)
 
 # Make a fake model so we can test off of it.
 println("Initializing directory with a new standard project.")
