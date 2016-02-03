@@ -41,12 +41,6 @@ for i=1:nwalkers
 end
 
 
-# pos = run_mcmc(sampler, pos0, 10000)
-
-# reset_mcmc(sampler)
-
-# run_mcmc(sampler, pos, 10000)
-
 function f(sampler::Sampler, outdir::AbstractString)
     println("calling function")
     try
@@ -59,6 +53,30 @@ end
 run_schedule(sampler, pos0, 10, 1, "", f)
 
 
-# using NPZ
+# Now, let's try sampling a function with more parameters than walkers (just for testing purposes)
+# A 4D Gaussian to check against
+@everywhere function lnprob(p)
 
-# npzwrite("chain.npy", emcee_chain(sampler))
+    mu = [1.0, -2.0, 0.0, 3.4]
+    Sigma = [[0.5^2,  0.00, 0.0, 0.0] [0.00, 0.3^2, 0.0, 0.0] [0.0, 0.0, 0.7^2, 0.0] [0.0, 0.0, 0.0, 1.0^2] ]
+
+    R = p - mu # Residual vector
+    ld = logdet(Sigma)
+
+    lnp = -0.5 * ((R' * (Sigma\R))[1] + ld + 2 * log(2 * pi))
+    return lnp
+
+end
+
+nwalkers = 4
+ndim = 4
+
+sampler = Sampler(nwalkers, ndim, lnprob, true)
+
+# pos0 is the starting position, it needs to be a (ndim, nwalkers array)
+pos0 = Array(Float64, ndim, nwalkers)
+for i=1:nwalkers
+    pos0[:,i] = randn(ndim)
+end
+
+run_schedule(sampler, pos0, 1, 1, "", f)

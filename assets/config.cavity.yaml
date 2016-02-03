@@ -57,8 +57,8 @@ npix: 256
 pos0: pos0.npy
 
 # MCMC setup
-samples: 50
-loops: 10
+samples: 1
+loops: 1
 
 # Some parameters that may be helpful for making more realistic channel map plots of the model.
 # You will likely need to change these to correspond to the parameters of your observation.

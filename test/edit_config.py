@@ -16,10 +16,9 @@ config = yaml.load(f)
 f.close()
 
 import numpy as np
-nparam = 12
-nwalkers = 2 * nparam
+nwalkers = 4
 
-if args.fix_distance
+if args.fix_distance:
     # Just change the distance
     config["fix_d"] = True
 else:

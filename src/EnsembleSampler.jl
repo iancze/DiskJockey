@@ -22,8 +22,13 @@ type Sampler
     iterations::Int # How many iterations has the ensemble taken
 end
 
-function Sampler(nwalkers::Int, ndim::Int, lnprobfn::Function)
+function Sampler(nwalkers::Int, ndim::Int, lnprobfn::Function, test::Bool=false)
     a = 2.0
+
+    if !test
+        @assert ndim < nwalkers "I don't believe you have more parameters than walkers! Try flipping them."
+    end
+
     chain = Array(Float64, (ndim, 0, nwalkers))
     lnprob = Array(Float64, (nwalkers, 0))
     iterations = 0
@@ -242,6 +247,7 @@ end
 function write_samples(sampler::Sampler, outdir="")
 
     # fchain = flatchain(sampler)
+    
     npzwrite(outdir * "chain.npy", emcee_chain(sampler))
     # npzwrite(outdir * "flatchain.npy", fchain)
     npzwrite(outdir * "lnprob.npy", sampler.lnprob)

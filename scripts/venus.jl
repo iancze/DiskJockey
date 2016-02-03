@@ -24,6 +24,9 @@ s = ArgParseSettings()
     help = "Which CPUS to add"
     arg_type = Array{Int, 1}
     eval_arg = true
+    "--test"
+    help = "Is this a test run of venus.jl? Allow using many fewer walkers for eval purposes."
+    action = :store_true
 end
 
 parsed_args = parse_args(ARGS, s)
@@ -261,7 +264,8 @@ end
         lnprobs[i] = lnprob(dv, mvis)
     end
 
-    # remove the temporary directory in which we currently reside
+    # Change back to the home directory and then remove the temporary directory 
+    cd(homedir)
     run(`rm -rf $keydir`)
 
     # Sum them all together and feed back to the master process
@@ -284,12 +288,7 @@ ndim, nwalkers = size(pos0)
 # Use the EnsembleSampler to do the optimization
 using JudithExcalibur.EnsembleSampler
 
-sampler = Sampler(nwalkers, ndim, fprob)
-
-# make sure that we've loaded a pos0 with the right dimensions.
-size1, size2 = size(pos0)
-@assert size1==ndim "pos0 array does not match number of input dimensions."
-@assert size2==nwalkers "pos0 array does not match number of walkers."
+sampler = Sampler(nwalkers, ndim, fprob, parsed_args["test"])
 
 if parsed_args["plotly"]
     function f(sampler::Sampler, outdir::AbstractString)
