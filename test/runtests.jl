@@ -2,7 +2,9 @@ using Base.Test
 
 # check to see what's on our path and what directory we are in
 println(ENV["PATH"])
-println(pwd())
+println("Current working directory ", pwd())
+println("Files in this directory ")
+run(`ls`)
 
 ###################################
 ### Basic unit tests
