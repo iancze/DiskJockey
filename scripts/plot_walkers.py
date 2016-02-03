@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser(description="Measure statistics across multiple
 parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain for burn in.")
 parser.add_argument("--draw", type=int, help="If specified, print out a random sample of N draws from the posterior, after burn in.")
 parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
-parser.add_argument("--config", help="name of the config file used for the run.", default="../../config.yaml")
+parser.add_argument("--config", help="name of the config file used for the run.", default="config.yaml")
 parser.add_argument("--tri", help="Plot the triangle too.", action="store_true")
 
 args = parser.parse_args()
@@ -92,7 +92,7 @@ for i in range(ndim):
     for j in range(nwalkers):
         ax[i].plot(iterations, chain[j, :, i], lw=0.15, color="k")
 
-    ax[i].set_xlabel(labels[i])
+    ax[i].set_ylabel(labels[i])
 
 ax[-1].set_xlabel("Iteration")
 

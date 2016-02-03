@@ -8,6 +8,8 @@ include("ensemble_sampler.jl")
 
 # Make a fake model so we can test off of it.
 run(`JudithInitialize.jl --new-project=standard`)
+
+run(`python edit_config.py --fix-distance=True --model=standard`)
 include("initialize.jl")
 
 # Now, see if we can run venus.jl with d fixed
@@ -19,6 +21,21 @@ include("initialize.jl")
 
 
 # Now, with d floating
+# run(`python edit_config.py --fix-distance=False --model=standard`)
+# include("initialize.jl")
+#
+#
+# # Now, run with a cavity model
+# # Make a fake model so we can test off of it.
+# run(`JudithInitialize.jl --new-project=cavity`)
+#
+# run(`python edit_config.py --fix-distance=True --model=cavity`)
+# include("initialize.jl")
+#
+#
+# run(`JudithInitialize.jl --new-project=cavity`)
+# run(`python edit_config.py --fix-distance=False --model=cavity`)
+# include("initialize.jl")
 
 
 

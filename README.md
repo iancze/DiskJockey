@@ -1,6 +1,8 @@
 JudithExcalibur
 ===============
 
+[![Build Status](https://travis-ci.org/iancze/JudithExcalibur.svg?branch=master)](https://travis-ci.org/iancze/JudithExcalibur)
+
 Copyright Ian Czekala 2014-16
 
 email: iancze@gmail.com

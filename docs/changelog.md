@@ -8,6 +8,10 @@ The following are the changes that have been implemented since the previous vers
 
 Now provides installation instructions for tagged releases. RADMC-3D is installed automatically as a local version.
 
+## Travis integration
+
+Now the builds are tested on travis-ci, which should hopefully increase stability for future versions.
+
 ## fake_dataset.jl
 
 Creation of fake data for plotting and testing purposes.
