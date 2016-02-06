@@ -25,6 +25,7 @@ before_install:
 
 script:
   - git fetch --unshallow
+  - echo "We are in $(pwd) directory."
   - julia --color=yes -e 'Pkg.clone(pwd())'
   - julia --color=yes -e 'Pkg.build("DiskJockey")'
   - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
