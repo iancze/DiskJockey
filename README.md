@@ -3,9 +3,7 @@ DiskJockey
 
 [![Build Status](https://travis-ci.org/iancze/DiskJockey.svg?branch=master)](https://travis-ci.org/iancze/DiskJockey)
 
-![Logo](https://github.com/iancze/DiskJockey/blob/devel/docs/logo.svg)
-
-
+![Logo](logo.svg)
 
 Copyright Ian Czekala 2014-16
 
