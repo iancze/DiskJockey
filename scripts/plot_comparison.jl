@@ -26,11 +26,11 @@ config = YAML.load(open(parsed_args["config"]))
 
 # Load two separate high resolution images and compare them, computing the difference and the difference in lnprob.
 
-using JudithExcalibur.constants
-using JudithExcalibur.image
-using JudithExcalibur.model
-using JudithExcalibur.visibilities
-using JudithExcalibur.gridding
+using DiskJockey.constants
+using DiskJockey.image
+using DiskJockey.model
+using DiskJockey.visibilities
+using DiskJockey.gridding
 
 import PyPlot.plt
 using LaTeXStrings

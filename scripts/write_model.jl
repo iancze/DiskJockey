@@ -21,18 +21,18 @@ end
 
 parsed_args = parse_args(ARGS, s)
 
-using JudithExcalibur.constants
-using JudithExcalibur.image
-# using JudithExcalibur.model
-using JudithExcalibur.visibilities
-using JudithExcalibur.gridding
+using DiskJockey.constants
+using DiskJockey.image
+# using DiskJockey.model
+using DiskJockey.visibilities
+using DiskJockey.gridding
 
 using HDF5
 
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-# Let the model writing be taken care of by `JudithInitialize.jl`, the RADMC-3D synthesis be taken care of by `plot_model.jl` and then this simply reads in the image, does FFT, downsamples, etc.
+# Let the model writing be taken care of by `DJInitialize.jl`, the RADMC-3D synthesis be taken care of by `plot_model.jl` and then this simply reads in the image, does FFT, downsamples, etc.
 
 # read the wavelengths for all channels
 fid = h5open(config["data_file"], "r")

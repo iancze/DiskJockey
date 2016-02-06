@@ -20,7 +20,7 @@ function format_grid(grid::Grid, npix::Int)
     return "$(grid.nr)_$(grid.ntheta)_$(r_in)_$(r_out)_$npix"
 end
 
-"""Synthesize images for these parameters, grid, and npix values. dlams provides the frequencies at which to synthesize images. Assumes that you have run JudithInitialize.jl inside of homedir. When done, copies the image to outfile."""
+"""Synthesize images for these parameters, grid, and npix values. dlams provides the frequencies at which to synthesize images. Assumes that you have run DJInitialize.jl inside of homedir. When done, copies the image to outfile."""
 function synthesize_image(dlams::Array{Float64, 1}, pars::Parameters, grid::Grid, npix::Int, outfile::AbstractString, species::AbstractString)
 
     # Assumes that all of the necessary files are already in the current working directory.

@@ -1,8 +1,8 @@
 # All necessary variables (ie, setup vars) should be defined here, to be
 # shared between any disparate processes
-# push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
-# push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
-# push!(LOAD_PATH, "/pool/scout0/JudithExcalibur/")
+# push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/")
+# push!(LOAD_PATH, "/n/home07/iczekala/DiskJockey/")
+# push!(LOAD_PATH, "/pool/scout0/DiskJockey/")
 
 module consonance
 
@@ -10,21 +10,21 @@ export pars, nframes, nframes_per_proc, nchan, vels, lams, vmax, moviedir
 export vmax_d, vmax_g, vmax_v
 
 
-using JudithExcalibur.constants
-using JudithExcalibur.model
+using DiskJockey.constants
+using DiskJockey.model
 
 # For odyssey use
-# homedir = "/n/home07/iczekala/JudithExcalibur/"
+# homedir = "/n/home07/iczekala/DiskJockey/"
 # scratchdir = "/scratch/"
-# outdir = "/n/home07/iczekala/JudithExcalibur/output/movie/" #Where the images.out and images.png are stored
+# outdir = "/n/home07/iczekala/DiskJockey/output/movie/" #Where the images.out and images.png are stored
 
 # For local use
-moviedir = "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/"
+moviedir = "/home/ian/Grad/Research/Disks/DiskJockey/movie/"
 
 # For cfa CF use
-# homedir = "/pool/scout0/JudithExcalibur/"
+# homedir = "/pool/scout0/DiskJockey/"
 # scratchdir = "/pool/cf/iczekala/scratch/"
-# outdir = "/pool/scout0/JudithExcalibur/output/movie/"
+# outdir = "/pool/scout0/DiskJockey/output/movie/"
 
 # How many frames per process?
 nframes_per_proc = 50

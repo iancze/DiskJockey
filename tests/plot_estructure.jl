@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/")
 
 using ArgParse
 

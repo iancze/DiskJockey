@@ -58,11 +58,11 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
-using JudithExcalibur.constants
-using JudithExcalibur.visibilities
-using JudithExcalibur.image
-using JudithExcalibur.gridding
-using JudithExcalibur.model
+using DiskJockey.constants
+using DiskJockey.visibilities
+using DiskJockey.image
+using DiskJockey.gridding
+using DiskJockey.model
 using Base.Test
 
 
@@ -180,7 +180,7 @@ function fprob(p::Vector{Float64})
 
     # Copy all relevant configuration scripts to this subdirectory
     # these are mainly setup files that will be static throughout the run
-    # they were written by JudithInitialize.jl and write_grid()
+    # they were written by DJInitialize.jl and write_grid()
     for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
         ff = homedir * fname
         run(`cp $ff $keydir`)

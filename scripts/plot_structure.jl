@@ -15,8 +15,8 @@ import YAML
 config = YAML.load(open(parsed_args["config"]))
 
 
-using JudithExcalibur.model
-using JudithExcalibur.constants
+using DiskJockey.model
+using DiskJockey.constants
 
 species = config["species"]
 transition = config["transition"]
@@ -29,7 +29,7 @@ using LaTeXStrings
 
 # velocity structure
 function plot_vel(pars::AbstractParameters, grid::Grid)
-    vels = JudithExcalibur.model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
+    vels = DiskJockey.model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -49,7 +49,7 @@ end
 
 # temperature structure
 function plot_temp(pars::AbstractParameters, grid::Grid)
-    temps = JudithExcalibur.model.temperature(grid.rs, pars)
+    temps = DiskJockey.model.temperature(grid.rs, pars)
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -73,7 +73,7 @@ end
 
 # scale height
 function plot_height(pars::AbstractParameters, grid::Grid)
-    heights = JudithExcalibur.model.Hp(grid.rs, pars) ./ AU
+    heights = DiskJockey.model.Hp(grid.rs, pars) ./ AU
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -91,7 +91,7 @@ end
 #     R = 10 * AU
 #     dlnrhos = Array(Float64, nz)
 #     for i=1:nz
-#         dlnrhos[i] = - G * pars.M_star * M_sun * zs[i] * mu_gas * m_H / ((R^2 + zs[i]^2)^1.5 * kB * JudithExcalibur.model.temperature(R, pars))
+#         dlnrhos[i] = - G * pars.M_star * M_sun * zs[i] * mu_gas * m_H / ((R^2 + zs[i]^2)^1.5 * kB * DiskJockey.model.temperature(R, pars))
 #     end
 #
 #     fig = plt[:figure]()
@@ -113,7 +113,7 @@ end
 #     R = 100 * AU
 #     rhos = Array(Float64, nz)
 #     for i=1:nz
-#         rhos[i] = JudithExcalibur.model.rho_gas(R, zs[i], pars)
+#         rhos[i] = DiskJockey.model.rho_gas(R, zs[i], pars)
 #     end
 #
 #     lngas = log(rhos) - log(mu_gas * m_H)
@@ -140,7 +140,7 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
     Sigmas = Array(Float64, grid.nr)
 
     for i=1:grid.nr
-        Sigmas[i] = JudithExcalibur.model.Sigma(grid.rs[i], pars)
+        Sigmas[i] = DiskJockey.model.Sigma(grid.rs[i], pars)
     end
 
     ax[:loglog](rr, Sigmas)

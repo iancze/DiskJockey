@@ -1,4 +1,4 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/")
 # Given some model parameters, synthesize and plot the channel maps and
 # integrated spectrum
 

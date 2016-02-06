@@ -16,8 +16,8 @@ config = YAML.load(open(parsed_args["config"]))
 
 # Make some diagnostic plots to show what the model looks like in analytic terms
 
-using JudithExcalibur.hmodel
-using JudithExcalibur.constants
+using DiskJockey.hmodel
+using DiskJockey.constants
 import PyPlot.plt
 using LaTeXStrings
 using Dierckx
@@ -29,7 +29,7 @@ function plot_vel(pars::Parameters, grid)
     for j=1:nz
         for i=1:nr
             # convert from cm/s to km/s
-            vel[j, i] = JudithExcalibur.hmodel.velocity(rs[i], zs[j], pars) .* 1e-5
+            vel[j, i] = DiskJockey.hmodel.velocity(rs[i], zs[j], pars) .* 1e-5
         end
     end
 
@@ -57,7 +57,7 @@ function plot_temp(pars::Parameters, grid)
     Ts = Array(Float64, (nz,nr));
     for j=1:nz
         for i=1:nr
-            Ts[j, i] = JudithExcalibur.hmodel.temperature(rs[i], zs[j], pars)
+            Ts[j, i] = DiskJockey.hmodel.temperature(rs[i], zs[j], pars)
         end
     end
 
@@ -82,7 +82,7 @@ end
 # scale height
 function plot_height(pars::Parameters, grid)
 
-    heights = JudithExcalibur.hmodel.Hp(grid.rs, pars) ./ AU
+    heights = DiskJockey.hmodel.Hp(grid.rs, pars) ./ AU
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -96,7 +96,7 @@ end
 
 # Atmospheric height
 function plot_atm_height(pars::Parameters, grid)
-    heights = JudithExcalibur.hmodel.z_q(grid.rs, pars) ./ AU
+    heights = DiskJockey.hmodel.z_q(grid.rs, pars) ./ AU
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -110,7 +110,7 @@ end
 
 function plot_surface_density(pars::Parameters, grid)
 
-    Sigmas = JudithExcalibur.hmodel.Sigma(grid.rs, pars)
+    Sigmas = DiskJockey.hmodel.Sigma(grid.rs, pars)
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -137,7 +137,7 @@ function plot_density_slice(pars::Parameters)
     ax = fig[:add_subplot](111)
 
     for r in rs
-        zs, slice = JudithExcalibur.hmodel.density_slice(r * AU, pars)
+        zs, slice = DiskJockey.hmodel.density_slice(r * AU, pars)
         # ax[:semilogy](zs ./AU, slice)
         ax[:semilogy](zs ./AU, slice/(mu_gas * m_H))
     end
@@ -156,7 +156,7 @@ function plot_density_gradient(pars::Parameters)
     R = 0.5 * AU
     y = Array(Float64, nz)
     for i=1:nz
-        y[i] = JudithExcalibur.hmodel.dlnrho(R, zs[i], pars)
+        y[i] = DiskJockey.hmodel.dlnrho(R, zs[i], pars)
     end
 
     fig = plt.figure()
@@ -178,7 +178,7 @@ function plot_density_1D_unnormed(pars::Parameters)
     R = 10 * AU
     y = Array(Float64, nz)
     for i=1:nz
-        y[i] = JudithExcalibur.hmodel.un_lnrho(R, zs[i], pars)
+        y[i] = DiskJockey.hmodel.un_lnrho(R, zs[i], pars)
     end
 
     fig = plt.figure()
@@ -200,7 +200,7 @@ function plot_dlnrho(pars::Parameters)
     R = 10 * AU
     dlnrhos = Array(Float64, nz)
     for i=1:nz
-        dlnrhos[i] = JudithExcalibur.hmodel.dlnrho(R, zs[i], pars)
+        dlnrhos[i] = DiskJockey.hmodel.dlnrho(R, zs[i], pars)
     end
 
     fig = plt.figure()
@@ -221,11 +221,11 @@ function plot_density_1D(pars::Parameters)
     R = 0.5 * AU
     y = Array(Float64, nz)
     for i=1:nz
-        y[i] = JudithExcalibur.hmodel.un_lnrho(R, zs[i], pars)
+        y[i] = DiskJockey.hmodel.un_lnrho(R, zs[i], pars)
     end
 
     # Now calculate the correction factor here
-    lncor = exp(JudithExcalibur.hmodel.lncorrection_factor(R, pars))
+    lncor = exp(DiskJockey.hmodel.lncorrection_factor(R, pars))
 
     lngas = lncor +  y - log(mu_gas * m_H)
 
@@ -251,11 +251,11 @@ function plot_interpolator(pars::Parameters)
     lncors = Array(Float64, nr)
 
     for i=1:nr
-        lncors[i] = JudithExcalibur.hmodel.lncorrection_factor(rs[i], pars)
+        lncors[i] = DiskJockey.hmodel.lncorrection_factor(rs[i], pars)
     end
 
     # Now, let's use the interpolator to make finer samples and see if they line up.
-    spl = JudithExcalibur.hmodel.make_correction_interpolator(pars, grid)
+    spl = DiskJockey.hmodel.make_correction_interpolator(pars, grid)
 
     # Now, come up with a finer spaceing of grid points
     n_fine = 100
@@ -289,7 +289,7 @@ function plot_dens(pars::Parameters, grid)
     nr = grid.nr
     nz = 64
     rs = grid.rs
-    zq = JudithExcalibur.hmodel.z_q(rs[end], pars)
+    zq = DiskJockey.hmodel.z_q(rs[end], pars)
 
     zs = cat(1, [0], logspace(log10(0.1 * AU), log10(1.5 * zq), nz-1))
 
@@ -305,16 +305,16 @@ function plot_dens(pars::Parameters, grid)
 
     println("Making correction interpolator")
     tic()
-    spl = JudithExcalibur.hmodel.make_correction_interpolator(pars, grid)
+    spl = DiskJockey.hmodel.make_correction_interpolator(pars, grid)
     toc()
     println("Finished correction interpolator")
 
     rhos = Array(Float64, (nz,nr))
     for j=1:nz
         for i=1:nr
-            temp = JudithExcalibur.hmodel.temperature(rs[i], zs[j], pars)
-            XF = JudithExcalibur.hmodel.X_freeze(temp, pars)
-            rhos[j, i] = XF * JudithExcalibur.hmodel.rho_gas(rs[i], zs[j], pars, spl)
+            temp = DiskJockey.hmodel.temperature(rs[i], zs[j], pars)
+            XF = DiskJockey.hmodel.X_freeze(temp, pars)
+            rhos[j, i] = XF * DiskJockey.hmodel.rho_gas(rs[i], zs[j], pars, spl)
         end
     end
 
@@ -394,7 +394,7 @@ const global nr = grid.nr
 global nr = grid.nr
 global nz = 64
 global rs = grid.rs
-global zq = JudithExcalibur.hmodel.z_q(rs[end], pars)
+global zq = DiskJockey.hmodel.z_q(rs[end], pars)
 
 global zs = cat(1, [0], logspace(log10(0.1 * AU), log10(zq), nz-1))
 

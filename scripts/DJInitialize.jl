@@ -25,7 +25,7 @@ end
 
 parsed_args = parse_args(ARGS, s)
 
-assets_dir = Pkg.dir("JudithExcalibur") * "/assets/"
+assets_dir = Pkg.dir("DiskJockey") * "/assets/"
 
 # The user is going to start modeling a new disk, so copy in the new configuration file.
 if parsed_args["new-project"] != "no"
@@ -39,14 +39,14 @@ if parsed_args["new-project"] != "no"
     quit()
 end
 
-using JudithExcalibur.constants
-using JudithExcalibur.model
-using JudithExcalibur.visibilities
+using DiskJockey.constants
+using DiskJockey.model
+using DiskJockey.visibilities
 
 # This is just for new users to test that the package is successfully installed.
 if parsed_args["version"]
-    println("Your JudithExcalibur scripts are successfully linked.")
-    println("You are running JudithExcalibur $JUDITHEXCALIBUR_VERSION")
+    println("Your DiskJockey scripts are successfully linked.")
+    println("You are running DiskJockey $JUDITHEXCALIBUR_VERSION")
     println("Exiting")
     quit()
 end

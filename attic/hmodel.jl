@@ -5,7 +5,7 @@ module hmodel
 export write_grid, write_model, write_lambda, write_dust, Parameters, Grid
 
 # The double dot is because we are now inside the model module, and we want to import the
-# constants module, which is part of the enclosing JudithExcalibur package.
+# constants module, which is part of the enclosing DiskJockey package.
 using Dierckx
 using ..constants
 

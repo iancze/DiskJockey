@@ -67,11 +67,11 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
-@everywhere using JudithExcalibur.constants
-@everywhere using JudithExcalibur.visibilities
-@everywhere using JudithExcalibur.image
-@everywhere using JudithExcalibur.gridding
-@everywhere using JudithExcalibur.tmodel
+@everywhere using DiskJockey.constants
+@everywhere using DiskJockey.visibilities
+@everywhere using DiskJockey.image
+@everywhere using DiskJockey.gridding
+@everywhere using DiskJockey.tmodel
 @everywhere using Base.Test
 
 
@@ -265,7 +265,7 @@ end
 
     # Copy all relevant configuration scripts to this subdirectory
     # these are mainly setup files that will be static throughout the run
-    # they were written by JudithInitialize.jl and write_grid()
+    # they were written by DJInitialize.jl and write_grid()
     for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
         ff = homedir * fname
         run(`cp $ff $keydir`)
@@ -376,7 +376,7 @@ pos0 = npzread(config["pos0"])
 ndim, nwalkers = size(pos0)
 
 # Use the EnsembleSampler to do the optimization
-using JudithExcalibur.EnsembleSampler
+using DiskJockey.EnsembleSampler
 
 sampler = Sampler(nwalkers, ndim, fprob)
 

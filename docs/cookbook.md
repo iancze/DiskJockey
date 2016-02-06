@@ -1,10 +1,10 @@
 # Cookbook
 
-After you have installed both `RADMC-3D` and `JudithExcalibur`, it's time to get up and running!
+After you have installed both `RADMC-3D` and `DiskJockey`, it's time to get up and running!
 
 ## Initialization
 
-Now the `JudithExcalibur` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one protoplanetary disk, or perhaps try different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each disk model. The following is an example to get you started fitting AK Sco.
+Now the `DiskJockey` package should be successfully installed user-wide. Because it is likely that you will want to fit more than just one protoplanetary disk, or perhaps try different model specifications for a particular disk, the code structure is organized so that you will have a separate directory for each disk model. The following is an example to get you started fitting AK Sco.
 
     $ mkdir AKSco
     $ cd AKSco
@@ -13,7 +13,7 @@ Make sure to download the dataset in HDF5 format [here](https://figshare.com/art
 
 Now, you'll want to initialize this directory with a config file. This config file will store all of the options that are specific to fitting this disk and is frequently used by many of the scripts in this package. To initialize,
 
-    $ JudithInitialize.jl --new-project=standard
+    $ DJInitialize.jl --new-project=standard
     Copied default model specific config.yaml and InitializeWalkers.ipynb to current working directory.
     Exiting
 
@@ -93,7 +93,7 @@ will create plots in your current working directory of velocity, temperature, an
 
 Next, we'll need to initialize the directory with the appropriate RADMC-3D files specific to your dataset and config parameters.
 
-    $ JudithInitialize.jl
+    $ DJInitialize.jl
 
 This command copies the appropriate molecular data to your current directory and writes out the input files for RADMC-3D using the parameters defined in `config.yaml`.
 
@@ -113,10 +113,10 @@ And, if you'd like to plot up a zeroth-moment map
 
     $ plot_moments.jl
 
-**Important**: Note that if you make changes to `config.yaml`, you'll need to *rerun* `JudithInitialize.jl` to recreate the input files for RADMC-3D before running `synthesize_model.jl`, otherwise you'll be synthesizing stale input files. For me, a typical workflow for playing around with channel maps is
+**Important**: Note that if you make changes to `config.yaml`, you'll need to *rerun* `DJInitialize.jl` to recreate the input files for RADMC-3D before running `synthesize_model.jl`, otherwise you'll be synthesizing stale input files. For me, a typical workflow for playing around with channel maps is
 
 1. Edit `config.yaml` to parameters that might make sense
-2. at the command line, run `$ JudithInitialize.jl && synthesize_model.jl && plot_chmaps.jl && plot_moments.jl`. The `&&` ensures that the previous command completes before moving on to the next command.
+2. at the command line, run `$ DJInitialize.jl && synthesize_model.jl && plot_chmaps.jl && plot_moments.jl`. The `&&` ensures that the previous command completes before moving on to the next command.
 3. Inspect the resulting plots of the data, and if I am not satisfied go back to 1.
 
 It is a very good idea to inspect your channel maps to make sure that there isn't any weird structure, that you have enough pixels to resolve the disk structure, and that your model grid appears to be at high enough resolution. **A few extra minutes or hours spent debugging your images during this step can save you days (of supercomputer time) in the steps ahead.**
@@ -131,7 +131,7 @@ It is a very good idea to inspect your channel maps to make sure that there isn'
 
 As you just experienced, model synthesis can take a very long time, generally 1 - 5 minutes per model, where in the case of AK Sco we have 82 channels. In order to explore the posterior in a reasonable amount of time, we need to parallelize the synthesis and evaluation of the likelihood function across multiple compute cores. This is done using a Julia port of the Ensemble Sampler by Goodman and Weare 2010, implemented in Python by Foreman-Mackey et al. as `emcee`. For more information about this great sampler, see here.
 
-Much like `emcee`, starting out requires deciding upon the positions of the walkers. To aid in placing these, the `JudithInitialize.jl` script copied over a Jupyter notebook to your current directory. Now, open up `InitilializeWalkers.ipynb` with a Jupyter notebook. We will change these following values to correspond to your disk of choice.
+Much like `emcee`, starting out requires deciding upon the positions of the walkers. To aid in placing these, the `DJInitialize.jl` script copied over a Jupyter notebook to your current directory. Now, open up `InitilializeWalkers.ipynb` with a Jupyter notebook. We will change these following values to correspond to your disk of choice.
 
 To save you some computational time otherwise spent on burn-in, I found that the following walker starting positions worked well for AK Sco
 

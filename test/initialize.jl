@@ -2,7 +2,7 @@
 
 # Now, synthesize a new set of channel maps
 # First, create the necessary input files
-run(`JudithInitialize.jl`)
+run(`DJInitialize.jl`)
 
 # make plots of the structure
 run(`plot_structure.jl`)

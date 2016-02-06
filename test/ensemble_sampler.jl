@@ -1,4 +1,4 @@
-using JudithExcalibur.EnsembleSampler
+using DiskJockey.EnsembleSampler
 
 # Rosenbrock function
 @everywhere function lnprob(p)

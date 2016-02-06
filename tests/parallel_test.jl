@@ -1,5 +1,5 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
-push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/")
+push!(LOAD_PATH, "/n/home07/iczekala/DiskJockey/")
 
 println("On startup, we have ", nprocs(), " processes.")
 println("On startup, we have ", nworkers(), " workers.")

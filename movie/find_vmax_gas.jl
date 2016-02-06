@@ -1,6 +1,6 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/")
-# push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
-# push!(LOAD_PATH, "/pool/scout0/JudithExcalibur/")
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/movie/")
+# push!(LOAD_PATH, "/n/home07/iczekala/DiskJockey/")
+# push!(LOAD_PATH, "/pool/scout0/DiskJockey/")
 
 using ArgParse
 
@@ -22,8 +22,8 @@ run_index = parsed_args["run_index"]
 # and transforms of channel maps
 using consonance
 
-using JudithExcalibur.image
-using JudithExcalibur.visibilities
+using DiskJockey.image
+using DiskJockey.visibilities
 
 import YAML
 config = YAML.load(open("config.yaml"))

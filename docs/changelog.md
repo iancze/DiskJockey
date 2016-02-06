@@ -4,6 +4,8 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.2
 
+The package is now named DiskJockey (previously JudithExcalibur).
+
 ## Installation
 
 Now provides installation instructions for tagged releases. RADMC-3D is installed automatically as a local version.
@@ -12,9 +14,6 @@ Now provides installation instructions for tagged releases. RADMC-3D is installe
 
 Now the builds are tested on travis-ci, which should hopefully increase stability for future versions.
 
-## fake_dataset.jl
-
-Creation of fake data for plotting and testing purposes.
 
 ## EnsembleSampler
 
@@ -24,6 +23,8 @@ Now takes an optional function, to be called at the end of each loop as `func(sa
 
 See the `src/EnsembleSampler.jl` file for more details. This is primarily in support of the next feature...
 
+There is also an `expand_walkers.py` script.
+
 ## Plotly script
 
 If you run the sampling script as
@@ -32,15 +33,17 @@ If you run the sampling script as
 
 After each loop, creates/updates a plotly walkers plot corresponding to the `name` entry in `config.yaml`. This allows easy monitoring of many different chains that might be running on a cluster.
 
-## JudithInitialize.jl
+## DJInitialize.jl
 
 Now can easily spit out an `exclude` array so that fewer channels can be fit during initial testing.
+
+You can also follow up with `plot_baselines.jl` to get an idea of what the array configuration looks like.
 
 ## Cavity model
 
 By initializing a directory with
 
-    $ JudithInitialize.jl --new-project=cavity
+    $ DJInitialize.jl --new-project=cavity
 
 you can start exploring the `cavity` model, which has an exponential taper inside of some radius, `r_cav`.
 

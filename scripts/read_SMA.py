@@ -2,7 +2,7 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Convert SMA FITS files into an HDF5 file for JudithExcalibur.")
+parser = argparse.ArgumentParser(description="Convert SMA FITS files into an HDF5 file for DiskJockey.")
 parser.add_argument("FITS", help="The SMA FITS file.")
 parser.add_argument("--out", default="data.hdf5", help="The output file.")
 args = parser.parse_args()
@@ -36,6 +36,8 @@ vv = 1e-3 * (freqs * np.tile(data["VV"], (nfreq, 1)).T).T
 # uu, vv are now (nfreq, nvis) shape arrays
 
 shape = uu.shape
+
+print("Original shape of DATA", data["DATA"].shape)
 
 vis = np.squeeze(data["DATA"])  # Remove all of the "zombie" 1D columns
 # On disk, stored as an (npoints, nfreqs, 3) array, where last dimension is

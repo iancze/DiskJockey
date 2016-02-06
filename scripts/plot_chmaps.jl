@@ -17,9 +17,9 @@ parsed_args = parse_args(ARGS, s)
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-using JudithExcalibur.constants
-using JudithExcalibur.image
-using JudithExcalibur.model
+using DiskJockey.constants
+using DiskJockey.image
+using DiskJockey.model
 using HDF5
 
 import PyPlot.plt

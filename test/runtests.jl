@@ -25,7 +25,7 @@ run(`bash clean.sh`)
 
 # Make a fake model so we can test off of it.
 println("Initializing directory with a new standard project.")
-run(`JudithInitialize.jl --new-project=standard`)
+run(`DJInitialize.jl --new-project=standard`)
 
 # Set up the config file and pos0.npy
 println("Editing config.yaml to use the standard model with fixed distance.")
@@ -47,7 +47,7 @@ run(`bash clean.sh`)
 
 # Make a fake model so we can test off of it.
 println("Initializing directory with a new standard project.")
-run(`JudithInitialize.jl --new-project=standard`)
+run(`DJInitialize.jl --new-project=standard`)
 
 # Set up the config file and pos0.npy
 println("Editing config.yaml to use the standard model with floating distance.")
@@ -75,13 +75,13 @@ run(`venus.jl --test`)
 #
 # # Now, run with a cavity model
 # # Make a fake model so we can test off of it.
-# run(`JudithInitialize.jl --new-project=cavity`)
+# run(`DJInitialize.jl --new-project=cavity`)
 #
 # run(`python edit_config.py --fix-distance=True --model=cavity`)
 # include("initialize.jl")
 #
 #
-# run(`JudithInitialize.jl --new-project=cavity`)
+# run(`DJInitialize.jl --new-project=cavity`)
 # run(`python edit_config.py --fix-distance=False --model=cavity`)
 # include("initialize.jl")
 
@@ -93,8 +93,8 @@ run(`venus.jl --test`)
 
 # Clean the directory
 # Repeat everything with truncated model
-# run(`JudithInitialize.jl --new-project=truncated`)
+# run(`DJInitialize.jl --new-project=truncated`)
 
 # Clean the directory
 # Repeat everything with cavity model
-# run(`JudithInitialize.jl --new-project=cavity`)
+# run(`DJInitialize.jl --new-project=cavity`)

@@ -1,6 +1,6 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
-push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
-push!(LOAD_PATH, "/pool/scout0/JudithExcalibur/")
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/")
+push!(LOAD_PATH, "/n/home07/iczekala/DiskJockey/")
+push!(LOAD_PATH, "/pool/scout0/DiskJockey/")
 
 # Determine the proper vmin and vmax scaling for the dust images, channel maps,
 # and transforms of channel maps

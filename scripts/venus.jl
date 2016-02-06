@@ -83,11 +83,11 @@ else
 end
 
 
-@everywhere using JudithExcalibur.constants
-@everywhere using JudithExcalibur.visibilities
-@everywhere using JudithExcalibur.image
-@everywhere using JudithExcalibur.gridding
-@everywhere using JudithExcalibur.model
+@everywhere using DiskJockey.constants
+@everywhere using DiskJockey.visibilities
+@everywhere using DiskJockey.image
+@everywhere using DiskJockey.gridding
+@everywhere using DiskJockey.model
 @everywhere using Base.Test
 
 # load data and figure out how many channels
@@ -186,7 +186,7 @@ end
 
     # Copy all relevant configuration scripts to this subdirectory so that RADMC-3D can run.
     # these are mainly setup files that will be static throughout the run
-    # they were written by JudithInitialize.jl and write_grid()
+    # they were written by DJInitialize.jl and write_grid()
     for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
         run(`cp $(homedir)$fname $keydir`)
     end
@@ -286,7 +286,7 @@ end
 ndim, nwalkers = size(pos0)
 
 # Use the EnsembleSampler to do the optimization
-using JudithExcalibur.EnsembleSampler
+using DiskJockey.EnsembleSampler
 
 sampler = Sampler(nwalkers, ndim, fprob, parsed_args["test"])
 

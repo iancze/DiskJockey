@@ -1,6 +1,6 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/movie/")
-# push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
-# push!(LOAD_PATH, "/pool/scout0/JudithExcalibur/")
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/movie/")
+# push!(LOAD_PATH, "/n/home07/iczekala/DiskJockey/")
+# push!(LOAD_PATH, "/pool/scout0/DiskJockey/")
 
 using consonance
 
@@ -21,8 +21,8 @@ run_index = parsed_args["run_index"]
 
 imgdir = moviedir * @sprintf("g%02d/", run_index)
 
-using JudithExcalibur.constants
-using JudithExcalibur.image
+using DiskJockey.constants
+using DiskJockey.image
 
 import YAML
 config = YAML.load(open("config.yaml"))

@@ -1,7 +1,9 @@
-JudithExcalibur
+DiskJockey
 ===============
 
-[![Build Status](https://travis-ci.org/iancze/JudithExcalibur.svg?branch=master)](https://travis-ci.org/iancze/JudithExcalibur)
+[![Build Status](https://travis-ci.org/iancze/DiskJockey.svg?branch=master)](https://travis-ci.org/iancze/DiskJockey)
+
+![Logo](docs/logo.svg)
 
 Copyright Ian Czekala 2014-16
 
@@ -11,16 +13,16 @@ This package derives dynamical masses for T Tauri stars using the Keplerian moti
 
 See an explanation of [how dynamical mass measurements](http://iancze.github.io/dynamical/) work.
 
-Papers published using JudithExcalibur:
+Papers published using DiskJockey:
 
 * *A Disk-based Dynamical Constraint on the Mass of the Young Binary AK Sco*: [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C)
 * *A Disk-based Dynamical Constraint on the Mass of the Young Binary DQ Tau* : [Czekala et al. 2016 2016arXiv160103806C](http://adsabs.harvard.edu/abs/2016arXiv160103806C)
 
 # Organization
 
-JudithExcalibur is designed to forward model inteferometric observations of protoplanetary disks, for the purpose of deriving a precise measurement of the central (sub-)stellar mass.
+DiskJockey is designed to forward model inteferometric observations of protoplanetary disks, for the purpose of deriving a precise measurement of the central (sub-)stellar mass.
 
-This package relies upon the excellent radiative synthesis package RADMC-3D to perform the radiative transfer of the disk model. Comprehensive documentation for RADMC-3D can be found [here](http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/). For package versions after v0.1.2, RADMC-3D is installed locally within the JudithExcalibur package. This means that you should be able to run all of the examples without needing to install RADMC-3D separately. If you already use RADMC-3D for other synthesis, this will leave your current installation alone, it's just that JudithExcalibur will use the version it installed for itself.
+This package relies upon the excellent radiative synthesis package RADMC-3D to perform the radiative transfer of the disk model. Comprehensive documentation for RADMC-3D can be found [here](http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/). For package versions after v0.1.2, RADMC-3D is installed locally within the DiskJockey package. This means that you should be able to run all of the examples without needing to install RADMC-3D separately. If you already use RADMC-3D for other synthesis, this will leave your current installation alone, it's just that DiskJockey will use the version it installed for itself.
 
 There are several stages to evaluating the best-fitting parameters of a disk structure model:
 
@@ -31,7 +33,7 @@ There are several stages to evaluating the best-fitting parameters of a disk str
 
 I have organized the code in this package into source (in the `src` directory) and scripts (in the `scripts`) directory. After installation (see below), if you do
 
-    using JudithExcalibur
+    using DiskJockey
 
 You will be able to access any of the modules within `src`. These provide the base functionality for the package in common tasks, such as reading in images produced by RADMC-3D, Fourier transforms, and visibility interpolation. My hope is to make these components as general as possible so if you would like to extend this package to fit a novel type of disk, it will be easy to reuse many of the core functionality.
 
@@ -47,20 +49,20 @@ Because spectral line datasets are large, and synthesizing models is computation
 
 First, make sure you have installed RADMC-3D and you can successfully run one of the example scripts contained within that package. My current RADMC-3D installation is v0.38, although I expect that everything should work well on other recent versions of the package. Second, I have now migrated this package to run on Julia v0.4+, and I plan to keep it up to date with current Julia releases.
 
-Because `JudithExcalibur` is not yet an official Julia package, for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
+Because `DiskJockey` is not yet an official Julia package, for now, installation involves simply cloning the repository. First, open up a Julia prompt in the REPL, then type
 
-    julia> Pkg.clone("https://github.com/iancze/JudithExcalibur.git")
+    julia> Pkg.clone("https://github.com/iancze/DiskJockey.git")
 
 You can also download the releases [here](). However, due to the ongoing development of this package, it will be easier to keep your version current by installing off of the git master branch as described above.
 
 As mentioned previously, there are several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your system PATH. To figure out where the package is installed
 
-    julia> Pkg.dir("JudithExcalibur")
-    "/home/ian/.julia/JudithExcalibur"
+    julia> Pkg.dir("DiskJockey")
+    "/home/ian/.julia/DiskJockey"
 
 Your PATH will vary. The scripts are located inside of the `scripts` directory, so if you are using bash or Z-shell, you will want to add the PATH that looks something like
 
-    export PATH="/home/ian/.julia/JudithExcalibur/scripts:$PATH"
+    export PATH="/home/ian/.julia/DiskJockey/scripts:$PATH"
 
 inside of your `.bashrc` or `.zshrc` file. Finally,
 
@@ -68,9 +70,9 @@ inside of your `.bashrc` or `.zshrc` file. Finally,
 
 To check that you have properly added the scripts (and check that you installed the correct version), you can try in your system shell
 
-    $ JudithInitialize.jl --version
-    Your JudithExcalibur scripts are successfully linked.
-    You are running JudithExcalibur 0.1.1
+    $ DJInitialize.jl --version
+    Your DiskJockey scripts are successfully linked.
+    You are running DiskJockey 0.1.1
     Exiting
 
 

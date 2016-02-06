@@ -16,14 +16,14 @@ config = YAML.load(open(parsed_args["config"]))
 
 # Make some diagnostic plots to show what the model looks like in analytic terms
 
-using JudithExcalibur.tmodel
-using JudithExcalibur.constants
+using DiskJockey.tmodel
+using DiskJockey.constants
 import PyPlot.plt
 using LaTeXStrings
 
 # velocity structure
 function plot_vel(pars::Parameters, grid)
-    vels = JudithExcalibur.tmodel.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
+    vels = DiskJockey.tmodel.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -43,7 +43,7 @@ end
 
 # temperature structure
 function plot_temp(pars::Parameters, grid)
-    temps = JudithExcalibur.tmodel.temperature(grid.rs, pars)
+    temps = DiskJockey.tmodel.temperature(grid.rs, pars)
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -63,7 +63,7 @@ end
 
 # scale height
 function plot_height(pars::Parameters, grid)
-    heights = JudithExcalibur.tmodel.Hp(grid.rs, pars) ./ AU
+    heights = DiskJockey.tmodel.Hp(grid.rs, pars) ./ AU
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -77,7 +77,7 @@ end
 
 function plot_surface_density(pars::Parameters, grid)
 
-    # Sigmas = JudithExcalibur.model.Sigma(grid.rs, pars)
+    # Sigmas = DiskJockey.model.Sigma(grid.rs, pars)
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -85,7 +85,7 @@ function plot_surface_density(pars::Parameters, grid)
     Sigmas = Array(Float64, grid.nr)
 
     for i=1:grid.nr
-        Sigmas[i] = JudithExcalibur.tmodel.Sigma(grid.rs[i], pars)
+        Sigmas[i] = DiskJockey.tmodel.Sigma(grid.rs[i], pars)
     end
 
     ax[:loglog](rr, Sigmas)

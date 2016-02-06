@@ -1,7 +1,6 @@
 #!/usr/bin/env julia
 
-# Given some model parameters, synthesize the images. Need to run DJInitialize.jl first.
-
+# Read the data file and plot the location of all of the baselines, in k\lambda
 using ArgParse
 
 s = ArgParseSettings()
@@ -20,7 +19,10 @@ using DiskJockey.constants
 using DiskJockey.image
 using DiskJockey.model
 using DiskJockey.visibilities
-using HDF5
+using DiskJockey.gridding
+
+import PyPlot.plt
+using LaTeXStrings
 
 species = config["species"]
 transition = config["transition"]
@@ -29,12 +31,13 @@ model = config["model"]
 
 pars = convert_dict(config["parameters"], config["model"])
 
+# Load the data file so we can use it to compute lnprob
 dvarr = DataVis(config["data_file"])
-max_base = max_baseline(dvarr)
-npix = config["npix"] # number of pixels
+dv = dvarr[1]
 
-# lambda should have already been written by DJInitialize.jl
-tic()
-run(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda`)
-println("Synthesis runtime")
-toc()
+fig,ax = plt[:subplots](figsize=(6,6))
+ax[:plot](dv.uu, dv.vv, ".")
+ax[:set_xlabel](L"UU [k$\lambda$]")
+ax[:set_ylabel](L"VV [k$\lambda$]")
+
+plt[:savefig]("baselines.png")

@@ -34,10 +34,10 @@ end
 
 parsed_args = parse_args(ARGS, s)
 
-assets_dir = Pkg.dir("JudithExcalibur") * "/assets/"
+assets_dir = Pkg.dir("DiskJockey") * "/assets/"
 
 if parsed_args["test"]
-    println("Your JudithExcalibur scripts are successfully linked.")
+    println("Your DiskJockey scripts are successfully linked.")
     println("Exiting")
     quit()
 end
@@ -54,8 +54,8 @@ config = YAML.load(open(parsed_args["config"]))
 
 using HDF5
 
-using JudithExcalibur.constants
-using JudithExcalibur.tmodel
+using DiskJockey.constants
+using DiskJockey.tmodel
 
 # To initialize, we basically want to do everything that would be necessary to then go in and
 # run a RADMC-3D model.

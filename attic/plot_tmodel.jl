@@ -20,10 +20,10 @@ parsed_args = parse_args(ARGS, s)
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-using JudithExcalibur.constants
-using JudithExcalibur.image
-using JudithExcalibur.tmodel
-using JudithExcalibur.visibilities
+using DiskJockey.constants
+using DiskJockey.image
+using DiskJockey.tmodel
+using DiskJockey.visibilities
 # using constants
 # using image
 # using model

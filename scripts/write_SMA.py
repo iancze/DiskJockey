@@ -61,22 +61,18 @@ hdulist = fits.open(args.out_model, mode="update")
 
 # Concatenate the different parts of the visibility
 D = np.array([real, imag, weight]).T
-# (nvis, nfreq, 3)
-
-# Add the zombie dimensions back in
-vis = D[:, np.newaxis, np.newaxis, :, np.newaxis, :]
 
 if ofreqs[-1] > ofreqs[0]:
     print("Originally stored with decreasing wavelength, reversing model order.")
-
-    # Stuff the new visibilities into the existing dataset
-    hdulist[0].data["DATA"][:] = vis[:, ::-1, :]
+    D = D[:, ::-1, :]
 
 else:
     print("Originally stored with increasing wavelength, keeping model order the same.")
 
-    # Stuff the new visibilities into the existing dataset
-    hdulist[0].data["DATA"][:] = vis
+# Add the zombie dimensions back in to the visibilities
+vis = D[:, np.newaxis, np.newaxis, :, np.newaxis, :]
+
+hdulist[0].data["DATA"][:] = vis
 
 # Write the changes to disk
 hdulist.flush()
@@ -96,19 +92,16 @@ fid.close()
 
 hdulist = fits.open(args.out_resid, mode="update")
 D = np.array([real, imag, weight]).T
-vis = D[:, np.newaxis, np.newaxis, :, np.newaxis, :]
 
 if ofreqs[-1] > ofreqs[0]:
     print("Originally stored with decreasing wavelength, reversing residual order.")
-
-    # Stuff the new visibilities into the existing dataset
-    hdulist[0].data["DATA"][:] = vis[:, ::-1, :]
+    D = D[:, ::-1, :]
 
 else:
     print("Originally stored with increasing wavelength, keeping residual order the same.")
 
-    # Stuff the new visibilities into the existing dataset
-    hdulist[0].data["DATA"][:] = vis
+vis = D[:, np.newaxis, np.newaxis, :, np.newaxis, :]
+hdulist[0].data["DATA"][:] = vis
 
 hdulist.flush()
 hdulist.close()

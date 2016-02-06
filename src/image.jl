@@ -15,7 +15,7 @@ module image
 export imread, imToSky, imToSpec, SkyImage, blur, -
 
 using ..constants
-import Images # The Images.jl package, not affiliated w/ JudithExcalibur
+import Images # The Images.jl package, not affiliated w/ DiskJockey
 
 import Base.- # extend this for Image
 

@@ -62,7 +62,7 @@ end
 println("Creating ", outdir)
 mkdir(outdir)
 
-using JudithExcalibur.visibilities
+using DiskJockey.visibilities
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
@@ -133,12 +133,12 @@ end
 # Clear all directories
 cleardirs!(keylist)
 
-@everywhere using JudithExcalibur.constants
-@everywhere using JudithExcalibur.parallel
-@everywhere using JudithExcalibur.visibilities
-@everywhere using JudithExcalibur.image
-@everywhere using JudithExcalibur.gridding
-@everywhere using JudithExcalibur.model
+@everywhere using DiskJockey.constants
+@everywhere using DiskJockey.parallel
+@everywhere using DiskJockey.visibilities
+@everywhere using DiskJockey.image
+@everywhere using DiskJockey.gridding
+@everywhere using DiskJockey.model
 
 # Delete the old log file (if it exists)
 const logfile = outdir * "log.log"
@@ -455,7 +455,7 @@ else
         jump_param = config["jump_scale"]^2 * npzread(config["opt_jump"])
     end
 
-    using JudithExcalibur.LittleMC
+    using DiskJockey.LittleMC
 
     # Code to hook into the chain.js plot generator
     if parsed_args["chain"]
@@ -470,16 +470,16 @@ else
     mc = MC(fp, config["samples"], starting_param, jump_param, csv)
     debug("Initialized MCMC")
 
-    JudithExcalibur.LittleMC.start(mc)
+    DiskJockey.LittleMC.start(mc)
 
     println(mean(mc.samples, 2))
     println(std(mc.samples, 2))
 
     runstats(mc)
 
-    debug("Acceptance: ", JudithExcalibur.LittleMC.acceptance(mc))
+    debug("Acceptance: ", DiskJockey.LittleMC.acceptance(mc))
 
-    JudithExcalibur.LittleMC.write(mc, outdir * "mc.hdf5")
+    DiskJockey.LittleMC.write(mc, outdir * "mc.hdf5")
     close(csv)
 
 end

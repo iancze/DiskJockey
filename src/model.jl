@@ -5,7 +5,7 @@ export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCa
 export lnprior
 
 # The double dot is because we are now inside the model module, and we want to import the
-# constants module, which is part of the enclosing JudithExcalibur package.
+# constants module, which is part of the enclosing DiskJockey package.
 using ..constants
 
 # Write the wavelength sampling file. Only run on setup

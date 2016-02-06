@@ -1,8 +1,8 @@
 using consonance
 
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/JudithExcalibur/")
-push!(LOAD_PATH, "/n/home07/iczekala/JudithExcalibur/")
-push!(LOAD_PATH, "/pool/scout0/JudithExcalibur/")
+push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/")
+push!(LOAD_PATH, "/n/home07/iczekala/DiskJockey/")
+push!(LOAD_PATH, "/pool/scout0/DiskJockey/")
 
 using ArgParse
 

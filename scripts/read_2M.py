@@ -3,7 +3,7 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Convert ALMA NPZ save files into an HDF5 file for JudithExcalibur.", prefix_chars="@")
+parser = argparse.ArgumentParser(description="Convert ALMA NPZ save files into an HDF5 file for DiskJockey.", prefix_chars="@")
 parser.add_argument("NPZ", help="The ALMA NPZ file produced by Sean.")
 # parser.add_argument("nu0", type=float, help="The starting frequency for index 0, in Hz")
 # parser.add_argument("dnu", type=float, help="The change in frequency with array index. Can be negative. In Hz.")

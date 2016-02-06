@@ -19,8 +19,8 @@ parsed_args = parse_args(ARGS, s)
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-using JudithExcalibur.visibilities
-using JudithExcalibur.constants
+using DiskJockey.visibilities
+using DiskJockey.constants
 
 species = config["species"]
 transition = config["transition"]

@@ -1,7 +1,7 @@
-using JudithExcalibur.constants
-using JudithExcalibur.gridding
-using JudithExcalibur.visibilities
-using JudithExcalibur.image
+using DiskJockey.constants
+using DiskJockey.gridding
+using DiskJockey.visibilities
+using DiskJockey.image
 using gauss_model
 
 # This module is designed to test several lines of reasoning regarding the gridding convolution
