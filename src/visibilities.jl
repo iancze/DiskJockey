@@ -35,7 +35,7 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
 
     freqs = read(fid["freqs"]) # [Hz]
     # Convert from Hz to wavelengths in μm
-    lams = cc/freqs * 1e4 # [μm]
+    lams = cc ./ freqs * 1e4 # [μm]
 
     uu = read(fid["uu"])
     vv = read(fid["vv"])
@@ -44,45 +44,59 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     VV = real + imag .* im # Complex visibility
     weight = read(fid["weight"]) # [1/Jy^2]
     # invsig = sqrt(read(fid["weight"])) # convert from [1/Jy^2] to [1/Jy]
-    flag = read(fid["flag"])
+    flag = convert(Array{Bool}, read(fid["flag"]))
     close(fid)
 
     nlam = length(lams)
 
     # Do we want to include the flagged visibility points? In nearly all cases, the answer
     # should be no. The one exception is when we want to export model visibilities in `write_model.jl`
-    
-    # Mask out the flagged points
-    if !flagged
-        uu = uu[flag]
-        vv = vv[flag]
-        VV = VV[flag]
-        invsig = sqrt(weight[flag]) # do this here to avoid sqrt(-weight)
-    # Keep the flagged points in everything
-    else
-        invsig = sqrt(weight)
-    end
+
+    # Do the flagging channel by channel
 
     # Return an array of DataVis
     out = Array(DataVis, nlam)
-    for i=1:nlam
-        out[i] = DataVis(lams[i], uu[:,i], vv[:,i], VV[:, i], invsig[:, i])
+    if !flagged
+        for i=1:nlam
+            ch_flag = ~flag[:,i]
+            out[i] = DataVis(lams[i], uu[ch_flag,i], vv[ch_flag,i], VV[ch_flag, i], sqrt(weight[ch_flag, i]))
+        end
+    else
+        for i=1:nlam
+            out[i] = DataVis(lams[i], uu[:,i], vv[:,i], VV[:, i], sqrt(weight[:, i]))
+        end
     end
     return out
 end
 
 # Read just one channel of visibilities from the HDF5 file
-function DataVis(fname::AbstractString, index::Int)
+function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
     fid = h5open(fname, "r")
     # the indexing and `vec` are necessary here because HDF5 doesn't naturally
     # squeeze trailing dimensions of length-1
-    lam = fid["lams"][index][1] # [μm]
-    uu = vec(fid["uu"][:, index])
-    vv = vec(fid["vv"][:, index])
-    real = vec(fid["real"][:, index])
-    imag = vec(fid["imag"][:, index])
+
+    freqs = read(fid["freqs"])[index][1] # [Hz]
+    # Convert from Hz to wavelengths in μm
+    lams = cc ./ freqs * 1e4 # [μm]
+
+    len = length(fid["uu"][:, index])
+
+    if !flagged
+        flag = convert(Array{Bool}, read(fid["flag"]))
+        ch_flag = ~flag[:,index]
+    else
+        ch_flag = ones(Bool, len) # Keep all visibilities, regardless of what flag says
+    end
+
+    uu = vec(fid["uu"][ch_flag, index])
+    vv = vec(fid["vv"][ch_flag, index])
+    real = vec(fid["real"][ch_flag, index])
+    imag = vec(fid["imag"][ch_flag, index])
+
     VV = real + imag .* im # Complex visibility
-    invsig = vec(fid["invsig"][:, index])
+
+    invsig = vec(sqrt(read(fid["weight"][ch_flag, index]))) # [1/Jy^2]
+
     close(fid)
 
     #Return a DataVis object
@@ -90,11 +104,11 @@ function DataVis(fname::AbstractString, index::Int)
 end
 
 # Read just a subset of channels from the HDF5 file and return an array of DataVis
-function DataVis(fname::AbstractString, indices::Vector{Int})
+function DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=false)
     nchan = length(indices)
     out = Array(DataVis, nchan)
     for i=1:nchan
-        out[i] = DataVis(fname, indices[i])
+        out[i] = DataVis(fname, indices[i], flagged)
     end
     return out
 end
@@ -141,7 +155,7 @@ function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
     # hcat here stacks the individual channel data sets into a big block
     # of shape (nvis, nlam)
 
-    fid["freqs"] = [cc/(1e-4 * dv.lam) for dv in dvarr]
+    fid["freqs"] = Float64[cc / (1e-4 * dv.lam) for dv in dvarr]
     fid["uu"] = hcat([dv.uu for dv in dvarr]...)
     fid["vv"] = hcat([dv.vv for dv in dvarr]...)
     fid["real"] = hcat([real(dv.VV) for dv in dvarr]...)

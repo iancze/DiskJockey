@@ -27,7 +27,7 @@ else:
 if args.model == "standard":
     config["model"] = "standard"
     # Also set parameters to a reasonable dictionary
-    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -3.8, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "vel": 0.0}
+    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -3.8, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "vel": -1.6}
 
     if args.fix_distance:
         p0 = np.array([np.random.uniform(1.03, 1.05, nwalkers), # mass [M_sun]

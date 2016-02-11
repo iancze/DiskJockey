@@ -39,7 +39,6 @@ fid = h5open(config["data_file"], "r")
 nchan = length(read(fid["freqs"]))
 close(fid)
 
-
 # Read the parameters from the config file
 pp = config["parameters"]
 
@@ -57,7 +56,7 @@ corrfun!(skim) # alpha = 1.0
 
 # For *this purpose only*, read in the flagged data, so that we can export a model for these
 # visibilities
-dvarr = DataVis(config["data_file"], flagged=true)
+dvarr = DataVis(config["data_file"], true)
 # Do this as we do in `mach_three.jl`
 for dset in dvarr
     # Conjugation is necessary for the SMA and ALMA
