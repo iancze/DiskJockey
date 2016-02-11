@@ -44,6 +44,9 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     VV = real + imag .* im # Complex visibility
     weight = read(fid["weight"]) # [1/Jy^2]
     # invsig = sqrt(read(fid["weight"])) # convert from [1/Jy^2] to [1/Jy]
+    flag = read(fid["flag"])
+    println(typeof(flag))
+
     flag = convert(Array{Bool}, read(fid["flag"]))
     close(fid)
 
