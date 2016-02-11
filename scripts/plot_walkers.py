@@ -161,7 +161,7 @@ def plot_hdis(flatchain, fname="hdi.png"):
         print("Diffs: max:{}, low:{}, high:{}, dbin:{}".format(vals["max"], vals["minus"], vals["plus"], vals["dbin"]))
         print()
 
-    fig.subplots_adjust(hspace=0.1)
+    fig.subplots_adjust(hspace=0.3, bottom=0.01, top=0.99)
     fig.savefig(fname)
 
 plot_hdis(flatchain)

@@ -1,29 +1,32 @@
 # Changelog
 
-The following are the changes that have been implemented since the previous version. All versions are tagged as releases.
+The following are the changes that have been implemented since the previous version. All versions are tagged as releases and available as a clone off of the master branch.
 
 # Version 0.1.2
 
-The package is now named DiskJockey (previously JudithExcalibur).
+The package is now named DiskJockey (previously JudithExcalibur). Check out the new logo!
 
 ## Installation
 
-Now provides installation instructions for tagged releases. RADMC-3D is installed automatically as a local version.
+The README now provides installation instructions for tagged releases. Rather than requiring the user to install it separately, RADMC-3D is now installed automatically as part of the installation process.
+
+## UVHDF5
+
+Conversion from UVFITS and CASA measurement set was previously handled by scripts in this repository. However, this import and export capability has be standardized via the [UVHDF5](https://github.com/Astrochem/UVHDF5) package. Please see that package for any issues with import and export.
 
 ## Travis integration
 
-Now the builds are tested on travis-ci, which should hopefully increase stability for future versions.
-
+Now the builds are tested on travis-ci, which should hopefully increase stability for the development cycle.
 
 ## EnsembleSampler
 
-Now takes an optional function, to be called at the end of each loop as `func(sampler, outdir)`
+There is now an `expand_walkers.py` script, designed to add the `dpc` dimension to the sampling routine from an ensemble of walkers used on a posterior with distance fixed.
+
+Now the ensemble sampler takes an optional function, to be called at the end of each loop as `func(sampler, outdir)`
 
     function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int, outdir, func::Function=nothing)
 
 See the `src/EnsembleSampler.jl` file for more details. This is primarily in support of the next feature...
-
-There is also an `expand_walkers.py` script.
 
 ## Plotly script
 
@@ -31,13 +34,11 @@ If you run the sampling script as
 
     $ venus.jl --plotly
 
-After each loop, creates/updates a plotly walkers plot corresponding to the `name` entry in `config.yaml`. This allows easy monitoring of many different chains that might be running on a cluster.
+Then after the completion of each sampling loop, this will create a plotly walkers plot corresponding to the `name` entry in `config.yaml`. This allows easy monitoring of many different chains that might be running on a cluster.
 
 ## DJInitialize.jl
 
-Now can easily spit out an `exclude` array so that fewer channels can be fit during initial testing.
-
-You can also follow up with `plot_baselines.jl` to get an idea of what the array configuration looks like.
+(Previously JudithInitialize.jl). Now this initialization script can easily spit out an `exclude` array so that fewer channels can be fit during initial testing.
 
 ## Cavity model
 
@@ -47,21 +48,9 @@ By initializing a directory with
 
 you can start exploring the `cavity` model, which has an exponential taper inside of some radius, `r_cav`.
 
-## Overwrites
-
-Now `venus.jl` should guard against overwriting previous MCMC samples in the case of a job restart on HPC. This requires changing
-
-    run_schedule() to include a write to chain.npy file.
-
-Anyway, not actually implemented yet.
-
-## Channel maps
-
-plots a circle over the image at the radius of the grid. If emission gets close, you're in trouble.
-
 ## gridding.jl
 
-`gridding.jl` now exports a `corrfun(img::SkyImage)` routine, in contrast to `corrfun!(img::SkyImage)`. This new function returns a corrected image as a copy, leaving the original image in the arguments unchanged. This is useful for plotting and debugging scripts so that you don't need to copy the image manually.
+`gridding.jl` now exports a `corrfun(img::SkyImage)` routine, in addition to `corrfun!(img::SkyImage)`. This new function returns a corrected image as a copy, leaving the original image in the arguments unchanged. This is useful for plotting and debugging scripts so that you don't need to copy the image manually.
 
 ## visibilities.jl
 
@@ -73,9 +62,7 @@ plots a circle over the image at the radius of the grid. If emission gets close,
 
 ## config.yaml copied to output directory
 
-Now `venus.jl` will move a copy of your `config.yaml` file to the output directory. This creates an automatic record of what parameters you ran with, which will undoubtedly be useful when reviewing previous runs sometime in the near future.
-
-Also, default values in the initial `config.yaml` files have been updated.
+Now `venus.jl` will move a copy of your `config.yaml` file to the output directory. This creates an automatic record of what parameters you ran with, which will undoubtedly be useful when reviewing previous runs sometime in the near future. Default values in the initial `config.yaml` files have also been updated.
 
 ## plot_baselines.jl
 

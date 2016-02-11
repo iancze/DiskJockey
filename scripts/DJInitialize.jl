@@ -126,7 +126,9 @@ if config["gas"]
 
     # read the wavelengths for all data channels
     fid = h5open(config["data_file"], "r")
-    lams = read(fid["lams"]) # [μm]
+    freqs = read(fid["freqs"]) # [Hz]
+    # Convert from Hz to wavelengths in μm
+    lams = cc/freqs * 1e4 # [μm]
     close(fid)
 
     # Doppler shift the dataset wavelength according to the velocity in the parameter file

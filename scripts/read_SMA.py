@@ -48,6 +48,8 @@ real = vis[:, :, 0].T
 imag = vis[:, :, 1].T
 weight = vis[:, :, 2].T
 
+print(weight)
+
 # Now, stuff each of these into an HDF5 file.
 fid = h5py.File(args.out, "w")
 

@@ -21,27 +21,49 @@ using Base.Test
 # Stores the data visibilities for a single channel
 type DataVis
     lam::Float64 # [μm] Wavelength (in microns) corresponding to channel
-    uu::Vector{Float64} # [kλ] Vectors of the u, v locations in kilolambda
+    uu::Vector{Float64} # [kλ] Vectors of the u, v locations in kilolambda, shape (nchan, nvis)
     vv::Vector{Float64} # [kλ]
     VV::Vector{Complex128} # [Jy] Complex visibilities
     invsig::Vector{Float64} # 1/sigma [1/Jy]
+    # NOTE that there is no flags field
 end
 
 # Read all the visibilities from an HDF5 string and return them as an array of DataVis objects
-function DataVis(fname::AbstractString)
+# `flagged` means whether we should be loading the flagged points or not.
+function DataVis(fname::AbstractString, flagged::Bool=false)
     fid = h5open(fname, "r")
-    lams = read(fid["lams"]) # [μm]
+
+    freqs = read(fid["freqs"]) # [Hz]
+    # Convert from Hz to wavelengths in μm
+    lams = cc/freqs * 1e4 # [μm]
+
     uu = read(fid["uu"])
     vv = read(fid["vv"])
     real = read(fid["real"])
     imag = read(fid["imag"])
     VV = real + imag .* im # Complex visibility
-    invsig = read(fid["invsig"])
+    weight = read(fid["weight"]) # [1/Jy^2]
+    # invsig = sqrt(read(fid["weight"])) # convert from [1/Jy^2] to [1/Jy]
+    flag = read(fid["flag"])
     close(fid)
 
     nlam = length(lams)
 
-    #Return an array of DataVis
+    # Do we want to include the flagged visibility points? In nearly all cases, the answer
+    # should be no. The one exception is when we want to export model visibilities in `write_model.jl`
+    
+    # Mask out the flagged points
+    if !flagged
+        uu = uu[flag]
+        vv = vv[flag]
+        VV = VV[flag]
+        invsig = sqrt(weight[flag]) # do this here to avoid sqrt(-weight)
+    # Keep the flagged points in everything
+    else
+        invsig = sqrt(weight)
+    end
+
+    # Return an array of DataVis
     out = Array(DataVis, nlam)
     for i=1:nlam
         out[i] = DataVis(lams[i], uu[:,i], vv[:,i], VV[:, i], invsig[:, i])
@@ -100,12 +122,13 @@ function write(dv::DataVis, fname::AbstractString)
     nvis = length(dv.uu)
     VV = reshape(dv.VV, (nvis, 1))
     fid = h5open(fname, "w")
-    fid["lams"] = [dv.lam] # expects 1D array
+
+    fid["freqs"] = [cc/(1e-4 * dv.lam)] # expects 1D array
     fid["uu"] = reshape(dv.uu, (nvis, 1)) # expects 2D array
     fid["vv"] = reshape(dv.vv, (nvis, 1)) # expects 2D array
     fid["real"] = real(VV)
     fid["imag"] = imag(VV)
-    fid["invsig"] = reshape(dv.invsig, (nvis, 1)) # expects 2D array
+    fid["weight"] = reshape(dv.invsig, (nvis, 1)).^2 # expects 2D array
 
     close(fid)
 end
@@ -117,12 +140,13 @@ function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
     fid = h5open(fname, "w")
     # hcat here stacks the individual channel data sets into a big block
     # of shape (nvis, nlam)
-    fid["lams"] = [dv.lam for dv in dvarr]
+
+    fid["freqs"] = [cc/(1e-4 * dv.lam) for dv in dvarr]
     fid["uu"] = hcat([dv.uu for dv in dvarr]...)
     fid["vv"] = hcat([dv.vv for dv in dvarr]...)
     fid["real"] = hcat([real(dv.VV) for dv in dvarr]...)
     fid["imag"] = hcat([imag(dv.VV) for dv in dvarr]...)
-    fid["invsig"] = hcat([dv.invsig for dv in dvarr]...)
+    fid["weight"] = hcat([dv.invsig.^2 for dv in dvarr]...)
     close(fid)
 
 end

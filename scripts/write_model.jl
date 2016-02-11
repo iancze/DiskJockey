@@ -1,8 +1,8 @@
 #!/usr/bin/env julia
 
-# Generate a set of model and residual visibilities and then write them to HDF5
-# The follow up step is to use the python scripts `write_ALMA.py` or `write_SMA.py` to convert
-# these from HDF5 and pack into numpy or FITS arrays.
+# Generate a set of model and residual visibilities and then write them to UVHDF5 file format
+# More about this format, including scripts to convert to UVFITS and CASA Measurement set,
+# can be found at https://github.com/Astrochem/UVHDF5
 
 using ArgParse
 
@@ -36,9 +36,9 @@ config = YAML.load(open(parsed_args["config"]))
 
 # read the wavelengths for all channels
 fid = h5open(config["data_file"], "r")
-lams = read(fid["lams"]) # [μm]
+nchan = length(read(fid["freqs"]))
 close(fid)
-nchan = length(lams)
+
 
 # Read the parameters from the config file
 pp = config["parameters"]
@@ -55,7 +55,9 @@ im = imread()
 skim = imToSky(im, dpc)
 corrfun!(skim) # alpha = 1.0
 
-dvarr = DataVis(config["data_file"])
+# For *this purpose only*, read in the flagged data, so that we can export a model for these
+# visibilities
+dvarr = DataVis(config["data_file"], flagged=true)
 # Do this as we do in `mach_three.jl`
 for dset in dvarr
     # Conjugation is necessary for the SMA and ALMA
@@ -106,12 +108,14 @@ else
     keylist = Int[i for i=1:nchan]
 end
 
-
+println("Note: includes flagged visibilities!")
 chi2s = chi2s[keylist]
 println("Unmasked Chi^2s", chi2s)
 
 println("Chi^2 :", sum(chi2s))
 println("Reduced Chi^2 ", sum(chi2s)/N)
+
+#TODO copy visibility flags
 
 visibilities.write(mvarr, parsed_args["out-model"])
 visibilities.write(rvarr, parsed_args["out-resid"])
