@@ -78,9 +78,9 @@ function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
     # the indexing and `vec` are necessary here because HDF5 doesn't naturally
     # squeeze trailing dimensions of length-1
 
-    freqs = read(fid["freqs"])[index][1] # [Hz]
+    freq = read(fid["freqs"])[index][1] # [Hz]
     # Convert from Hz to wavelengths in μm
-    lams = cc ./ freqs * 1e4 # [μm]
+    lam = cc / freq * 1e4 # [μm]
 
     len = length(fid["uu"][:, index])
 
@@ -91,14 +91,14 @@ function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
         ch_flag = ones(Bool, len) # Keep all visibilities, regardless of what flag says
     end
 
-    uu = vec(fid["uu"][ch_flag, index])
-    vv = vec(fid["vv"][ch_flag, index])
-    real = vec(fid["real"][ch_flag, index])
-    imag = vec(fid["imag"][ch_flag, index])
+    uu = vec(fid["uu"][:,index])[ch_flag]
+    vv = vec(fid["vv"][:,index])[ch_flag]
+    real = vec(fid["real"][:,index])[ch_flag]
+    imag = vec(fid["imag"][:,index])[ch_flag]
 
     VV = real + imag .* im # Complex visibility
 
-    invsig = vec(sqrt(read(fid["weight"][ch_flag, index]))) # [1/Jy^2]
+    invsig = vec(sqrt(fid["weight"][:,index]))[ch_flag] # [1/Jy^2]
 
     close(fid)
 
