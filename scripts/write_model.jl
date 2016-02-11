@@ -114,7 +114,9 @@ println("Unmasked Chi^2s", chi2s)
 println("Chi^2 :", sum(chi2s))
 println("Reduced Chi^2 ", sum(chi2s)/N)
 
-#TODO copy visibility flags
-
 visibilities.write(mvarr, parsed_args["out-model"])
 visibilities.write(rvarr, parsed_args["out-resid"])
+
+# copy visibility flags
+visibilities.copy_flags(config["data_file"], parsed_args["out-model"])
+visibilities.copy_flags(config["data_file"], parsed_args["out-resid"])

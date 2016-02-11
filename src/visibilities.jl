@@ -140,7 +140,7 @@ function write(dv::DataVis, fname::AbstractString)
     VV = reshape(dv.VV, (nvis, 1))
     fid = h5open(fname, "w")
 
-    fid["freqs"] = [cc/(1e-4 * dv.lam)] # expects 1D array
+    fid["freqs"] = [cc/(1e-4 * dv.lam)] # expects 1D array [Hz]
     fid["uu"] = reshape(dv.uu, (nvis, 1)) # expects 2D array
     fid["vv"] = reshape(dv.vv, (nvis, 1)) # expects 2D array
     fid["real"] = real(VV)
@@ -158,7 +158,7 @@ function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
     # hcat here stacks the individual channel data sets into a big block
     # of shape (nvis, nlam)
 
-    fid["freqs"] = Float64[cc / (1e-4 * dv.lam) for dv in dvarr]
+    fid["freqs"] = Float64[cc / (1e-4 * dv.lam) for dv in dvarr] # [Hz]
     fid["uu"] = hcat([dv.uu for dv in dvarr]...)
     fid["vv"] = hcat([dv.vv for dv in dvarr]...)
     fid["real"] = hcat([real(dv.VV) for dv in dvarr]...)
@@ -166,6 +166,24 @@ function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
     fid["weight"] = hcat([dv.invsig.^2 for dv in dvarr]...)
     close(fid)
 
+end
+
+"""
+Copy the flags from one dataset to another.
+"""
+function copy_flags(source::AbstractString, dest::AbstractString)
+    println("Copying flags from $source to $dest")
+
+    fid_source = h5open(source, "r") # read only
+    fid_dest = h5open(dest, "r+") # append mode
+
+    @assert fid_source["uu"][:,:] == fid_dest["uu"][:,:] "UU spacings between datasets do not match, make sure you have loaded $source with flagged=true."
+    @assert fid_source["vv"][:,:] == fid_dest["vv"][:,:] "UU spacings between dataset do not match, make sure you have loaded $source with flagged=true.."
+
+    fid_dest["flag"] = fid_source["flag"][:,:]
+
+    close(fid_source)
+    close(fid_dest)
 end
 
 """
