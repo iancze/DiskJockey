@@ -37,17 +37,14 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     # Convert from Hz to wavelengths in μm
     lams = cc ./ freqs * 1e4 # [μm]
 
-    uu = read(fid["uu"])
-    vv = read(fid["vv"])
-    real = read(fid["real"])
-    imag = read(fid["imag"])
+    uu = read(fid, "uu")
+    vv = read(fid, "vv")
+    real = read(fid, "real")
+    imag = read(fid, "imag")
     VV = real + imag .* im # Complex visibility
-    weight = read(fid["weight"]) # [1/Jy^2]
-    # invsig = sqrt(read(fid["weight"])) # convert from [1/Jy^2] to [1/Jy]
-    flag = read(fid["flag"])
-    println(typeof(flag))
+    weight = read(fid, "weight") # [1/Jy^2]
 
-    flag = convert(Array{Bool}, read(fid["flag"]))
+    flag = convert(Array{Bool}, read(fid, "flag"))
     close(fid)
 
     nlam = length(lams)
@@ -177,11 +174,11 @@ function copy_flags(source::AbstractString, dest::AbstractString)
     fid_source = h5open(source, "r") # read only
     fid_dest = h5open(dest, "r+") # append mode
 
-    @assert fid_source["uu"][:,:] == fid_dest["uu"][:,:] "UU spacings between datasets do not match, make sure you have loaded $source with flagged=true."
-    @assert fid_source["vv"][:,:] == fid_dest["vv"][:,:] "VV spacings between dataset do not match, make sure you have loaded $source with flagged=true."
-    @assert fid_source["weight"][:,:] == fid_dest["weight"][:,:] "Weights between dataset do not match, make sure you have loaded $source with flagged=true."
+    @assert isapprox(read(fid_source, "uu"), read(fid_dest, "uu")) "UU spacings between datasets do not match, make sure you have loaded $source with flagged=true."
+    @assert isapprox(read(fid_source, "vv"), read(fid_dest, "vv")) "VV spacings between dataset do not match, make sure you have loaded $source with flagged=true."
+    @assert isapprox(read(fid_source, "weight"), read(fid_dest, "weight")) "Weights between dataset do not match, make sure you have loaded $source with flagged=true."
 
-    fid_dest["flag"] = fid_source["flag"][:,:]
+    fid_dest["flag"] = read(fid_source, "flag")
 
     close(fid_source)
     close(fid_dest)
