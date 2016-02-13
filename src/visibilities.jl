@@ -178,7 +178,8 @@ function copy_flags(source::AbstractString, dest::AbstractString)
     fid_dest = h5open(dest, "r+") # append mode
 
     @assert fid_source["uu"][:,:] == fid_dest["uu"][:,:] "UU spacings between datasets do not match, make sure you have loaded $source with flagged=true."
-    @assert fid_source["vv"][:,:] == fid_dest["vv"][:,:] "UU spacings between dataset do not match, make sure you have loaded $source with flagged=true.."
+    @assert fid_source["vv"][:,:] == fid_dest["vv"][:,:] "VV spacings between dataset do not match, make sure you have loaded $source with flagged=true."
+    @assert fid_source["weight"][:,:] == fid_dest["weight"][:,:] "Weights between dataset do not match, make sure you have loaded $source with flagged=true."
 
     fid_dest["flag"] = fid_source["flag"][:,:]
 
