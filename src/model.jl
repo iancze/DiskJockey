@@ -273,7 +273,7 @@ end
 """The common sense priors that apply to all parameter values"""
 function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float64)
     # Create a giant short-circuit or loop to test for sensical parameter values.
-    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10 <= 0. || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < 0. || pars.PA > 360.
+    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10 <= 0. || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
         return -Inf
     end
 
