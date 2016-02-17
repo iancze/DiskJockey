@@ -31,6 +31,10 @@ transition = config["transition"]
 lam0 = lam0s[species*transition]
 model = config["model"]
 
+# cmap = plt[:get_cmap]("viridis")
+# cmap = plt[:get_cmap]("inferno")
+cmap = plt[:get_cmap]("plasma")
+
 # First contour is at 3 sigma, and then contours go up (or down) in multiples of spacing
 function get_levels(rms::Float64, vmax::Float64, spacing=3)
     levels = Float64[]
@@ -60,7 +64,7 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
     if log
         ldata = log10(img.data + 1e-99)
         vvmax = maximum(ldata)
-        norm = PyPlot.matplotlib[:colors][:Normalize](vvmax - 8, vvmax)
+        norm = PyPlot.matplotlib[:colors][:Normalize](vvmax - 6, vvmax)
     else
         vvmax = maxabs(img.data)
         # println(vmin, " ", vmax, " ", vvmax)
@@ -80,7 +84,12 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
     ncols = 8
     nrows = ceil(Int, nlam/ncols)
 
-    fig, ax = plt[:subplots](nrows=nrows, ncols=ncols, figsize=(12, 1.5 * nrows))
+    xx = 1.5 * 9
+    dx = 1.5
+    yy = (nrows + 1) * 1.5
+    dy = 1.5
+
+    fig, ax = plt[:subplots](nrows=nrows, ncols=ncols, figsize=(xx, yy))
 
     for row=1:nrows
         for col=1:ncols
@@ -96,7 +105,7 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
 
             if iframe > nlam
                 # Plot a blank square if we run out of channels
-                ax[row, col][:imshow](zeros((im_ny, im_nx)), cmap=plt[:get_cmap]("PuBu"), vmin=0, vmax=20, extent=ext, origin="lower")
+                ax[row, col][:imshow](zeros((im_ny, im_nx)), cmap=cmap, vmin=0, vmax=20, extent=ext, origin="lower")
 
             else
                 #Flip the frame for Sky convention
@@ -105,14 +114,23 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
                 if log
                     frame += 1e-15 #Add a tiny bit so that we don't have log10(0)
                     lframe = log10(frame)
-                    ax[row, col][:imshow](lframe, extent=ext, interpolation="none", origin="lower", cmap=plt[:get_cmap]("PuBu"), norm=norm)
+                    im = ax[row, col][:imshow](lframe, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
                 else
-                    ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=plt[:get_cmap]("PuBu"), norm=norm)
+                    im = ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
 
                     if contours
                         ax[row, col][:contour](frame, origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
                     end
 
+                end
+
+                if iframe==1
+                    # Plot the colorbar
+                    cax = fig[:add_axes]([(xx - 0.35 * dx)/xx, (yy - 1.5 * dy)/yy, (0.1 * dx)/xx, dy/yy])
+                    cbar = fig[:colorbar](mappable=im, cax=cax)
+
+                    cbar[:ax][:tick_params](labelsize=6)
+                    fig[:text](0.99, (yy - 1.7 * dy)/yy, "Jy/beam", size=8, ha="right")
                 end
 
                 ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
@@ -121,7 +139,7 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
         end
     end
 
-    fig[:subplots_adjust](hspace=0.06, wspace=0.01, top=0.9, bottom=0.1, left=0.05, right=0.95)
+    fig[:subplots_adjust](hspace=0.00, wspace=0.00, top=(yy - 0.5 * dy)/yy, bottom=(0.5 * dy)/yy, left=(0.5 * dx)/xx, right=(xx - 0.5 * dy)/xx)
 
     plt[:savefig](fname, dpi=600)
 
@@ -155,8 +173,6 @@ skim = imToSky(im, pars.dpc)
 global nlam = length(skim.lams)
 # convert wavelengths to velocities
 global vels = c_kms * (skim.lams .- lam0)/lam0
-println("Vels are ", vels)
-
 
 println("Plotting hires maps")
 plot_chmaps(skim, fname="chmaps_hires_linear.png", contours=false)

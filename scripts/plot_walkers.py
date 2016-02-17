@@ -11,9 +11,25 @@ parser.add_argument("--tri", help="Plot the triangle too.", action="store_true")
 
 args = parser.parse_args()
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
 
 # This first bit of code is run for every invocation of the script
 chain = np.load("chain.npy")
+
+# Load the lnprobabilities
+lnprobs = np.load("lnprob.npy")
+# Truncate for burn in, shape (nwalkers, niter)
+lnprobs = lnprobs[:, args.burn:]
+
+# Set a colorscale for the lnprobs
+cmap = matplotlib.cm.get_cmap("brg")
+
+final_lnprobs = lnprobs[:, -1]
+norm = matplotlib.colors.Normalize(vmin=np.min(final_lnprobs), vmax=np.max(final_lnprobs))
+
+# Determine colors based on the ending lnprob of each walker
+colors = [cmap(norm(val)) for val in final_lnprobs]
 
 # Truncate burn in from chain
 chain = chain[:, args.burn:, :]
@@ -82,25 +98,40 @@ if args.draw is not None:
 
 
 import matplotlib.pyplot as plt
-import triangle
 
-fig, ax = plt.subplots(nrows=ndim, ncols=1, figsize=(10, 1.5 * ndim))
+fig, ax = plt.subplots(nrows=(ndim + 1), ncols=1, figsize=(10, 1.5 * ndim))
 
 iterations = np.arange(niter)
 
+step = 100
+
+#Plot the lnprob on top
+for j in range(nwalkers):
+    ax[0].plot(iterations, lnprobs[j], lw=0.15, color=colors[j])
+
+avg = np.average(lnprobs, axis=0)
+ax[0].plot(iterations, avg, lw=1.1, color="w")
+ax[0].plot(iterations, avg, lw=0.9, color="b")
+ax[0].set_ylabel("lnprob")
+
 for i in range(ndim):
     for j in range(nwalkers):
-        ax[i].plot(iterations, chain[j, :, i], lw=0.15, color="k")
+        ax[i +1].plot(iterations, chain[j, :, i], lw=0.15, color=colors[j])
 
-    ax[i].set_ylabel(labels[i])
+    # also plot the instanteous walker average to watch for drift
+    avg = np.average(chain[:, :, i], axis=0)
+    ax[i+1].plot(iterations, avg, lw=1.1, color="w")
+    ax[i+1].plot(iterations, avg, lw=0.9, color="b")
+
+    ax[i+1].set_ylabel(labels[i])
 
 ax[-1].set_xlabel("Iteration")
 
-fig.savefig("walkers.png")
+fig.savefig("walkers.png", dpi=300)
 
 flatchain = np.load("flatchain.npy")
 
-def hdi(samples, bins=80):
+def hdi(samples, bins=40):
 
     hist, bin_edges = np.histogram(samples, bins=bins, density=True)
     # convert bin_edges into bin centroids
@@ -161,14 +192,15 @@ def plot_hdis(flatchain, fname="hdi.png"):
         print("Diffs: max:{}, low:{}, high:{}, dbin:{}".format(vals["max"], vals["minus"], vals["plus"], vals["dbin"]))
         print()
 
-    fig.subplots_adjust(hspace=0.3, bottom=0.01, top=0.99)
+    fig.subplots_adjust(hspace=0.5, bottom=0.05, top=0.99)
     fig.savefig(fname)
 
 plot_hdis(flatchain)
 
 # Make the triangle plot
 if args.tri:
-    figure = triangle.corner(flatchain, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
+    import corner
+    figure = corner.corner(flatchain, bins=30, labels=labels, quantiles=[0.16, 0.5, 0.84], plot_contours=True, plot_datapoints=False, show_titles=True)
     figure.savefig("triangle.png")
 else:
     print("Not plotting triangle, no --tri flag.")
