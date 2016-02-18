@@ -264,7 +264,7 @@ end
         lnprobs[i] = lnprob(dv, mvis)
     end
 
-    # Change back to the home directory and then remove the temporary directory 
+    # Change back to the home directory and then remove the temporary directory
     cd(homedir)
     run(`rm -rf $keydir`)
 

@@ -208,7 +208,7 @@ function get_lnprob(sampler::Sampler, pos)
 
     # In Python, it seems like each row corresponds to a different walker.
     # For Julia, we really want each column to the parameters corresponding to a different walker.
-    result = pmap(sampler.lnprobfn, lst)
+    result = pmap(sampler.lnprobfn, lst, err_stop=true)
 
     # The array may contain one or two RemoteExceptions, so let's check to see what caused them.
     for (res,par) in zip(result, lst)
@@ -247,7 +247,7 @@ end
 function write_samples(sampler::Sampler, outdir="")
 
     # fchain = flatchain(sampler)
-    
+
     npzwrite(outdir * "chain.npy", emcee_chain(sampler))
     # npzwrite(outdir * "flatchain.npy", fchain)
     npzwrite(outdir * "lnprob.npy", sampler.lnprob)
