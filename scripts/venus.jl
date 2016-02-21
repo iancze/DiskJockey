@@ -27,6 +27,9 @@ s = ArgParseSettings()
     "--test"
     help = "Is this a test run of venus.jl? Allow using many fewer walkers for eval purposes."
     action = :store_true
+    "--MPI"
+    help = "Run the script using MPI"
+    action = :store_true
 end
 
 parsed_args = parse_args(ARGS, s)
@@ -42,6 +45,16 @@ end
 # processors via the julia executable, so we need to ghost this behavior back in.
 if parsed_args["p"] > 0
     addprocs(parsed_args["p"])
+end
+
+# Use MPI as the transport mechanism--good for a cluster environment
+if parsed_args["MPI"]
+    import MPI
+    MPI.Init()
+    rank = MPI.Comm_rank(MPI.COMM_WORLD)
+    size = MPI.Comm_size(MPI.COMM_WORLD)
+
+    manager = MPI.start_main_loop(MPI.MPI_TRANSPORT_ALL)
 end
 
 import YAML
@@ -309,3 +322,7 @@ else
 end
 
 write_samples(sampler, outdir)
+
+if parsed_args["MPI"]
+    MPI.stop_main_loop(manager)
+end
