@@ -52,7 +52,7 @@ if parsed_args["MPI"]
     import MPI
     MPI.Init()
     rank = MPI.Comm_rank(MPI.COMM_WORLD)
-    size = MPI.Comm_size(MPI.COMM_WORLD)
+    size_workers = MPI.Comm_size(MPI.COMM_WORLD)
 
     manager = MPI.start_main_loop(MPI.MPI_TRANSPORT_ALL)
 end
