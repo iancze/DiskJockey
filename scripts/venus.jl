@@ -127,14 +127,14 @@ for process in procs()
 end
 println("Mapped variables to all processes")
 
+# Convert the parameter values from the config.yaml file from Dict{ASCIIString, Float64} to
+# Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector
+# method
+@everywhere xargs = convert(Dict{Symbol}{Float64}, cfg["parameters"])
+
 # Set the correct model
 @everywhere function convert_p(p::Vector{Float64})
-    gamma = cfg["parameters"]["gamma"][1]
-    if cfg["fix_d"]
-        return convert_vector(p, cfg["model"], cfg["parameters"]["dpc"], gamma)
-    else
-        return convert_vector(p, cfg["model"], -1.0, gamma)
-    end
+    return convert_vector(p, cfg["model"], cfg["fix_d"]; xargs...)
 end
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate

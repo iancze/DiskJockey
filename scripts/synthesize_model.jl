@@ -17,10 +17,7 @@ import YAML
 config = YAML.load(open(parsed_args["config"]))
 
 using DiskJockey.constants
-using DiskJockey.image
 using DiskJockey.model
-using DiskJockey.visibilities
-using HDF5
 
 species = config["species"]
 transition = config["transition"]
@@ -29,8 +26,6 @@ model = config["model"]
 
 pars = convert_dict(config["parameters"], config["model"])
 
-dvarr = DataVis(config["data_file"])
-max_base = max_baseline(dvarr)
 npix = config["npix"] # number of pixels
 
 # lambda should have already been written by DJInitialize.jl

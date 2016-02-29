@@ -34,7 +34,7 @@ if parsed_args["new-project"] != "no"
     cp(assets_dir * "config.$(model).yaml", pwd() * "/config.yaml")
     cp(assets_dir * "InitializeWalkers.$(model).ipynb", pwd() * "/InitializeWalkers.ipynb")
 
-    println("Copied default model specific config.yaml and InitializeWalkers.ipynb to current working directory.")
+    println("Copied default config.yaml and InitializeWalkers.ipynb for the $model model to current working directory.")
     println("Exiting")
     quit()
 end
@@ -46,7 +46,7 @@ using DiskJockey.visibilities
 # This is just for new users to test that the package is successfully installed.
 if parsed_args["version"]
     println("Your DiskJockey scripts are successfully linked.")
-    println("You are running DiskJockey $JUDITHEXCALIBUR_VERSION")
+    println("You are running DiskJockey $DISKJOCKEY_VERSION")
     println("Exiting")
     quit()
 end

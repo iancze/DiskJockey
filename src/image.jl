@@ -13,6 +13,7 @@
 module image
 
 export imread, imToSky, imToSpec, SkyImage, blur, -
+export tauread
 
 using ..constants
 import Images # The Images.jl package, not affiliated w/ DiskJockey
@@ -28,9 +29,9 @@ abstract Image
 # you must set the first array element to the lower left corner.
 type RawImage <: Image
     data::Array{Float64, 3} # [ergs/s/cm^2/Hz/ster]
-    pixsize_x::Float64
-    pixsize_y::Float64
-    lams::Vector{Float64}
+    pixsize_x::Float64 # [cm]
+    pixsize_y::Float64 # [cm]
+    lams::Vector{Float64} # [μm]
 end
 
 # SkyImage is a holder that has both RA and DEC increasing with array index
@@ -44,6 +45,20 @@ type SkyImage <: Image
     dec::Vector{Float64} # [arcsec]
     lams::Vector{Float64} # [μm]
 end
+
+# TausurfImage is designed to hold the projected output
+type TausurfImage <: Image
+    data::Array{Float64, 3} # cm above/behind central projected plane of disk
+    pixsize_x::Float64 # [cm]
+    pixsize_y::Float64 # [cm]
+    lams::Vector{Float64} # [μm]
+end
+
+# Encapsulates the 3D positions of the tau=1 surface, for all pixels
+type Tausurf3D
+    data::Array{Float64, 4} # [cm], x, y, z positions for multiple wavelengths
+end
+
 
 function -(img1::SkyImage, img2::SkyImage)
     @assert img1.lams == img2.lams "Images must have the same wavelengths."
@@ -103,6 +118,51 @@ function imread(file="image.out")
     # According to the RADMC3D manual, the units are *intensity* [erg cm−2 s−1 Hz−1 ster−1]
 
     return RawImage(data, pixsize_x, pixsize_y, lams)
+end
+
+"""Like imread, but for tausurf. Values where there is no surface set to NaN."""
+function tauread(file="image.out")
+    fim = open(file, "r")
+    iformat = parse(Int, readline(fim))
+    im_nx, im_ny = split(readline(fim))
+    im_nx = parse(Int, im_nx)
+    im_ny = parse(Int, im_ny)
+    nlam = parse(Int, readline(fim))
+    pixsize_x, pixsize_y = split(readline(fim))
+    pixsize_x = parse(Float64, pixsize_x)
+    pixsize_y = parse(Float64, pixsize_y)
+
+    # Read the wavelength array
+    lams = Array(Float64, nlam)
+    for i=1:nlam
+        lams[i] = parse(Float64, readline(fim))
+    end
+
+    # Create an array with the proper size, and then read the file into it
+    data = Array(Float64, (im_ny, im_nx, nlam))
+
+    for k=1:nlam
+        readline(fim) # Junk space
+        for j=1:im_ny
+            for i=1:im_nx
+                val = parse(Float64, readline(fim))
+
+                # If RADMC3D signaled that there is no tau=1 surface here, set height to NaN
+                if isapprox(val, -1e91)
+                    data[j,i,k] = NaN #
+                else
+                    data[j,i,k] = val
+                end
+            end
+        end
+    end
+
+    close(fim)
+
+    # According to the RADMC3D manual, the units are *intensity* [erg cm−2 s−1 Hz−1 ster−1]
+
+    return TausurfImage(data, pixsize_x, pixsize_y, lams)
+
 end
 
 # Assumes dpc is parsecs

@@ -47,6 +47,90 @@ function plot_vel(pars::AbstractParameters, grid::Grid)
     plt[:savefig]("velocity.png")
 end
 
+# Instead of a 1D slice, we'll need to do a 2D field
+function plot_vel(pars::ParametersVertical, grid::Grid)
+    # Instead of spherical coordinates, do this with cartesian
+    nz = 64
+    zs = linspace(0.0, 20 * AU, nz)
+    zz = zs./AU
+
+    nr = grid.nr
+    rs = grid.rs
+
+    xx = Array(Float64, (nz, nr))
+    yy = Array(Float64, (nz, nr))
+    vels = Array(Float64, (nz, nr))
+
+    for i=1:nz
+        xx[i, :] = rr
+    end
+
+    for j=1:nr
+        yy[:, j] = zz
+    end
+
+    for i=1:nz
+        for j=1:nr
+            vels[i,j] = DiskJockey.model.velocity(grid.rs[j], zs[i], pars)
+        end
+    end
+
+
+    levels = Float64[0.0, 1.0, 5.0, 10.0, 20.0, 40.]
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    ax[:set_ylabel](L"$z$ [AU]")
+    ax[:set_xlabel](L"$r$ [AU]")
+
+    #ticks = np.linspace(0, np.max(cov), num=6)
+    #cb.set_ticks(ticks)
+    #cb.set_ticks(MaxNLocator(nbins=5))
+
+
+    #Plot the contoured density in cylindrical coordinates, then plot the spherical grid on top of it?
+    # Do this by plotting a bunch of lines
+    # First, the radial lines
+
+    # Basically, each of these originates from x = 0, z = 0, and has a slope of theta
+    # for theta in (pi/2 - grid.Thetas)
+    #     slope = tan(theta)
+    #     ax[:plot](rr, slope .* rr, "k", lw=0.1)
+    # end
+    #
+    # # Arcs
+    # xs = Array(Float64, (grid.ntheta + 1))
+    # ys = Array(Float64, (grid.ntheta + 1))
+    #
+    # for r in rr
+    #     for (i, theta) in enumerate(pi/2 - grid.Thetas)
+    #         xs[i] = cos(theta) * r
+    #         ys[i] = sin(theta) * r
+    #     end
+    #     ax[:plot](xs, ys, "k", lw=0.1)
+    # end
+    #
+    # ax[:set_ylim](0, maximum(zz))
+
+    # convert from cm/s to km/s
+    img = ax[:contourf](xx, yy, 1e-5 * vels, levels=levels)
+
+    ax[:set_xscale]("log")
+
+    # # Now, go overlay small grey lines vertically
+    # for cell_edge in grid.Rs/AU
+    #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    # end
+
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+
+    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
+    cb = fig[:colorbar](img, cax=cax)
+
+    plt[:savefig]("velocity.png")
+end
+
 # temperature structure
 function plot_temp(pars::AbstractParameters, grid::Grid)
     temps = DiskJockey.model.temperature(grid.rs, pars)
@@ -67,9 +151,88 @@ function plot_temp(pars::AbstractParameters, grid::Grid)
     plt[:savefig]("temperature.png")
 end
 
-# This new stub is for plotting temperature for more complex models
-# function plot_temp()
-# end
+
+function plot_temp(pars::ParametersVertical, grid::Grid)
+    # Instead of spherical coordinates, do this with cartesian
+    nz = 64
+    zs = linspace(0.0, 20 * AU, nz)
+    zz = zs./AU
+
+    nr = grid.nr
+    rs = grid.rs
+
+    xx = Array(Float64, (nz, nr))
+    yy = Array(Float64, (nz, nr))
+    temps = Array(Float64, (nz, nr))
+
+    for i=1:nz
+        xx[i, :] = rr
+    end
+
+    for j=1:nr
+        yy[:, j] = zz
+    end
+
+    for i=1:nz
+        for j=1:nr
+            temps[i,j] = DiskJockey.model.temperature(grid.rs[j], zs[i], pars)
+        end
+    end
+
+    levels = Float64[0.0, 5.0, 10.0, 20.0, 30., 40., 50.0, 100.0]
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    ax[:set_ylabel](L"$z$ [AU]")
+    ax[:set_xlabel](L"$r$ [AU]")
+
+    #ticks = np.linspace(0, np.max(cov), num=6)
+    #cb.set_ticks(ticks)
+    #cb.set_ticks(MaxNLocator(nbins=5))
+
+
+    #Plot the contoured density in cylindrical coordinates, then plot the spherical grid on top of it?
+    # Do this by plotting a bunch of lines
+    # First, the radial lines
+
+    # Basically, each of these originates from x = 0, z = 0, and has a slope of theta
+    # for theta in (pi/2 - grid.Thetas)
+    #     slope = tan(theta)
+    #     ax[:plot](rr, slope .* rr, "k", lw=0.1)
+    # end
+    #
+    # # Arcs
+    # xs = Array(Float64, (grid.ntheta + 1))
+    # ys = Array(Float64, (grid.ntheta + 1))
+    #
+    # for r in rr
+    #     for (i, theta) in enumerate(pi/2 - grid.Thetas)
+    #         xs[i] = cos(theta) * r
+    #         ys[i] = sin(theta) * r
+    #     end
+    #     ax[:plot](xs, ys, "k", lw=0.1)
+    # end
+    #
+    # ax[:set_ylim](0, maximum(zz))
+
+
+    img = ax[:contourf](xx, yy, temps, levels=levels)
+
+    ax[:set_xscale]("log")
+
+    # # Now, go overlay small grey lines vertically
+    # for cell_edge in grid.Rs/AU
+    #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    # end
+
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+
+    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
+    cb = fig[:colorbar](img, cax=cax)
+
+    plt[:savefig]("temperature.png")
+end
 
 # scale height
 function plot_height(pars::AbstractParameters, grid::Grid)
@@ -162,7 +325,7 @@ function plot_dens(pars::AbstractParameters, grid)
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
-    zs = linspace(0.0, 420 * AU, nz)
+    zs = linspace(0.0, 150 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
@@ -182,7 +345,7 @@ function plot_dens(pars::AbstractParameters, grid)
 
     for i=1:nz
         for j=1:nr
-            rhos[i,j] = model.rho_gas(grid.rs[j], zs[i], pars)
+            rhos[i,j] = DiskJockey.model.rho_gas(grid.rs[j], zs[i], pars)
         end
     end
 
@@ -243,7 +406,116 @@ function plot_dens(pars::AbstractParameters, grid)
     cb = fig[:colorbar](img, cax=cax)
 
     plt[:savefig]("density.png")
+end
 
+# Plot a 1D slice of the vertical density structure at a particular radius
+function plot_density_column(pars::ParametersVertical, grid::Grid)
+    r = 10 * AU
+    zs, rhos = DiskJockey.model.rho_column(r, pars)
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    ax[:semilogy](zs./AU, rhos/(mu_gas * m_H))
+
+    # Now, go overlay small grey lines vertically for the radial cells
+    # for cell_edge in grid.Rs/AU
+    #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    # end
+
+    ax[:set_ylabel](L"$\rho_\mathrm{gas} \, [\mathrm{n/cm}^3]$")
+    ax[:set_xlabel](L"$r$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt[:savefig]("density_column.png")
+
+end
+
+function plot_density_column_CO(pars::ParametersVertical, grid::Grid)
+    r = 50 * AU
+
+    # Gas density [g/cm^3]
+    zs, rhos = DiskJockey.model.rho_column(r, pars)
+
+    # Gas density of CO [g/cm^3]
+    zs, rhos = DiskJockey.model.rho_column_CO(r, zs, rhos, pars)
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    ax[:semilogy](zs./AU, DiskJockey.constants.f_12CO * DiskJockey.constants.X_H2 * rhos/(mu_gas * m_H))
+
+    # Now, go overlay small grey lines vertically for the radial cells
+    # for cell_edge in grid.Rs/AU
+    #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    # end
+
+    ax[:set_ylabel](L"$\rho_\mathrm{CO} \, [\mathrm{n/cm}^3]$")
+    ax[:set_xlabel](L"$z$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt[:savefig]("density_column_CO.png")
+
+end
+
+function plot_dens(pars::ParametersVertical, grid::Grid)
+    # Set up the interpolator
+
+    rho_gas = DiskJockey.model.rho_gas_interpolator(pars, grid)
+
+    # Instead of spherical coordinates, do this with cartesian
+    nz = 64
+    zs = linspace(0.0, 50 * AU, nz)
+    zz = zs./AU
+
+    nr = grid.nr
+    rs = grid.rs
+
+    xx = Array(Float64, (nz, nr))
+    yy = Array(Float64, (nz, nr))
+    rhos = Array(Float64, (nz, nr))
+
+    for i=1:nz
+        xx[i, :] = rr
+    end
+
+    for j=1:nr
+        yy[:, j] = zz
+    end
+
+    for i=1:nz
+        for j=1:nr
+            rhos[i,j] = rho_gas(grid.rs[j], zs[i])
+        end
+    end
+
+    println("rho extrema ", extrema(rhos))
+
+    nlog = log10(rhos/(mu_gas * m_H))
+
+    # levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9]
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    ax[:set_ylabel](L"$z$ [AU]")
+    ax[:set_xlabel](L"$r$ [AU]")
+
+    img = ax[:contourf](xx, yy, nlog) #, levels=levels)
+
+    ax[:set_xscale]("log")
+
+    # Now, go overlay small grey lines vertically
+    # for cell_edge in grid.Rs/AU
+    #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
+    # end
+
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+
+    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
+    cb = fig[:colorbar](img, cax=cax)
+
+    plt[:savefig]("density.png")
 end
 
 grd = config["grid"]
@@ -252,10 +524,15 @@ grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 # The cell centers for plotting purposes
 const global rr = grid.rs ./ AU # convert to AU
 
+if config["model"] == "vertical"
+    plot_density_column(pars, grid)
+    plot_density_column_CO(pars, grid)
+end
+
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)
 plot_surface_density(pars, grid)
-# plot_dens(pars, grid)
+plot_dens(pars, grid)
 # plot_density_1D(pars)
 # plot_dlnrho(pars)

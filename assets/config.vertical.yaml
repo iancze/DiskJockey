@@ -1,0 +1,71 @@
+name: disk
+
+out_base: output/
+
+gas: true
+species : 12CO # Possible choices: 12CO, 13CO, C18O. Future may include HCN, etc...
+transition: 3-2 # J =
+
+grid:
+  nr: 128
+  ntheta: 46 # if mirrored about the equator, total of 64
+  nphi: 1
+  r_in: 0.1 # [AU] # Inner edge of model grid
+  r_out: 2000. # [AU] # Outer edge of model grid
+
+# Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
+# exclude: [35, 36, 37, 38]
+
+# Distance prior setup
+fix_d : true
+
+dpc_prior:
+  mu : 145.
+  sig : 20.
+
+# What type of model will we be fitting? This also affects which parameters to include.
+model : vertical # choices of {standard, truncated, vertical, cavity, etc..}
+
+# parameters, either used for model synthesis or visualization. Be careful that all of these are Float64 and not Int
+parameters:
+  M_star: 1.0 # [M_sun] stellar mass
+  r_c: 100.0 # [AU] characteristic radius
+  T_10m: 30.0 # [K] temperature at 10 AU, midplane
+  q_m: 0.5 # midplane temperature gradient exponent
+  T_10a: 100.0 # [K] temperature at 10 AU, atmosphere
+  q_a: 0.5 # atmosphere temperature gradient exponent
+  T_freeze: 19 # [K] temperature below which to reduce CO abundance
+  X_freeze: 0.0001 # [ratio] amount to reduce CO abundance
+  sigma_s: 0.706 # Photodissociation boundary in units of A_V.
+  gamma: 1.0 # surface temperature gradient exponent
+  h: 4.0 # Number of scale heights that z_q is at, typically fixed to 4
+  delta: 2.0 # Shape exponent, currently fixed to 2
+  logM_gas: -1.0 # [M_Sun] disk mass of gas
+  ksi: 0.2 # [cm s^{-1}] micsroturbulence
+  dpc: 145.0 # [pc] distance to system
+  incl: 45.0 # [degrees] inclination 0 deg = face on, 90 = edge on.
+  PA: 0.0 # [degrees] position angle (East of North)
+  vel: 0.0 # [km/s] systemic velocity (positive is redshift/receeding)
+  mu_RA: 0.0 # [arcsec] central offset in RA
+  mu_DEC: 0.0 # [arcsec] central offset in DEC
+
+# The HDF5 file containing the visibilities
+data_file: data.hdf5
+
+# Image setup
+npix: 256
+
+# Starting positions of walkers
+pos0: pos0.npy
+
+# MCMC setup
+samples: 1
+loops: 1
+
+# Some parameters that may be helpful for making more realistic channel map plots of the model.
+# You will likely need to change these to correspond to the parameters of your observation.
+beam :
+  rms : 0.1 # Jy/beam
+  BMAJ: 0.9 # arcsec
+  BMIN: 0.9 # arcsec
+  BPA: 1.0 # degrees east of North of the semi-major axis.

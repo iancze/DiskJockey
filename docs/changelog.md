@@ -2,6 +2,26 @@
 
 The following are the changes that have been implemented since the previous version. All versions are tagged as releases and available as a clone off of the master branch.
 
+# Version 0.1.3
+
+## Visualizing the tau=1 surface
+
+The functionality originally stored in RADMC is now exposed via DiskJockey to visualize the tau = 1 (or other value) surface.
+
+  $ DJinit.jl && tausurf_model.jl && plot_tausurf.jl
+
+This also introduces the `TausurfImage` type in `src/image.jl`. This is useful to see whether the tau=1 surface is in front of or behind the midplane of the disk, projected on the sky.
+
+The more useful plot is in 3D, however.
+
+## Vertical temperature gradient
+
+Now includes support for fitting a vertical temperature gradient, following the parameterization in Williams and Best 14.
+
+## model.convert_vector
+
+Has been simplified to ingest *kwargs*, enabling easier selection of model types and parameters.
+
 # Version 0.1.2
 
 The package is now named DiskJockey (previously JudithExcalibur). Check out the new logo!

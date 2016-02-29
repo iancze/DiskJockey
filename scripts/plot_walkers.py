@@ -195,7 +195,10 @@ def plot_hdis(flatchain, fname="hdi.png"):
     fig.subplots_adjust(hspace=0.5, bottom=0.05, top=0.99)
     fig.savefig(fname)
 
-plot_hdis(flatchain)
+try:
+    plot_hdis(flatchain)
+except IndexError:
+    pass
 
 # Make the triangle plot
 if args.tri:

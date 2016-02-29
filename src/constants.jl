@@ -2,10 +2,10 @@
 
 module constants
 
-export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s, nyquist_factor, r_out_factor, Av_sigmaH
-export JUDITHEXCALIBUR_VERSION
+export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s, nyquist_factor, r_out_factor, Av_sigmaH, n_z_interpolator, X_H2, rho_gas_critical
+export DISKJOCKEY_VERSION
 
-JUDITHEXCALIBUR_VERSION = v"0.1.2"
+DISKJOCKEY_VERSION = v"0.1.2"
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]
@@ -86,7 +86,13 @@ arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
 # 2 is not Nyquist sampled. This is currently set to 2.2 to provide a degree of oversampling.
 nyquist_factor = 2.2
 
+# The bound at which to force the density to zero
+# n_H2 = 100 [1/cm^3] average H2 number density in diffuse ISM
+rho_gas_critical = (100./X_H2) * mu_gas * amu # [g/cm^3]
 
+# The number of z points to use for the density interpolator
+n_z_interpolator = 64
+rho_gas_zero = 1e-50
 
 # Oftentimes it is necessary to get a symmetric coordinate array that spans N
 # elements from -width to +width, but makes sure that the middle point lands
