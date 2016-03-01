@@ -103,6 +103,13 @@ end
 @everywhere using DiskJockey.model
 @everywhere using Base.Test
 
+# Determine if we will be including the User-defined prior
+if isfile("prior.jl")
+    println("Including user-defined prior from prior.jl")
+    include("prior.jl")
+    cp("prior.jl", outdir * "prior.jl")
+end
+
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)

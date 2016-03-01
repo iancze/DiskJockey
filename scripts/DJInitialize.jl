@@ -18,6 +18,9 @@ s = ArgParseSettings(description="Initialize a new project directory with the ap
     help = "Print out an exclude array that should be manually copied to config.yaml so that only every n-th channel is fit in venus.jl"
     arg_type = Int
     default = 0
+    "--prior"
+    help = "Copy a default prior.jl template to this current directory, for user modification. CAREFUL! See the docs about this functionality before invoking."
+    action = :store_true
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
@@ -35,6 +38,13 @@ if parsed_args["new-project"] != "no"
     cp(assets_dir * "InitializeWalkers.$(model).ipynb", pwd() * "/InitializeWalkers.ipynb")
 
     println("Copied default config.yaml and InitializeWalkers.ipynb for the $model model to current working directory.")
+    println("Exiting")
+    quit()
+end
+
+if parsed_args["prior"]
+    cp(assets_dir * "prior.jl", pwd() * "/prior.jl")
+    println("prior.jl copied to current directory. If you didn't mean to do this, delete this file now. Otherwise, edit this file with your favorite text editor to enforce the prior you would like to see for this specific disk. Please see the docs for more information.")
     println("Exiting")
     quit()
 end

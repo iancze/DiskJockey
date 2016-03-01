@@ -457,11 +457,15 @@ function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)
 
-    rho = S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
-    if rho < rho_gas_critical
+    # Calculate the midplane density
+    rho_mid = S/(sqrt(2. * pi) * H)
+
+    # If the midplane density is less than our cutoff, just return 0.0
+    if rho_mid < rho_gas_critical
         return 0.0
+    # Otherwise, return the density at this height
     else
-        return rho
+        return S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
     end
 end
 

@@ -5,7 +5,7 @@ module constants
 export M_sun, M_earth, AU, pc, G, kB, amu, c_ang, cc, c_kms, mu_gas, m_H, m_CO, m_12CO, m_13CO, m_C18O, number_densities, molnames, arcsec, deg, fftspace, MCO, lam0_12CO, lam0_13CO, lam0_C18O, lam0s, nyquist_factor, r_out_factor, Av_sigmaH, n_z_interpolator, X_H2, rho_gas_critical
 export DISKJOCKEY_VERSION
 
-DISKJOCKEY_VERSION = v"0.1.2"
+DISKJOCKEY_VERSION = v"0.1.3"
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]

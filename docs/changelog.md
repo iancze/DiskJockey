@@ -22,6 +22,10 @@ Now includes support for fitting a vertical temperature gradient, following the 
 
 Has been simplified to ingest *kwargs*, enabling easier selection of model types and parameters.
 
+## User-defined priors
+
+As an experimental feature, it is now possible to assign user defined priors. This will require you to write some Julia code, but shouldn't be that difficult. An example is in `assets/prior.jl`, which will be read automatically from the current working directory. The main idea is to make it easier to assign disk-specific priors (i.e., constrain the disk gas mass to a specific value, or disk position, etc...).
+
 # Version 0.1.2
 
 The package is now named DiskJockey (previously JudithExcalibur). Check out the new logo!
