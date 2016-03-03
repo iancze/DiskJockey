@@ -18,3 +18,6 @@ The format of this datafile is as follows:
 and an example datafile is provided for AK Sco, available for download [here](https://figshare.com/articles/ALMA_AK_Sco_12CO_J_2_1_Visibilities/2066022). The invsig field may seem like an non-traditional way to store visibility weights (typically measured in `[1/Jy^2]`), but enables quick computation of the `chi^2` statistic via Julia's `sumabs2` routine.
 
 Example scripts for reading in data from the SMA FITS format are available in the `scripts/` directory. We are working on a more centralized way to easily extract ALMA visibilities from a measurement set. Right now it tends to be a bit object-specific.
+
+
+calculate `un_lnrho()`

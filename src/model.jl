@@ -439,11 +439,12 @@ function Sigma(r::Float64, pars::ParametersCavity)
     r_cav = pars.r_cav * AU
 
     gamma = pars.gamma
+    gamma_cav = pars.gamma_cav
     M_gas = pars.M_gas * M_sun
 
     Sigma_c = M_gas * (2 - pars.gamma) / (2 * pi * r_c^2)
 
-    inner_taper = exp(-(r_cav/r)^(2 - gamma))
+    inner_taper = exp(-(r_cav/r)^gamma_cav)
     outer_taper = exp(-(r/r_c)^(2 - gamma))
     power_law = (r/r_c)^(-gamma)
 
@@ -457,15 +458,15 @@ function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)
 
-    # Calculate the midplane density
-    rho_mid = S/(sqrt(2. * pi) * H)
+    # Calculate the density
+    rho = S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
 
-    # If the midplane density is less than our cutoff, just return 0.0
-    if rho_mid < rho_gas_critical
-        return 0.0
+    # If the density is less than our cutoff, just return 0.0
+    if rho < rho_gas_critical
+        return constants.rho_gas_zero
     # Otherwise, return the density at this height
     else
-        return S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+        return rho
     end
 end
 
@@ -496,17 +497,7 @@ function dlnrho(r::Float64, z::Float64, pars::ParametersStandard)
     return -(mu_gas * m_H)/(kB * T) * (G * pars.M_star * M_sun * z)/r^3
 end
 
-# Delivers an unnormalized gas density. Needs to be multiplied by correction factor.
-function un_lnrho(r::Float64, z::Float64, ztop::Float64, pars::ParametersVertical)
-    f(x) = dlnrho(r, x, pars)
-
-    val, err = quadgk(f, ztop, z)
-    return val
-end
-
-# Calculate a vertical 1-D density column at a given radius
-function rho_column(r::Float64, pars::ParametersVertical)
-
+function z_top(r::Float64, pars::ParametersVertical)
     zq = z_q(r, pars) # The height of the disk "atmosphere"
 
     # 10 AU is an arbitrary number, but this is to make sure that we have a high enough bound
@@ -517,6 +508,24 @@ function rho_column(r::Float64, pars::ParametersVertical)
     else
         ztop = 10 * AU
     end
+    return ztop
+end
+
+# Delivers an unnormalized gas density. Needs to be multiplied by correction factor.
+function un_lnrho(r::Float64, z::Float64, pars::ParametersVertical)
+    ztop = z_top(r, pars)
+
+    f(x) = dlnrho(r, x, pars)
+
+    val, err = quadgk(f, ztop, z)
+    return val
+end
+
+# Calculate the normalization and the height for CO dissocation as a function of radius
+# norm(r) and z_phot(r)
+function rho_norm_and_phot(r::Float64, pars::ParametersVertical)
+
+    ztop = z_top(r, pars)
 
     # Create an array of heights that goes from the midplane (0, 0.01, ..., ztop)
     zs = cat(1, [0], logspace(log10(0.01 * AU), log10(ztop), n_z_interpolator-1))
@@ -529,7 +538,7 @@ function rho_column(r::Float64, pars::ParametersVertical)
 
     # Find the largest value from this array and subtract it to avoid numberical overflow
     # in subsequent steps
-    bar_lnrho = un_lnrhos[1]
+    bar_lnrho = un_lnrhos[1] # the largest value in the array (at the midplane)
     un_lnrhos -= bar_lnrho
 
     # Convert from ln(rho) to rho; still unnormalized.
@@ -537,7 +546,8 @@ function rho_column(r::Float64, pars::ParametersVertical)
 
     # Now that we have the shape of the density structure but not the normalization,
     # integrate to find the normalization factor.
-    # The density is a unitful quantity, so we need to exponentiate (can't do this with un_lnrhos).
+    # The density is a unitful quantity, so we need to exponentiate
+    # (can't do this with just un_lnrhos).
     spl = Spline1D(zs, un_rhos)
 
     # Integral is from -inf to inf, or 2 x (0 to inf).
@@ -547,21 +557,18 @@ function rho_column(r::Float64, pars::ParametersVertical)
     # The actual value of the surface density
     S = Sigma(r, pars)
 
+    # This quantity allows you to do
+    # rho = norm_rho * un_lnrho(r, z)
+    norm_rho = S / (tot * exp(bar_lnrho))
+
     # The normalized density columns
+    # This is different from the norm because we already subtracted bar_lnrho from this
     rhos = S/tot * un_rhos # [g/cm^3]
 
-    return (zs, rhos)
-end
-
-# Translate from a gas density to a CO number density
-function rho_column_CO(r::Float64, zs::Vector{Float64}, rhos::Vector{Float64}, pars::ParametersVertical)
-
+    # Now, calculate the photodissociation height
     # Threshold column density
     thresh_H2 = pars.sigma_s * Av_sigmaH # [n_H2/cm^2]
     thresh = thresh_H2 * (mu_gas * amu / X_H2) # [g/cm^2] of gas
-
-    # Normalize the previous spline and integrate to get zboundary
-    # f(x) = S/tot * integrate(spl, x, zs[end])
 
     # Go through each of the z spacings, and use Riemann integration in a while loop to find
     # at which z point we've finally accumulated the threshold column density.
@@ -573,17 +580,42 @@ function rho_column_CO(r::Float64, zs::Vector{Float64}, rhos::Vector{Float64}, p
         icolumn -= 1
     end
 
-    # All densities below this z height remain intact, while all densities above this
-    # height are set to (effectively) zero (CO is dissociated)
-    rhos[icolumn:end] = constants.rho_gas_zero
+    z_phot = zs[icolumn]
 
-    # Implement CO freezout onto grains
-    for i=1:n_z_interpolator
-        rhos[i] *= X_freeze(temperature(r, zs[i], pars), pars)
-    end
-
-    return (zs, rhos)
+    return (norm_rho, z_phot)
 end
+
+# Translate from a gas density to a CO number density
+# function rho_column_CO(r::Float64, zs::Vector{Float64}, rhos::Vector{Float64}, pars::ParametersVertical)
+#
+#     # Threshold column density
+#     thresh_H2 = pars.sigma_s * Av_sigmaH # [n_H2/cm^2]
+#     thresh = thresh_H2 * (mu_gas * amu / X_H2) # [g/cm^2] of gas
+#
+#     # Normalize the previous spline and integrate to get zboundary
+#     # f(x) = S/tot * integrate(spl, x, zs[end])
+#
+#     # Go through each of the z spacings, and use Riemann integration in a while loop to find
+#     # at which z point we've finally accumulated the threshold column density.
+#     column = 0.0 # total acumulated column
+#     icolumn::Int = n_z_interpolator # index of the z point
+#     while (column <= thresh) && (icolumn > 1)
+#         dz = zs[icolumn] - zs[icolumn - 1]
+#         column += dz *  rhos[icolumn]
+#         icolumn -= 1
+#     end
+#
+#     # All densities below this z height remain intact, while all densities above this
+#     # height are set to (effectively) zero (CO is dissociated)
+#     rhos[icolumn:end] = constants.rho_gas_zero
+#
+#     # Implement CO freezout onto grains
+#     for i=1:n_z_interpolator
+#         rhos[i] *= X_freeze(temperature(r, zs[i], pars), pars)
+#     end
+#
+#     return (zs, rhos)
+# end
 
 
 #
@@ -659,40 +691,37 @@ end
 # end
 
 # Because the calculation for the vertical temperature gradient is a bit more complex than other
-# models, we can save time by caching the evaluation in a grid interpolator.
+# models, we can save time by caching the expensive quantities in an interpolator.
 # This function returns an interpolator function that can be used to determine rho_gas(r, z)
 function rho_gas_interpolator(pars::ParametersVertical, grid::Grid)
 
-    # Create a 2D spline interpolator for this surface using a density column at each radius
-    rs = Array(Float64, (n_z_interpolator, grid.nr))
-    zs = Array(Float64, (n_z_interpolator, grid.nr))
-    rhos = Array(Float64, (n_z_interpolator, grid.nr))
-    for i=1:grid.nr
-        r = grid.rs[i]
-        rs[:,i] = r
+    nr = grid.nr
+    rs = grid.rs # cell centers
+    norms = Array(Float64, nr)
+    z_phots = Array(Float64, nr)
 
-        ZS, RHOS = rho_column(r, pars)
-        zs[:,i], rhos[:,i] = rho_column_CO(r, ZS, RHOS, pars)
+    for i=1:nr
+        norms[i], z_phots[i] = rho_norm_and_phot(rs[i], pars)
     end
 
-    # Reshape all af rs, zs, and rhos into 1D arrays
-    rs = reshape(rs, prod(size(rs)))
-    zs = reshape(zs, prod(size(zs)))
-    rhos = reshape(rhos, prod(size(rhos)))
+    norm_intp = Spline1D(rs, norms)
+    z_phot_intp = Spline1D(rs, z_phots)
 
-    log10rhos = log10(rhos)
-
-    return
-
-    println("interpolator rho_gas extrema ", extrema(rhos))
-    spl = Spline2D(rs, zs, log10(rhos)) #; kx=1, ky=1, s=length(rs))
-
-    function interpolator(r::Float64, z::Float64)
+    # Create a function that will act like `rho_gas` for a vertical temperature gradient, but
+    # without the added cost of needing to solve the normalization and photodissociation integrals
+    # at each radius.
+    function interpolator(r::Float64, z::Float64, pars::ParametersVertical)
         # Santity checks to see that we're inside the grid
-        if r > grid.rs[end] || z > grid.rs[end]
+        if r > grid.rs[end] || z > grid.rs[end] || z > z_phot_intp(r)
             return constants.rho_gas_zero
+
         else
-            return 10^evaluate(spl, r, z)
+            # find norm(r)
+            # calculate unln(rho)
+            norm_gas = norm_intp(r)
+            rho = norm_gas * exp(un_lnrho(r, z, pars))
+
+            return rho * X_freeze(temperature(r, zs[i], pars), pars)
         end
     end
 
