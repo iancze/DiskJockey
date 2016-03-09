@@ -26,6 +26,14 @@ Has been simplified to ingest *kwargs*, enabling easier selection of model types
 
 As an experimental feature, it is now possible to assign user defined priors. This will require you to write some Julia code, but shouldn't be that difficult. An example is in `assets/prior.jl`, which will be read automatically from the current working directory. The main idea is to make it easier to assign disk-specific priors (i.e., constrain the disk gas mass to a specific value, or disk position, etc...).
 
+## Makefiles
+
+Now, we include a makefile that should be copied to each source directory. In a typical analysis workflow, there isn't need to regenerate each intermediate product repeatedly.
+
+## Script renaming
+
+To prevent these scripts from cluttering a users namespace when adding to their `PATH`, we've prefixed everything with `DJ_`. Moreover, for most tasks, the users will not need to run these tasks directly, but from the Makefile.
+
 # Version 0.1.2
 
 The package is now named DiskJockey (previously JudithExcalibur). Check out the new logo!

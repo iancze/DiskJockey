@@ -298,6 +298,11 @@ function ResidVis(dvarr::Array{DataVis, 1}, mvarr)
     return rvarr
 end
 
+# For just computing the difference between two datasets
+function lnprob(dvis::DataVis, mvis::DataVis)
+    return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
+end
+
 function lnprob(dvis::DataVis, mvis::ModelVis)
     @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
     return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2

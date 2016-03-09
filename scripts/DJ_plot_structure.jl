@@ -4,6 +4,9 @@ using ArgParse
 
 s = ArgParseSettings()
 @add_arg_table s begin
+    "-M"
+    help = "Print out the list of files this program will create."
+    action = :store_true
     "config"
     help = "a YAML configuration file"
     default = "config.yaml"
@@ -14,7 +17,6 @@ parsed_args = parse_args(ARGS, s)
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-
 using DiskJockey.model
 using DiskJockey.constants
 
@@ -23,6 +25,13 @@ transition = config["transition"]
 lam0 = lam0s[species*transition]
 model = config["model"]
 pars = convert_dict(config["parameters"], config["model"])
+
+if parsed_args["M"]
+    args = "velocity.png temperature.png scale_height.png surface_density.png density.png"
+    # If we have vertical gradient, add some extra to this
+    println(args)
+    quit()
+end
 
 import PyPlot.plt
 using LaTeXStrings

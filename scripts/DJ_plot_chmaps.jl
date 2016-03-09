@@ -10,6 +10,18 @@ s = ArgParseSettings()
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
+    "--linear"
+    help = "Plot the regular linear channel maps."
+    action = :store_true
+    "--log"
+    help = "Plot the channel maps with log stretch."
+    action = :store_true
+    "--blur"
+    help = "Plot the channel maps, convolved with a fake beam."
+    action = :store_true
+    "--spectrum"
+    help = "Plot the spatially-integrated spectrum."
+    action = :store_true
 end
 
 parsed_args = parse_args(ARGS, s)
@@ -174,28 +186,35 @@ global nlam = length(skim.lams)
 # convert wavelengths to velocities
 global vels = c_kms * (skim.lams .- lam0)/lam0
 
-println("Plotting hires maps")
-plot_chmaps(skim, fname="chmaps_hires_linear.png", contours=false)
-plot_chmaps(skim, fname="chmaps_hires_log.png", log=true, contours=false)
+if parsed_args["linear"]
+    plot_chmaps(skim, fname="chmaps_linear.png", contours=false)
+end
 
-beam = config["beam"]
-rms = beam["rms"] # Jy/beam
-BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
-BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
-BAVG = (BMAJ + BMIN)/2
-BPA = beam["BPA"] # position angle East of North [degrees]
+if parsed_args["log"]
+    plot_chmaps(skim, fname="chmaps_log.png", log=true, contours=false)
+end
 
-println("Beam sigma ", BAVG, " [arcsec]")
+if parsed_args["blur"]
+    beam = config["beam"]
+    rms = beam["rms"] # Jy/beam
+    BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
+    BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
+    BAVG = (BMAJ + BMIN)/2
+    BPA = beam["BPA"] # position angle East of North [degrees]
 
-arcsec_ster = (4.25e10)
-# Convert beam from arcsec^2 to Steradians
-global rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
+    println("Beam sigma ", BAVG, " [arcsec]")
 
-println("bluring maps")
-sk_blur = blur(skim, [BAVG, BAVG])
+    arcsec_ster = (4.25e10)
+    # Convert beam from arcsec^2 to Steradians
+    global rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
 
-println("Plotting blured maps")
-plot_chmaps(sk_blur, fname="chmaps_blur_linear.png", log=false, contours=true)
+    println("bluring maps")
+    sk_blur = blur(skim, [BAVG, BAVG])
 
-println("Plotting spectrum")
-plot_spectrum(skim)
+    println("Plotting blured maps")
+    plot_chmaps(sk_blur, fname="chmaps_blur.png", log=false, contours=true)
+end
+
+if parsed_args["spectrum"]
+    plot_spectrum(skim)
+end

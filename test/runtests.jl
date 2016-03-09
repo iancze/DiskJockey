@@ -6,6 +6,12 @@ println("Current working directory ", pwd())
 println("Files in this directory ")
 run(`ls`)
 
+##################################
+### Visibility interpolation
+##################################
+
+include("interpolation.jl")
+
 ###################################
 ### Basic unit tests
 ###################################
@@ -25,7 +31,7 @@ run(`bash clean.sh`)
 
 # Make a fake model so we can test off of it.
 println("Initializing directory with a new standard project.")
-run(`DJInitialize.jl --new-project=standard`)
+run(`DJ_initialize.jl --new-project=standard`)
 
 # Set up the config file and pos0.npy
 println("Editing config.yaml to use the standard model with fixed distance.")
@@ -47,7 +53,7 @@ run(`bash clean.sh`)
 
 # Make a fake model so we can test off of it.
 println("Initializing directory with a new standard project.")
-run(`DJInitialize.jl --new-project=standard`)
+run(`DJ_initialize.jl --new-project=standard`)
 
 # Set up the config file and pos0.npy
 println("Editing config.yaml to use the standard model with floating distance.")

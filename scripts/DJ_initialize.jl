@@ -11,6 +11,9 @@ s = ArgParseSettings(description="Initialize a new project directory with the ap
     "--version"
     help = "Print a the version number and exit."
     action = :store_true
+    "-M"
+    help = "Print out the list of files this program generates."
+    action = :store_true
     "--new-project"
     help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity'"
     default = "no"
@@ -27,6 +30,11 @@ s = ArgParseSettings(description="Initialize a new project directory with the ap
 end
 
 parsed_args = parse_args(ARGS, s)
+
+if parsed_args["M"]
+    println("amr_grid.inp camera_wavelength_micron.inp gas_temperature.inp gas_velocity.inp lines.inp microturbulence.inp molecule_co.inp numberdens_co.inp radmc3d.inp wavelength_micron.inp")
+    quit()
+end
 
 assets_dir = Pkg.dir("DiskJockey") * "/assets/"
 
