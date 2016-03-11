@@ -41,7 +41,7 @@ immutable Grid
     phis::Vector{Float64}
 end
 
-function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool)
+function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool=true)
     # Specify a 2D axisymmetric *separable* grid in spherical coordinates:
     # {r, theta, phi}, where theta is angle from zenith, phi is azimuth
 
@@ -74,6 +74,64 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool)
 
     return Grid(nr, ntheta, nphi, ncells, Rs, Thetas, Phis, rs, thetas, phis)
 
+end
+
+# Create a grid object using a logarithmic then linear then logarithmic radial spacing
+function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::Int, n_mid::Int, n_out::Int, ntheta::Int, eqmirror::Bool=true)
+    # Number of cells in each dimension
+    nphi = 1 # axisymmetric disk
+    nr = n_in + n_mid + n_out
+    ncells = nr * ntheta * nphi
+    r_in = convert(Float64, r_in) * AU # [cm] Inner extent of disk
+    r_linstart = convert(Float64, r_linstart) * AU # [cm] Start of linear section
+    r_linend = convert(Float64, r_linend) * AU # [cm] End of linear section
+    r_out = convert(Float64, r_out) * AU # [cm] Outer extent of disk
+
+    #Define the cell *walls*
+    # logarithmically spaced inner grid
+    Rs_in = logspace(log10(r_in), log10(r_linstart), n_in + 1) # [cm]
+
+    # linearly spaced middle grid
+    Rs_mid = linspace(r_linstart, r_linend, n_mid + 1) # [cm]
+
+    # logarithmically spaced outer grid
+    Rs_out = logspace(log10(r_linend), log10(r_out), n_out + 1) # [cm]
+
+    Rs = cat(1, Rs_in[1:end-1], Rs_mid, Rs_out[2:end])
+
+    if eqmirror
+        ped = 0.1
+        #Thetas = linspace(0, pi/2., ntheta+1)
+        # [rad] Angles are internally defined in radians, not degrees
+        Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        #Spaced closer near the z=0
+    else
+        Thetas = linspace(0, pi, ntheta+1)
+        # [rad] Angles are internally defined in radians, not degrees
+    end
+
+    Phis = Float64[0.0, 0.0] # [rad] cell walls for inactive coordinate
+
+    #Define the cell centers as the average between walls
+    rs = 0.5 * (Rs[1:end-1] + Rs[2:end]) # [cm]
+    thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
+    phis = Float64[0.0]
+
+    return Grid(nr, ntheta, nphi, ncells, Rs, Thetas, Phis, rs, thetas, phis)
+end
+
+# Read from a dictionary, then choose how to make the grid based upon the arguments
+function Grid(d::Dict)
+    if "r_linstart" in keys(d)
+        # We're going for a log-linear-log grid
+        names = ["r_in", "r_linstart", "r_linend", "r_out", "n_in", "n_mid", "n_out", "ntheta"]
+    else
+        # We're just going for a log spaced grid
+        names = ["nr", "ntheta", "r_in", "r_out"]
+    end
+    vec = [d[name] for name in names]
+    # Unroll these into an actual parameter
+    return Grid(vec...)
 end
 
 #This function only needs to be run once, upon setup.

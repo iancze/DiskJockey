@@ -27,7 +27,7 @@ model = config["model"]
 pars = convert_dict(config["parameters"], config["model"])
 
 if parsed_args["M"]
-    args = "velocity.png temperature.png scale_height.png surface_density.png density.png"
+    args = "velocity.png temperature.png scale_height.png surface_density.png density.png grid_topgrid.png"
     # If we have vertical gradient, add some extra to this
     println(args)
     quit()
@@ -35,6 +35,27 @@ end
 
 import PyPlot.plt
 using LaTeXStrings
+
+# Plot looking down, in polar coordinates
+function plot_topgrid(pars::AbstractParameters, grid::Grid)
+    fig = plt[:figure](figsize=(8,8))
+    ax = fig[:add_subplot](111, polar=true)
+
+    # Something to span the circle
+    phis = linspace(0, 2pi, 100)
+
+    # Plot the grid cell edges in radius and phi
+    for R in grid.Rs
+        rr = R * ones(phis)
+        ax[:plot](phis, rr ./AU, "b", lw=0.1)
+    end
+
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    plt[:savefig]("grid_topgrid.png", dpi=300)
+end
+
+function plot_sidegrid(pars::AbstractParameters, grid::Grid)
+end
 
 # velocity structure
 function plot_vel(pars::AbstractParameters, grid::Grid)
@@ -315,7 +336,8 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
         Sigmas[i] = DiskJockey.model.Sigma(grid.rs[i], pars)
     end
 
-    ax[:loglog](rr, Sigmas)
+    # ax[:loglog](rr, Sigmas)
+    ax[:semilogy](rr, Sigmas)
 
     # Now, go overlay small grey lines vertically for the radial cells
     for cell_edge in grid.Rs/AU
@@ -328,6 +350,7 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
 
     plt[:savefig]("surface_density.png")
 end
+
 
 # density structure
 function plot_dens(pars::AbstractParameters, grid)
@@ -527,8 +550,9 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
     plt[:savefig]("density.png")
 end
 
-grd = config["grid"]
-grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+# grd = config["grid"]
+# grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+grid = Grid(config["grid"])
 
 # The cell centers for plotting purposes
 const global rr = grid.rs ./ AU # convert to AU
@@ -538,6 +562,7 @@ if config["model"] == "vertical"
     plot_density_column_CO(pars, grid)
 end
 
+plot_topgrid(pars, grid)
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)

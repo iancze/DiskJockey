@@ -34,6 +34,10 @@ Now, we include a makefile that should be copied to each source directory. In a 
 
 To prevent these scripts from cluttering a users namespace when adding to their `PATH`, we've prefixed everything with `DJ_`. Moreover, for most tasks, the users will not need to run these tasks directly, but from the Makefile.
 
+## grid
+
+`Grid` initialization now relies upon a dictionary.
+
 # Version 0.1.2
 
 The package is now named DiskJockey (previously JudithExcalibur). Check out the new logo!

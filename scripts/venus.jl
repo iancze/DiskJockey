@@ -158,7 +158,8 @@ end
 
 # Create the model grid
 @everywhere grd = cfg["grid"]
-@everywhere grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+# @everywhere grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+@everywhere grid = Grid(grd)
 
 @everywhere dpc_mu = cfg["dpc_prior"]["mu"]
 @everywhere dpc_sig = cfg["dpc_prior"]["sig"]

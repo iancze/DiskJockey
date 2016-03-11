@@ -155,7 +155,8 @@ if config["gas"]
 
 
     grd = config["grid"]
-    grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+    # grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+    grid = Grid(grd)
 
     # Write everything to the current working directory
     write_grid("", grid)
