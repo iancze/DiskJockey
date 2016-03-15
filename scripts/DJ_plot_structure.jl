@@ -443,7 +443,21 @@ end
 # Plot a 1D slice of the vertical density structure at a particular radius
 function plot_density_column(pars::ParametersVertical, grid::Grid)
     r = 10 * AU
-    zs, rhos = DiskJockey.model.rho_column(r, pars)
+
+    # Calculate the normalizing constant and height of dissocation
+    norm_rho, z_phot = DiskJockey.model.rho_norm_and_phot(r, pars)
+
+    # Calculate a range of zs
+    nz = 64
+    zs = linspace(0, 4 * AU, nz)
+
+    un_lnrhos = Array(Float64, nz)
+    for i=1:nz
+        un_lnrhos[i] = DiskJockey.model.un_lnrho(r, zs[i], pars)
+    end
+
+    # calculate un_rhos for these zs
+    rhos = norm_rho .* exp(un_lnrhos)
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -490,14 +504,65 @@ function plot_density_column_CO(pars::ParametersVertical, grid::Grid)
 
 end
 
+function test_dens(pars::ParametersVertical, grid::Grid)
+    tic()
+    rho_gas = DiskJockey.model.rho_gas_interpolator(pars, grid)
+    println("Constructing interpolator")
+    toc()
+    #
+    # r_in = grid.rs[1]
+    # println("r_in ", r_in)
+    # println(rho_gas(r_in, 0.0, pars))
+
+    r2 = 0.12 * AU
+    println("r2 ", r2)
+    println("un_lnrho ", DiskJockey.model.un_lnrho(r2, 0.0, pars))
+    println("norm + zphot ", DiskJockey.model.rho_norm_and_phot(r2, pars))
+    tic()
+    println(rho_gas(r2, 0.0, pars))
+    toc()
+end
+
+function plot_norm(pars::ParametersVertical, grid::Grid)
+
+    # DiskJockey.model.rho_norm(10 * AU, pars)
+    # DiskJockey.model.z_phot(10 * AU, pars)
+    #
+    # quit()
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    norms = Array(Float64, grid.nr)
+
+    for i=1:grid.nr
+        norms[i] = DiskJockey.model.rho_norm(grid.rs[i], pars)
+    end
+
+    fig, ax = plt[:subplots](figsize=(6,6))
+
+    # ax[:loglog](rr, Sigmas)
+    ax[:loglog](rr, norms)
+
+    ax[:set_ylabel](L"$norm$")
+
+    ax[:set_xlabel](L"$r$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt[:savefig]("norm.png")
+end
+
 function plot_dens(pars::ParametersVertical, grid::Grid)
     # Set up the interpolator
 
+    tic()
     rho_gas = DiskJockey.model.rho_gas_interpolator(pars, grid)
+    println("Interpolator setup time")
+    toc()
 
     # Instead of spherical coordinates, do this with cartesian
-    nz = 64
-    zs = linspace(0.0, 50 * AU, nz)
+    nz = 128
+    zs = linspace(0.0, 25 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
@@ -517,15 +582,32 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
 
     for i=1:nz
         for j=1:nr
-            rhos[i,j] = rho_gas(grid.rs[j], zs[i])
+            rhos[i,j] = rho_gas(grid.rs[j], zs[i], pars)
         end
     end
+
+    # println(rhos)
+
+    # Find where these are infinite
+    # ind_infs = (rhos .== -Inf)
+    # ind_infs = (rhos .== Inf)
+
+    # println(ind_infs)
+    # println("ind_infs shape", size(ind_infs))
+    # println("xx shape", size(xx))
+    # rs = xx[ind_infs]
+    # zs = yy[ind_infs]
+    # for (r,z) in zip(rs, zs)
+    #     println(r, " ", z)
+    # end
+    # # print("rs", xx)
+    # quit()
 
     println("rho extrema ", extrema(rhos))
 
     nlog = log10(rhos/(mu_gas * m_H))
 
-    # levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9]
+    levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9]
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -533,7 +615,7 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
     ax[:set_ylabel](L"$z$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
 
-    img = ax[:contourf](xx, yy, nlog) #, levels=levels)
+    img = ax[:contourf](xx, yy, nlog, levels=levels)
 
     ax[:set_xscale]("log")
 
@@ -557,16 +639,24 @@ grid = Grid(config["grid"])
 # The cell centers for plotting purposes
 const global rr = grid.rs ./ AU # convert to AU
 
+# test_dens(pars,grid)
+
+# quit()
+
 if config["model"] == "vertical"
-    plot_density_column(pars, grid)
-    plot_density_column_CO(pars, grid)
+    plot_norm(pars, grid)
+    # plot_zphot(pars, grid)
+    # plot_density_column(pars, grid)
+    # plot_density_column_CO(pars, grid)
 end
 
+plot_dens(pars, grid)
+#
 plot_topgrid(pars, grid)
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)
 plot_surface_density(pars, grid)
-plot_dens(pars, grid)
+
 # plot_density_1D(pars)
 # plot_dlnrho(pars)

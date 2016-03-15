@@ -31,11 +31,6 @@ end
 
 parsed_args = parse_args(ARGS, s)
 
-if parsed_args["M"]
-    println("amr_grid.inp camera_wavelength_micron.inp gas_temperature.inp gas_velocity.inp lines.inp microturbulence.inp molecule_co.inp numberdens_co.inp radmc3d.inp wavelength_micron.inp")
-    quit()
-end
-
 assets_dir = Pkg.dir("DiskJockey") * "/assets/"
 
 # The user is going to start modeling a new disk, so copy in the new configuration file.
@@ -44,8 +39,9 @@ if parsed_args["new-project"] != "no"
 
     cp(assets_dir * "config.$(model).yaml", pwd() * "/config.yaml")
     cp(assets_dir * "InitializeWalkers.$(model).ipynb", pwd() * "/InitializeWalkers.ipynb")
+    cp(assets_dir * "Makefile", pwd() * "/Makefile")
 
-    println("Copied default config.yaml and InitializeWalkers.ipynb for the $model model to current working directory.")
+    println("Copied default config.yaml, InitializeWalkers.ipynb, and Makefile for the $model model to current working directory.")
     println("Exiting")
     quit()
 end
@@ -57,9 +53,29 @@ if parsed_args["prior"]
     quit()
 end
 
+import YAML
+config = YAML.load(open(parsed_args["config"]))
+
+if parsed_args["M"]
+
+    str = "amr_grid.inp camera_wavelength_micron.inp gas_temperature.inp gas_velocity.inp lines.inp microturbulence.inp radmc3d.inp wavelength_micron.inp"
+
+    species = config["species"]
+    transition = config["transition"]
+
+    if species == "12CO"
+        str *= " molecule_co.inp numberdens_co.inp"
+    elseif species ==  "13CO"
+        str *= " molecule_13co.inp numberdens_13co.inp"
+    elseif species == "C18O"
+        str *= " molecule_c18o.inp numberdens_c18o.inp"
+    end
+
+    println(str)
+    quit()
+end
+
 using DiskJockey.constants
-using DiskJockey.model
-using DiskJockey.visibilities
 
 # This is just for new users to test that the package is successfully installed.
 if parsed_args["version"]
@@ -69,9 +85,8 @@ if parsed_args["version"]
     quit()
 end
 
-import YAML
-config = YAML.load(open(parsed_args["config"]))
-
+using DiskJockey.model
+using DiskJockey.visibilities
 using HDF5
 
 fit_every = parsed_args["fit-every"]

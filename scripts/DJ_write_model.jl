@@ -23,7 +23,7 @@ parsed_args = parse_args(ARGS, s)
 
 using DiskJockey.constants
 using DiskJockey.image
-# using DiskJockey.model
+using DiskJockey.model
 using DiskJockey.visibilities
 using DiskJockey.gridding
 
@@ -32,7 +32,7 @@ using HDF5
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
-# Let the model writing be taken care of by `DJInitialize.jl`, the RADMC-3D synthesis be taken care of by `plot_model.jl` and then this simply reads in the image, does FFT, downsamples, etc.
+# The model writing is taken care of by `DJ_initialize.jl`, the RADMC-3D synthesis is taken care of by `DJ_plot_model.jl` and then this simply reads in the image, does FFT, downsamples, etc.
 
 # read the wavelengths for all channels
 fid = h5open(config["data_file"], "r")
@@ -40,22 +40,22 @@ nchan = length(read(fid["freqs"]))
 close(fid)
 
 # Read the parameters from the config file
-pp = config["parameters"]
+pars = convert_dict(config["parameters"], config["model"])
+grid = Grid(config["grid"])
 
-a = (st)->pp[st][1]
-
-# The parameters we'll be using
-# pars = Parameters(a("M_star"), a("r_c"), 100., a("q"), a("gamma"), 10.^a("logM_CO"), a("ksi"), a("dpc"), a("incl"), a("PA"), a("vel"), a("mu_RA"), a("mu_DEC") )
-mu_RA = a("mu_RA")
-mu_DEC = a("mu_DEC")
-dpc = a("dpc")
+# Mention the contribution of the prior to the lnprob
+ln_prior = lnprior(pars, config["dpc_prior"]["mu"], config["dpc_prior"]["sig"], grid)
 
 im = imread()
-skim = imToSky(im, dpc)
+skim = imToSky(im, pars.dpc)
 corrfun!(skim) # alpha = 1.0
 
-# For *this purpose only*, read in the flagged data, so that we can export a model for these
-# visibilities
+# Determine dRA and dDEC from the image and distance
+dRA = (skim.ra[2] - skim.ra[1])/2. # [arcsec] the half-size of a pixel
+println("dRA is ", dRA, " arcsec")
+
+# For *this purpose only*, read in the flagged data in addition to the unflagged data
+# so that we can export a model for these otherwise flagged visibilities
 dvarr = DataVis(config["data_file"], true)
 # Do this as we do in `mach_three.jl`
 for dset in dvarr
@@ -65,6 +65,7 @@ end
 
 mvarr = Array(DataVis, nchan)
 chi2s = Array(Float64, nchan)
+lnprobs = Array(Float64, nchan)
 
 for i=1:nchan
 
@@ -77,13 +78,14 @@ for i=1:nchan
     mvis = ModelVis(dv, vis_fft)
 
     # Apply the phase correction here, since there are fewer data points
-    phase_shift!(mvis, mu_RA, mu_DEC)
+    phase_shift!(mvis, pars.mu_RA - dRA, pars.mu_DEC + dRA)
 
     dvis = visibilities.ModelVis2DataVis(mvis)
 
     mvarr[i] = dvis
 
     chi2s[i] = visibilities.chi2(dv, mvis)
+    lnprobs[i] = visibilities.lnprob(dv, mvis)
 end
 
 # Now generate the residual visibilities
@@ -95,7 +97,6 @@ for i=1:nchan
     visibilities.conj!(rvarr[i])
 end
 
-println("Chi^2 s ", chi2s)
 N = nchan * 2 * length(dvarr[1].VV)
 
 # Only use the unmasked channels in the chi2 calculation
@@ -107,16 +108,21 @@ else
     keylist = Int[i for i=1:nchan]
 end
 
-println("Note: includes flagged visibilities!")
+println("Note: may include flagged visibilities!")
 chi2s = chi2s[keylist]
-println("Unmasked Chi^2s", chi2s)
-
-println("Chi^2 :", sum(chi2s))
+# println("Chi^2 :", sum(chi2s))
 println("Reduced Chi^2 ", sum(chi2s)/N)
+
+# Calculate the lnprob between these two
+lnprobs = lnprobs[keylist]
+
+println("lnprior ", ln_prior)
+println("lnlikelihood ", sum(lnprobs))
+println("lnprob ", ln_prior + sum(lnprobs))
 
 visibilities.write(mvarr, parsed_args["out-model"])
 visibilities.write(rvarr, parsed_args["out-resid"])
 
-# copy visibility flags
+# copy visibility flags from the original dataset to this new one
 visibilities.copy_flags(config["data_file"], parsed_args["out-model"])
 visibilities.copy_flags(config["data_file"], parsed_args["out-resid"])

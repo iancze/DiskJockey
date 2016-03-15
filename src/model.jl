@@ -8,6 +8,7 @@ export lnprior
 # constants module, which is part of the enclosing DiskJockey package.
 using ..constants
 using Dierckx
+using Optim
 
 # Write the wavelength sampling file. Only run on setup
 function write_lambda(lams::AbstractArray, basedir::AbstractString)
@@ -575,13 +576,21 @@ function un_lnrho(r::Float64, z::Float64, pars::ParametersVertical)
 
     f(x) = dlnrho(r, x, pars)
 
+    # The values at the midplane (the largest they will be)
+    val0, err0 = quadgk(f, ztop, 0)
+
     val, err = quadgk(f, ztop, z)
-    return val
+
+    # subtract off the largest values, so that when we exponentiate later, we don't run into
+    # overflow errors
+    return val - val0
 end
 
-# Calculate the normalization and the height for CO dissocation as a function of radius
+# For a given radius (in cylindrical coordinates)
+# calculate the normalization for rho_gas [g/cm^3]
+# and at the same time calculate the height for CO dissocation
 # norm(r) and z_phot(r)
-function rho_norm_and_phot(r::Float64, pars::ParametersVertical)
+function rho_norm(r::Float64, pars::ParametersVertical)
 
     ztop = z_top(r, pars)
 
@@ -591,13 +600,13 @@ function rho_norm_and_phot(r::Float64, pars::ParametersVertical)
     un_lnrhos = Array(Float64, n_z_interpolator)
     # For each height, numerically integrate dlnrho/dz to yeild a yet-to-be normalized un_lnrho
     for i=1:n_z_interpolator
-        un_lnrhos[i] = un_lnrho(r, zs[i], ztop, pars)
+        un_lnrhos[i] = un_lnrho(r, zs[i], pars)
     end
 
     # Find the largest value from this array and subtract it to avoid numberical overflow
     # in subsequent steps
-    bar_lnrho = un_lnrhos[1] # the largest value in the array (at the midplane)
-    un_lnrhos -= bar_lnrho
+    # bar_lnrho = un_lnrhos[1] # the largest value in the array (at the midplane)
+    # un_lnrhos -= bar_lnrho
 
     # Convert from ln(rho) to rho; still unnormalized.
     un_rhos = exp(un_lnrhos)
@@ -616,12 +625,31 @@ function rho_norm_and_phot(r::Float64, pars::ParametersVertical)
     S = Sigma(r, pars)
 
     # This quantity allows you to do
-    # rho = norm_rho * un_lnrho(r, z)
-    norm_rho = S / (tot * exp(bar_lnrho))
+    # rho = norm_rho * exp(un_lnrho(r, z))
+    norm_rho = S/tot
 
-    # The normalized density columns
-    # This is different from the norm because we already subtracted bar_lnrho from this
-    rhos = S/tot * un_rhos # [g/cm^3]
+    return norm_rho
+end
+
+function z_phot(r::Float64, pars::ParametersVertical)
+
+    ztop = z_top(r, pars)
+
+    norm_rho = rho_norm(r, pars)
+
+    function rho(z::Float64)
+        return norm_rho * exp(un_lnrho(r, z, pars))
+    end
+
+    # Integrate rho(z) to get the total column
+    function column(z::Float64)
+        val, err = quadgk(rho, ztop, z)
+        return val
+    end
+
+    function f(z::Float64)
+        return thresh - column(z)
+    end
 
     # Now, calculate the photodissociation height
     # Threshold column density
@@ -630,123 +658,30 @@ function rho_norm_and_phot(r::Float64, pars::ParametersVertical)
 
     # Go through each of the z spacings, and use Riemann integration in a while loop to find
     # at which z point we've finally accumulated the threshold column density.
-    column = 0.0 # total acumulated column
-    icolumn::Int = n_z_interpolator # index of the z point
-    while (column <= thresh) && (icolumn > 1)
-        dz = zs[icolumn] - zs[icolumn - 1]
-        column += dz *  rhos[icolumn]
-        icolumn -= 1
-    end
+    # This is to "bracket the minimum"
+    # then we will use an optimizer to find the exact value
+    #
+    # col = 0.0 # total acumulated column
+    # icolumn::Int = n_z_interpolator # index of the z point
+    # while (col <= thresh) && (icolumn > 1)
+    #     col = column(zs[icolumn])
+    #
+    #     # dz = zs[icolumn] - zs[icolumn - 1]
+    #     # column += dz *  rhos[icolumn]
+    #     icolumn -= 1
+    # end
 
-    z_phot = zs[icolumn]
+    # println("thresh ", thresh, " column ", column)
 
-    return (norm_rho, z_phot)
+    # now we know that the minumim is between zs[icolumn] and zs[icolumn + 1]
+    ans = optimize(f, 0.0, ztop)
+    # println(ans)
+
+    z_phot = ans.minimum
+
+    return z_phot
+    # z_phot = zs[icolumn]
 end
-
-# Translate from a gas density to a CO number density
-# function rho_column_CO(r::Float64, zs::Vector{Float64}, rhos::Vector{Float64}, pars::ParametersVertical)
-#
-#     # Threshold column density
-#     thresh_H2 = pars.sigma_s * Av_sigmaH # [n_H2/cm^2]
-#     thresh = thresh_H2 * (mu_gas * amu / X_H2) # [g/cm^2] of gas
-#
-#     # Normalize the previous spline and integrate to get zboundary
-#     # f(x) = S/tot * integrate(spl, x, zs[end])
-#
-#     # Go through each of the z spacings, and use Riemann integration in a while loop to find
-#     # at which z point we've finally accumulated the threshold column density.
-#     column = 0.0 # total acumulated column
-#     icolumn::Int = n_z_interpolator # index of the z point
-#     while (column <= thresh) && (icolumn > 1)
-#         dz = zs[icolumn] - zs[icolumn - 1]
-#         column += dz *  rhos[icolumn]
-#         icolumn -= 1
-#     end
-#
-#     # All densities below this z height remain intact, while all densities above this
-#     # height are set to (effectively) zero (CO is dissociated)
-#     rhos[icolumn:end] = constants.rho_gas_zero
-#
-#     # Implement CO freezout onto grains
-#     for i=1:n_z_interpolator
-#         rhos[i] *= X_freeze(temperature(r, zs[i], pars), pars)
-#     end
-#
-#     return (zs, rhos)
-# end
-
-
-#
-# # Calculate the multiplicative factor needed to normalize `un_rho` based upon the boundary
-# # condition that the integral of rho(r, z) with z from -inf to inf should be equal to Sigma(r)
-# function lncorrection_factor(r::Float64, pars::Parameters)
-#     S = Sigma(r, pars)
-#     zq = z_q(r, pars)
-#     # Most of the total density is near the midplane. This is necessary to create a logspaced array with 0 as the beginning.
-#
-#     nz = 50
-#
-#     # How best to choose the outer bound? Some multiple of zq is probably a good idea, but this
-#     # doesn't really go to high enough altitude in the inner disk. Instead, let's choose a minimum threshold.
-#     if (10 * zq) >= 10 * AU
-#         outer_reaches = zq * 10
-#     else
-#         outer_reaches = 10 * AU
-#     end
-#
-#     zints = cat(1, [0], logspace(log10(0.01 * AU), log10(outer_reaches), nz-1))
-#
-#     un_lnrhos = Array(Float64, nz)
-#     for i=1:nz
-#         un_lnrhos[i] = un_lnrho(r, zints[i], pars)
-#     end
-#
-#     bar_lnrho = un_lnrhos[1]
-#
-#     # Remove the largest value so we don't get an overflow error
-#     un_lnrhos -= bar_lnrho
-#
-#     # Convert from ln(rho) to rho, but this is still unnormalized.
-#     un_rhos = exp(un_lnrhos)
-#
-#     # Now that we have the shape of the density structure but not the normalization,
-#     # integrate to get the normalization
-#     # The density should be unitful, so we need to exponentiate.
-#     spl = Spline1D(zints, un_rhos)
-#
-#     # Integral is from -inf to inf
-#     tot = 2 * integrate(spl, 0., zints[end])
-#
-#     # println("Norm. tot: ", tot, " lntot:", log(tot))
-#     # println("bar_lnrho. exp: ", exp(bar_lnrho), " bar_lnrho: ", bar_lnrho)
-#     # println("With bar_lnrho :", tot * exp(bar_lnrho), " lntot :", log(tot) + bar_lnrho)
-#
-#     # The correction factor is the ratio of the actual surface density to the value of the integral of our unnormalized density.
-#     lncor = log(S) - (log(tot) + bar_lnrho)
-#
-#     # cor = S/tot
-#     # apply this as
-#     # rhos = cor * unnormed_rhos
-#     return lncor
-# end
-#
-# # Now, create an interpolator for the the correction function. In spherical coordinates, that way, first evaluate it at every point (r, z=0) in the grid. Then, when we want to query the density of the disk at (r, z), which will correspond to a different r_cyl than the one used to compute the normalization, we can just use the spline interpolation and not have to redo the time consuming normalization integral.
-# function make_correction_interpolator(pars::Parameters, grid::Grid)
-#
-#     nr = 64
-#     rs = logspace(log10(0.5 * AU), log10(grid.Rs[end]), nr)
-#
-#     cors = Array(Float64, nr)
-#
-#     for i=1:nr
-#         cors[i] = lncorrection_factor(rs[i], pars)
-#     end
-#
-#     # An interpolating spline for this correction factor.
-#     spl = Spline1D(rs, cors)
-#
-#     return spl
-# end
 
 # Because the calculation for the vertical temperature gradient is a bit more complex than other
 # models, we can save time by caching the expensive quantities in an interpolator.
@@ -756,31 +691,39 @@ function rho_gas_interpolator(pars::ParametersVertical, grid::Grid)
     nr = grid.nr
     rs = grid.rs # cell centers
     norms = Array(Float64, nr)
-    z_phots = Array(Float64, nr)
+    # z_phots = Array(Float64, nr)
 
     for i=1:nr
-        norms[i], z_phots[i] = rho_norm_and_phot(rs[i], pars)
+        norms[i] = rho_norm(rs[i], pars)
     end
 
-    norm_intp = Spline1D(rs, norms)
-    z_phot_intp = Spline1D(rs, z_phots)
+    # norm_intp = Spline1D(rs, norms)
+    # The function varies widely, so more accurate to interpolate the logarithm
+    log10_norm_intp = Spline1D(rs, log10(norms))
+    # z_phot_intp = Spline1D(rs, z_phots)
 
     # Create a function that will act like `rho_gas` for a vertical temperature gradient, but
     # without the added cost of needing to solve the normalization and photodissociation integrals
     # at each radius.
     function interpolator(r::Float64, z::Float64, pars::ParametersVertical)
-        # Santity checks to see that we're inside the grid
-        if r > grid.rs[end] || z > grid.rs[end] || z > z_phot_intp(r)
-            return constants.rho_gas_zero
 
-        else
+        # # Santity checks to see that we're inside the grid
+        # if r > grid.rs[end] || z > grid.rs[end] || z > z_phot_intp(r)
+        #     return constants.rho_gas_zero
+        # else
             # find norm(r)
             # calculate unln(rho)
-            norm_gas = norm_intp(r)
-            rho = norm_gas * exp(un_lnrho(r, z, pars))
+        norm_gas = 10^log10_norm_intp(r)
+        rho = norm_gas * exp(un_lnrho(r, z, pars)) * X_freeze(temperature(r, z, pars), pars)
 
-            return rho * X_freeze(temperature(r, zs[i], pars), pars)
+        # If the density is less than our cutoff, just return 0.0
+        if rho < rho_gas_critical
+            return constants.rho_gas_zero
+        # Otherwise, return the density
+        else
+            return rho
         end
+        # end
     end
 
     return interpolator
@@ -887,7 +830,10 @@ end
 function write_model(pars::ParametersVertical, basedir::AbstractString, grid::Grid, species::AbstractString)
 
     # Prime the density interpolator
-    n_CO = number_densities[species] * rho_gas_interpolator(pars, grid)
+    rho_gas = rho_gas_interpolator(pars, grid)
+    function n_CO(r_cyl, z)
+        return number_densities[species] * rho_gas(r_cyl, z)
+    end
 
     # numberdens_co.inp
     fdens = open(basedir * "numberdens_" * molnames[species] * ".inp", "w")

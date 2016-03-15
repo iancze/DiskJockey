@@ -248,7 +248,7 @@ type FullModelVis
 end
 
 function -(vis1::FullModelVis, vis2::FullModelVis)
-    @assert vis1.lam == vis2.lam "Visibilities must have the same wavelengths."
+    # @assert vis1.lam == vis2.lam "Visibilities must have the same wavelengths."
     @assert vis1.uu == vis2.uu "Visibilities must have same uu sampling."
     @assert vis1.vv == vis2.vv "Visibilities must have same vv sampling."
     VV = vis1.VV - vis2.VV
@@ -383,7 +383,7 @@ function transform(img::SkyImage, index::Int=1)
     # ll = sin(img.ra * arcsec)
     # mm = sin(img.dec * arcsec)
 
-    # Remove the sin, since we will use the small angle approximation
+    # Sin is not necessary, since we are using the small angle approximation
     ll = img.ra * arcsec
     mm = img.dec * arcsec
 

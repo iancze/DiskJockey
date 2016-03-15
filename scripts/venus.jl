@@ -243,7 +243,7 @@ end
         -Inf
     end
 
-    # The image synthesis faild for some reason or another. Clean up by deleting the director and returning -Inf.
+    # The image synthesis faild for some reason or another. Clean up by deleting the directory and returning -Inf.
     if im == -Inf
         run(`rm -rf $keydir`)
         return -Inf
