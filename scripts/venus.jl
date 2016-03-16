@@ -164,27 +164,20 @@ end
 @everywhere dpc_mu = cfg["dpc_prior"]["mu"]
 @everywhere dpc_sig = cfg["dpc_prior"]["sig"]
 
-# Only calculate the interpolation closures if we are fixing distance.
-if cfg["fix_d"]
+# calculate the interpolation closures, since we are keeping the angular size of the image
+# fixed thoughout the entire simulation.
+# calculate dl and dm (assuming they are equal).
+@everywhere dl = cfg["size_arcsec"] * arcsec / cfg["npix"] # [radians/pixel]
 
-    angular_width = (1.1 * 2 * grd["r_out"])/cfg["parameters"]["dpc"][1] # [radians]
+@everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
+@everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
-    # Simply calculate pix_AU as 1.1 * (2 * r_out) / npix
-    # This is assuming that RADMC always calculates the image as 110% the full extent of the grid
-    @everywhere pix_AU = (1.1 * 2 * grd["r_out"]) / npix # [AU/pixel]
-
-    # Ignore the sin, since we use small angle approximation
-    @everywhere dl = pix_AU/cfg["parameters"]["dpc"][1] * arcsec
-
-    @everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-    @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
-
-    # For each channel, also calculate the interpolation closures
-    @everywhere int_arr = Array(Function, nchan)
-    @everywhere for (i, dset) in enumerate(dvarr)
-        int_arr[i] = plan_interpolate(dset, uu, vv)
-    end
+# For each channel, calculate the interpolation closures
+@everywhere int_arr = Array(Function, nchan)
+@everywhere for (i, dset) in enumerate(dvarr)
+    int_arr[i] = plan_interpolate(dset, uu, vv)
 end
+
 
 # This function is fed to the EnsembleSampler
 # That means, using the currently available global processes, like the data visibilities,
@@ -195,102 +188,105 @@ end
     # Convert the vector to a specific type of pars, e.g. ParametersStandard, ParametersTruncated, etc, which will be used for multiple dispatch from here on out.
     pars = convert_p(p)
 
-    lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
-    if lnpr == -Inf
-        return -Inf
-    end
-
     # Each walker needs to create it's own temporary directory
     # where all RADMC-3D files will reside and be driven from
     # It only needs to last for the duration of this function, so we use a tempdir
     keydir = mktempdir() * "/"
 
-    # Copy all relevant configuration scripts to this subdirectory so that RADMC-3D can run.
-    # these are mainly setup files that will be static throughout the run
-    # they were written by DJInitialize.jl and write_grid()
-    for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
-        run(`cp $(homedir)$fname $keydir`)
-    end
+    lnp = try
+    
+        lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
 
-    # change the subprocess to reside in this directory for the remainder of the run
-    # where it will drive its own independent RADMC3D process for a subset of channels
-    cd(keydir)
+        (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
+        println("sizeau_desired: ", sizeau_desired, " AU")
+        println("sizeau_command: ", sizeau_command, " AU")
 
-    write_grid(keydir, grid)
-
-    # Compute disk structure files using model.jl, write to disk in current directory
-    # Based upon typeof(pars), the subroutines within this function will dispatch to the correct model.
-    write_model(pars, keydir, grid, species)
-
-    # Doppler shift the dataset wavelengths to rest-frame wavelength
-    beta = pars.vel/c_kms # relativistic Doppler formula
-    lams = Array(Float64, nchan)
-    for i=1:nchan
-        lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
-    end
-
-    write_lambda(lams, keydir) # write into current directory
-
-    # Run RADMC-3D, redirect output to /dev/null
-    run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda`, DevNull))
-
-    # Read the RADMC-3D images from disk
-    im = try
-        imread() # we should already be in the sub-directory, no path required
-    # If the synthesized image is screwed up, just say there is zero probability.
-    catch SystemError
-        println("Failed to read synthesized image for parameters ", p)
-        -Inf
-    end
-
-    # The image synthesis faild for some reason or another. Clean up by deleting the directory and returning -Inf.
-    if im == -Inf
-        run(`rm -rf $keydir`)
-        return -Inf
-    end
-
-    if cfg["fix_d"]
-        # After the fact, we should be able to check that the pixel size of the image is the
-        # same as the one we originally calculated from the outer disk radius.
-        @assert abs((im.pixsize_x/AU  - pix_AU)/pix_AU) < 1e-5
-
-        # If we aren't fixing distance, then the pixel size is read directly from the calculated image.
-    end
-
-    # Convert raw images to the appropriate distance
-    skim = imToSky(im, pars.dpc)
-
-    # Apply the gridding correction function before doing the FFT
-    # No shift needed, since we will shift the resampled visibilities
-    corrfun!(skim)
-
-    lnprobs = Array(Float64, nchan)
-    # Do the Fourier domain stuff per channel
-    for i=1:nchan
-        dv = dvarr[i]
-        # FFT the appropriate image channel
-        vis_fft = transform(skim, i)
-
-        if cfg["fix_d"]
-            # Interpolate the `vis_fft` to the same locations as the DataSet
-            mvis = int_arr[i](dv, vis_fft)
-        else
-            mvis = ModelVis(dv, vis_fft)
+        # Copy all relevant configuration scripts to the keydir so that RADMC-3D can run.
+        # these are mainly setup files that will be static throughout the run
+        # they were written by DJInitialize.jl and write_grid()
+        for fname in ["radmc3d.inp", "wavelength_micron.inp", "lines.inp", "molecule_" * molnames[species] * ".inp"]
+            run(`cp $(homedir)$fname $keydir`)
         end
 
-        # Apply the phase shift here
-        phase_shift!(mvis, pars.mu_RA, pars.mu_DEC)
+        # change the subprocess to reside in this directory for the remainder of the run
+        # where it will drive its own independent RADMC3D process for a subset of channels
+        cd(keydir)
 
-        # Calculate the likelihood between these two using our chi^2 function.
-        lnprobs[i] = lnprob(dv, mvis)
+        # write the amr_grid.inp file
+        write_grid(keydir, grid)
+
+        # Compute disk structure files using model.jl, write to disk in current directory
+        # Based upon typeof(pars), the subroutines within this function will dispatch to the correct model.
+        write_model(pars, keydir, grid, species)
+
+        # Doppler shift the dataset wavelengths to rest-frame wavelength
+        beta = pars.vel/c_kms # relativistic Doppler formula
+        lams = Array(Float64, nchan)
+        for i=1:nchan
+            lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
+        end
+
+        write_lambda(lams, keydir) # write into current directory
+
+        # Run RADMC-3D, redirect output to /dev/null
+        run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`, DevNull))
+
+        # Read the RADMC-3D images from disk
+        im = try
+            imread() # we should already be in the sub-directory, no path required
+        # If the synthesized image is screwed up, just say there is zero probability.
+        catch SystemError
+            throw(ImageException("Failed to read synthesized image for parameters ", p))
+        end
+
+        phys_size = im.pixsize_x * npix/AU
+        println("Physical size of the synthesized image: ", phys_size , " [AU]" )
+        println("Discrepancy ", (sizeau_desired - phys_size)/sizeau_desired)
+
+        # Convert raw images to the appropriate distance
+        skim = imToSky(im, pars.dpc)
+
+        # Determine dRA and dDEC from the image and distance
+        # These will be used to correct for the half-pixel offset
+        half_pix = abs(skim.ra[2] - skim.ra[1])/2. # [arcsec]
+
+        # Apply the gridding correction function before doing the FFT
+        # No shift needed, since we will shift the resampled visibilities
+        corrfun!(skim)
+
+        lnprobs = Array(Float64, nchan)
+        # Do the Fourier domain stuff per channel
+        for i=1:nchan
+            dv = dvarr[i]
+            # FFT the appropriate image channel
+            vis_fft = transform(skim, i)
+
+            # Interpolate the `vis_fft` to the same locations as the DataSet
+            mvis = int_arr[i](dv, vis_fft)
+
+            # Apply the phase shift here, which includes a correction for the half-pixel offset
+            # inherent to any image synthesized with RADMC3D.
+            phase_shift!(mvis, pars.mu_RA + half_pix, pars.mu_DEC - half_pix)
+
+            # Calculate the likelihood between these two using our chi^2 function.
+            lnprobs[i] = lnprob(dv, mvis)
+        end
+
+        # Sum them all together
+        # this quantity is assigned to the value of lnp at the start of the try/catch block
+        sum(lnprobs) + lnpr
+
+    catch DiskJockeyException
+        # If an error occured through some of the known routines in this package ,
+        # -Inf is returned as the value of lnp
+        # Otherwise the error causese the program to exit
+        -Inf
+
+    finally
+        # Change back to the home directory and then remove the temporary directory
+        cd(homedir)
+        run(`rm -rf $keydir`)
     end
-
-    # Change back to the home directory and then remove the temporary directory
-    cd(homedir)
-    run(`rm -rf $keydir`)
-
-    # Sum them all together and feed back to the master process
-    lnp = sum(lnprobs) + lnpr
 
     return lnp
 

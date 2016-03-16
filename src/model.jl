@@ -1,6 +1,6 @@
 module model
 
-export write_grid, write_model, write_lambda, write_dust, Grid
+export write_grid, write_model, write_lambda, write_dust, Grid, size_au
 export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, convert_vector, convert_dict
 export lnprior
 
@@ -354,7 +354,7 @@ end
 function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float64)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10 <= 0. || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
-        return -Inf
+        throw(ModelException("Parameters outside of prior range."))
     end
 
     # Impose distance prior
@@ -363,7 +363,7 @@ function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float6
 
     # hard +/- 3 sigma cutoff
     if (pars.dpc < dlow) || (pars.dpc > dhigh)
-        return -Inf
+        throw(ModelException("Distance outside of 3 sigma prior range."))
     end
 
     # If we've passed all the hard-cut offs by this point, return the sum of the distance prior and the geometrical inclination prior.
@@ -378,7 +378,7 @@ function lnprior(pars::ParametersStandard, dpc_mu::Float64, dpc_sig::Float64, gr
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
     # to fit on the model grid.
     if (3 * pars.r_c) > r_out
-        return -Inf
+        throw(ModelException("Model radius too large for grid size."))
     else
         return lnp
     end
@@ -393,7 +393,7 @@ function lnprior(pars::ParametersTruncated, dpc_mu::Float64, dpc_sig::Float64, g
     r_out = grid.Rs[end]/AU # [AU]
 
     if pars.r_in < r_in || pars.r_out > r_out
-        return -Inf
+        throw(ModelException("Disk radii outside model grid radius."))
     else
         return lnp
     end
@@ -410,17 +410,37 @@ function lnprior(pars::ParametersCavity, dpc_mu::Float64, dpc_sig::Float64, grid
 
     # Also check to make sure that r_cav is less than r_c but larger than r_in.
     if (3 * pars.r_c) > r_out || pars.r_cav < r_in || pars.r_cav > pars.r_c
-        return -Inf
+        throw(ModelException("Model radius too large for grid size or cavity too large."))
     else
         return lnp
     end
 
 end
 
+# Determine the physical size of the image. Size_arcsec is the full width of the image,
+# and so sizeau is the full size of the image as well (RADMC3D conventions).
+# Because there seems to be a small but constant shift in the size of the image
+function size_au(size_arcsec::Real, dpc::Real, grid::Grid)
+    outer_model = (1.1 * grid.rs[end] / AU) # [AU]
+    sizeau_desired = size_arcsec * dpc # [AU]
+
+    if sizeau_desired < outer_model
+        # We don't want this error to be caught by the lnprob routine, since this should
+        # always halt execution of the script.
+        throw(ErrorException("Image size ($size_au AU) must be larger than 110% the model grid size ($outer_model AU)."))
+    end
+
+    # because there seems to be a slight offset between what sizeau is specified and the actual
+    # size of the image, we will also specifiy sizeau_command, which is the value to give to RADMC
+    sizeau_command = sizeau_desired/(1. + RADMC_SIZEAU_SHIFT)
+
+    return (sizeau_desired, sizeau_command) # [AU]
+
+end
+
 # Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.
 # # Alternate functions accept pars passed around, where pars is in M_star, AU, etc...
-
 function velocity{T}(r::T, M_star::Float64)
     sqrt(G * M_star ./ r)
 end

@@ -1,8 +1,10 @@
 #!/usr/bin/env julia
 
-# Read the HDF5 file and calculate the largest baseline in u and v, separately.
-
-# Also calculate the mean velocity of the dataset.
+# Calculates some limits of the problem just using the dataset and parameters in the config file.
+# * the largest baseline in u and v, separately.
+# * the mean velocity of the dataset.
+# * the physical scale of the image, and whether it fully encapsulates the model grid for
+#   all of the possible distances to explore.
 
 using ArgParse
 
@@ -21,10 +23,12 @@ config = YAML.load(open(parsed_args["config"]))
 
 using DiskJockey.visibilities
 using DiskJockey.constants
+using DiskJockey.model
 
 species = config["species"]
 transition = config["transition"]
 lam0 = lam0s[species*transition]
+grid = Grid(config["grid"])
 
 function wl_to_vel{T}(wl::T)
     return c_kms * (wl - lam0)/lam0
@@ -49,30 +53,31 @@ max_base = max_baseline(dvarr)
 
 println("Max baseline ", max_base, " kilolambda")
 
+
+# Given the size of the image in arcseconds and the number of pixels, figure out the nyquist
+# sampling and whether or not this is sufficiently higher than our largest baseline
+dRA = config["size_arcsec"] / config["npix"] # [arcsec/pix]
+
 # Convert this to dRA or dDEC
-dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec]
+dRA_max = 1/(nyquist_factor * max_base * 1e3) / arcsec # [arcsec / pix]
+
+@assert dRA < dRA_max "Nyquist sampling not satisfied: Either increase the number of pixels in your image, or decrease the angular size of your image. dRA ($dRA [arcsec/pix]) is greater than dRA_max ($dRA_max [arcsec/pix]), which is determined from the maximum baseline of your dataset."
+
+println("Nyquist sampling satisfied. dRA: $dRA [arcsec/pix] ; dRA_max: $dRA_max [arcsec/pix]")
+
+# Given the angular size of the image, calculate what the physical size of the image would be
+# at the closest source distance, and make sure that this is still larger than outer radius of
+# the model grid.
 
 mu_d = config["dpc_prior"]["mu"]
 sig_d = config["dpc_prior"]["sig"]
 
-dlow = mu_d - 3. * sig_d
-dhigh = mu_d + 3. * sig_d
+dlow = mu_d - 3. * sig_d # [AU]
 
-npix = config["npix"]
-println("At a resolution of  npix=$npix, the maximum outer radii for the model grid are")
+# Calculate the physical size of the image at the closer distance, and make sure it's still larger
+# than 110% of the outer grid radius
+sizeau = 0.5 * config["size_arcsec"] * dlow # [AU]
+outer_radius = 1.1 * config["grid"]["r_out"]
+@assert sizeau > outer_radius "The angular size of your image is too small to fully encapsulate the model grid at the closest distances to the source. Increase the angular size of your image via `size_arcsec` or decrease the outer radius of your model grid. Size at the closest distances $sizeau [AU]; outer radius of the grid + 10% $outer_radius [AU]"
 
-# These are upper limits on the total width [AU] of the image at each distance. If the disk is large enough that it exceedes these radii, then we will need to use more pixels in the image (ie, it's very resolved).
-println("dpc ", dlow, " r_out ", dlow * dRA_max * npix/(2 * 1.1))
-println("dpc ", dhigh, " r_out ", dhigh * dRA_max * npix/(2 * 1.1))
-
-# Then to an upper limit on the physical width of the image, given the current distance.
-# phys_width_lim = pars.dpc * dRA_max * npix # [AU]
-
-# Now see if the image is larger than this
-# if (1.1 * 2 * grd["r_out"]) > phys_width_lim
-#     println("Proposed disk r_out too large for given distance and number of pixels. Increase number of pixels in image to sample sufficiently high spatial frequencies. ", pars.dpc, " ", pars.r_c, " ", phys_width_lim)
-#     return -Inf
-# end
-
-
-# Calculate the mean velocity
+println("Image size satisfied. Size at the closest distances: $sizeau [AU]; outer radius of the grid + 10%: $outer_radius [AU]")

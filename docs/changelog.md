@@ -4,6 +4,10 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.3
 
+## Half-pixel offset
+
+Has now been addressed.
+
 ## Visualizing the tau=1 surface
 
 The functionality originally stored in RADMC is now exposed via DiskJockey to visualize the tau = 1 (or other value) surface.

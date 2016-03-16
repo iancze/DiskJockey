@@ -46,6 +46,7 @@ parameters:
 data_file: data.hdf5
 
 # Image setup
+size_arcsec : 60.0 # [arcsec] full width/height of image
 npix: 256
 
 # Starting positions of walkers

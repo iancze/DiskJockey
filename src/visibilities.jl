@@ -535,7 +535,6 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
     # This function inherits all of the variables just defined in this scope (uu, vv)
     function interpolate(data::DataVis, fmvis::FullModelVis)
         # Assert that we calculated the same UU and VV spacings for the FT'ed image, otherwise we did something wrong!
-
         # The 1e-5 addition is to prevent an undetermined error from the uu = 0.0 point.
         @assert all(abs((uu .- fmvis.uu) ./ (uu .+ 1e-5)) .< tol)
         @assert all(abs((vv .- fmvis.vv) ./ (vv .+ 1e-5)) .< tol)

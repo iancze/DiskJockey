@@ -51,7 +51,7 @@ skim = imToSky(im, pars.dpc)
 corrfun!(skim) # alpha = 1.0
 
 # Determine dRA and dDEC from the image and distance
-dRA = (skim.ra[2] - skim.ra[1])/2. # [arcsec] the half-size of a pixel
+dRA = abs(skim.ra[2] - skim.ra[1])/2. # [arcsec] the half-size of a pixel
 println("dRA is ", dRA, " arcsec")
 
 # For *this purpose only*, read in the flagged data in addition to the unflagged data
@@ -68,7 +68,6 @@ chi2s = Array(Float64, nchan)
 lnprobs = Array(Float64, nchan)
 
 for i=1:nchan
-
     dv = dvarr[i]
 
     # FFT the appropriate image channel
@@ -78,7 +77,7 @@ for i=1:nchan
     mvis = ModelVis(dv, vis_fft)
 
     # Apply the phase correction here, since there are fewer data points
-    phase_shift!(mvis, pars.mu_RA - dRA, pars.mu_DEC + dRA)
+    phase_shift!(mvis, pars.mu_RA + dRA, pars.mu_DEC - dRA)
 
     dvis = visibilities.ModelVis2DataVis(mvis)
 
