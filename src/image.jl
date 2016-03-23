@@ -62,8 +62,8 @@ end
 
 function -(img1::SkyImage, img2::SkyImage)
     # @assert img1.lams == img2.lams "Images must have the same wavelengths."
-    @assert img1.ra == img2.ra "Images must have same RA coordinates."
-    @assert img1.dec == img2.dec "Images must have same DEC coordinates."
+    @assert isapprox(img1.ra, img2.ra) "Images must have same RA coordinates."
+    @assert isapprox(img1.dec, img2.dec) "Images must have same DEC coordinates."
     data = img1.data - img2.data
     return SkyImage(data, img1.ra, img1.dec, img1.lams)
 end

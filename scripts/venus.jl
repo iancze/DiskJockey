@@ -169,6 +169,10 @@ end
 # calculate dl and dm (assuming they are equal).
 @everywhere dl = cfg["size_arcsec"] * arcsec / cfg["npix"] # [radians/pixel]
 
+# Determine dRA and dDEC from the image and distance
+# These will be used to correct for the half-pixel offset
+@everywhere half_pix = dl / (arcsec * 2.) # [arcsec/half-pixel]
+
 @everywhere uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
@@ -194,7 +198,7 @@ end
     keydir = mktempdir() * "/"
 
     lnp = try
-    
+
         lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
 
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
@@ -245,10 +249,6 @@ end
 
         # Convert raw images to the appropriate distance
         skim = imToSky(im, pars.dpc)
-
-        # Determine dRA and dDEC from the image and distance
-        # These will be used to correct for the half-pixel offset
-        half_pix = abs(skim.ra[2] - skim.ra[1])/2. # [arcsec]
 
         # Apply the gridding correction function before doing the FFT
         # No shift needed, since we will shift the resampled visibilities

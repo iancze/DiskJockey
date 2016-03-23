@@ -278,53 +278,6 @@ function plot_height(pars::AbstractParameters, grid::Grid)
     plt[:savefig]("scale_height.png")
 end
 
-# function plot_dlnrho(pars::Parameters)
-#     nz = 50
-#     zs = linspace(0, 200 * AU, nz)
-#     R = 10 * AU
-#     dlnrhos = Array(Float64, nz)
-#     for i=1:nz
-#         dlnrhos[i] = - G * pars.M_star * M_sun * zs[i] * mu_gas * m_H / ((R^2 + zs[i]^2)^1.5 * kB * DiskJockey.model.temperature(R, pars))
-#     end
-#
-#     fig = plt[:figure]()
-#     ax = fig[:add_subplot](111)
-#
-#     ax[:plot](zs/AU, dlnrhos)
-#
-#     ax[:set_ylabel](L"$d \ln \rho$")
-#     ax[:set_xlabel](L"$z$ [AU]")
-#     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
-#
-#     fig[:savefig]("dlnrhos.png")
-# end
-#
-# function plot_density_1D(pars::Parameters)
-#     nz = 50
-#     zs = linspace(0, 30 * AU, nz)
-#     println("zs ", zs/AU)
-#     R = 100 * AU
-#     rhos = Array(Float64, nz)
-#     for i=1:nz
-#         rhos[i] = DiskJockey.model.rho_gas(R, zs[i], pars)
-#     end
-#
-#     lngas = log(rhos) - log(mu_gas * m_H)
-#
-#     fig = plt[:figure]()
-#     ax = fig[:add_subplot](111)
-#
-#     ax[:plot](zs/AU, lngas)
-#
-#     # ax[:set_ylabel](L"$\log_{10} n_\mathrm{gas} \quad [\log_{10}$ 1/cm^3]")
-#     ax[:set_ylabel](L"$\ln n_\mathrm{gas}$")
-#     ax[:set_xlabel](L"$z$ [AU]")
-#     ax[:set_xlim](0, 30)
-#     fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
-#
-#     fig[:savefig]("ln_gas_slice.png")
-# end
-
 function plot_surface_density(pars::AbstractParameters, grid::Grid)
 
     fig = plt[:figure]()
@@ -552,17 +505,43 @@ function plot_norm(pars::ParametersVertical, grid::Grid)
     plt[:savefig]("norm.png")
 end
 
+function plot_ztop(pars::ParametersVertical, grid::Grid)
+
+    fig = plt[:figure]()
+    ax = fig[:add_subplot](111)
+
+    ztops = Array(Float64, grid.nr)
+
+    for i=1:grid.nr
+        ztops[i] = DiskJockey.model.z_top(grid.rs[i], pars)
+    end
+
+    fig, ax = plt[:subplots](figsize=(6,6))
+
+    # ax[:loglog](rr, Sigmas)
+    ax[:semilogx](rr, ztops ./ AU)
+
+    ax[:set_ylabel](L"$z_\mathrm{top}$ [AU]")
+
+    ax[:set_xlabel](L"$r$ [AU]")
+    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+
+    plt[:savefig]("ztop.png")
+end
+
 function plot_dens(pars::ParametersVertical, grid::Grid)
     # Set up the interpolator
 
+    DiskJockey.model.rho_gas(10 * AU, 0.1 * AU, pars)
+
     tic()
-    rho_gas = DiskJockey.model.rho_gas_interpolator(pars, grid)
-    println("Interpolator setup time")
+    DiskJockey.model.rho_gas(10 * AU, 0.1 * AU, pars)
+    println("Typical evaluation time")
     toc()
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 128
-    zs = linspace(0.0, 25 * AU, nz)
+    zs = linspace(0.0, 50 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
@@ -582,32 +561,21 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
 
     for i=1:nz
         for j=1:nr
-            rhos[i,j] = rho_gas(grid.rs[j], zs[i], pars)
+            temp = DiskJockey.model.temperature(grid.rs[j], zs[i], pars)
+            rhos[i,j] = DiskJockey.model.X_freeze(temp, pars) * DiskJockey.model.rho_gas(grid.rs[j], zs[i], pars)
         end
     end
 
-    # println(rhos)
-
-    # Find where these are infinite
-    # ind_infs = (rhos .== -Inf)
-    # ind_infs = (rhos .== Inf)
-
-    # println(ind_infs)
-    # println("ind_infs shape", size(ind_infs))
-    # println("xx shape", size(xx))
-    # rs = xx[ind_infs]
-    # zs = yy[ind_infs]
-    # for (r,z) in zip(rs, zs)
-    #     println(r, " ", z)
-    # end
-    # # print("rs", xx)
-    # quit()
+    ztops = Array(Float64, grid.nr)
+    for i=1:grid.nr
+        ztops[i] = DiskJockey.model.z_top(grid.rs[i], pars)
+    end
 
     println("rho extrema ", extrema(rhos))
 
     nlog = log10(rhos/(mu_gas * m_H))
 
-    levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9]
+    levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9, 10, 11, 12]
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
@@ -617,7 +585,10 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
 
     img = ax[:contourf](xx, yy, nlog, levels=levels)
 
+    ax[:plot](rr, ztops ./ AU)
+
     ax[:set_xscale]("log")
+    ax[:set_ylim](0, 50)
 
     # Now, go overlay small grey lines vertically
     # for cell_edge in grid.Rs/AU
@@ -632,31 +603,21 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
     plt[:savefig]("density.png")
 end
 
-# grd = config["grid"]
-# grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
+
 grid = Grid(config["grid"])
 
 # The cell centers for plotting purposes
 const global rr = grid.rs ./ AU # convert to AU
 
-# test_dens(pars,grid)
-
-# quit()
 
 if config["model"] == "vertical"
-    plot_norm(pars, grid)
-    # plot_zphot(pars, grid)
-    # plot_density_column(pars, grid)
-    # plot_density_column_CO(pars, grid)
+    plot_ztop(pars, grid)
 end
 
 plot_dens(pars, grid)
-#
+
 plot_topgrid(pars, grid)
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)
 plot_surface_density(pars, grid)
-
-# plot_density_1D(pars)
-# plot_dlnrho(pars)

@@ -9,6 +9,7 @@ export lnprior
 using ..constants
 using Dierckx
 using Optim
+using ODE
 
 # Write the wavelength sampling file. Only run on setup
 function write_lambda(lams::AbstractArray, basedir::AbstractString)
@@ -549,6 +550,22 @@ function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
     end
 end
 
+# Determines the midplane density assuming vertically isothermal
+function rho_gas_mid(r::Float64, pars::AbstractParameters)
+    H = Hp(r, pars)
+    S = Sigma(r, pars)
+
+    # Calculate the density at the midplane
+    rho = S/(sqrt(2. * pi) * H)
+
+    # If the density is less than our cutoff, just return 0.0
+    if rho < rho_gas_critical
+        return constants.rho_gas_zero
+    # Otherwise, return the density at this height
+    else
+        return rho
+    end
+end
 
 # The temperature change, dT/dz
 function dT(r::Float64, z::Float64, pars::ParametersVertical)
@@ -579,179 +596,78 @@ end
 function z_top(r::Float64, pars::ParametersVertical)
     zq = z_q(r, pars) # The height of the disk "atmosphere"
 
-    # 10 AU is an arbitrary number, but this is to make sure that we have a high enough bound
-    # in the inner disk
-    # It is assumed that there is 0 gas above this upper bound, ztop.
-    if (5 * zq) >= 10 * AU
-        ztop = zq * 5
-    else
-        ztop = 10 * AU
-    end
-    return ztop
+    return zq * 5
 end
 
-# Delivers an unnormalized gas density. Needs to be multiplied by correction factor.
-function un_lnrho(r::Float64, z::Float64, pars::ParametersVertical)
+function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
+
+    # Calculate the "top" of the atmosphere,
+    # a height where we are sure we can enforce that density = 0
     ztop = z_top(r, pars)
 
-    f(x) = dlnrho(r, x, pars)
-
-    # The values at the midplane (the largest they will be)
-    val0, err0 = quadgk(f, ztop, 0)
-
-    val, err = quadgk(f, ztop, z)
-
-    # subtract off the largest values, so that when we exponentiate later, we don't run into
-    # overflow errors
-    return val - val0
-end
-
-# For a given radius (in cylindrical coordinates)
-# calculate the normalization for rho_gas [g/cm^3]
-# and at the same time calculate the height for CO dissocation
-# norm(r) and z_phot(r)
-function rho_norm(r::Float64, pars::ParametersVertical)
-
-    ztop = z_top(r, pars)
-
-    # Create an array of heights that goes from the midplane (0, 0.01, ..., ztop)
-    zs = cat(1, [0], logspace(log10(0.01 * AU), log10(ztop), n_z_interpolator-1))
-
-    un_lnrhos = Array(Float64, n_z_interpolator)
-    # For each height, numerically integrate dlnrho/dz to yeild a yet-to-be normalized un_lnrho
-    for i=1:n_z_interpolator
-        un_lnrhos[i] = un_lnrho(r, zs[i], pars)
+    # If we are querying a height above this, just return 0 now
+    if z > ztop
+        return constants.rho_gas_zero
     end
 
-    # Find the largest value from this array and subtract it to avoid numberical overflow
-    # in subsequent steps
-    # bar_lnrho = un_lnrhos[1] # the largest value in the array (at the midplane)
-    # un_lnrhos -= bar_lnrho
+    # Calculate what the column density should be at the midplane
+    sigma = Sigma(r, pars) / 2
 
-    # Convert from ln(rho) to rho; still unnormalized.
-    un_rhos = exp(un_lnrhos)
-
-    # Now that we have the shape of the density structure but not the normalization,
-    # integrate to find the normalization factor.
-    # The density is a unitful quantity, so we need to exponentiate
-    # (can't do this with just un_lnrhos).
-    spl = Spline1D(zs, un_rhos)
-
-    # Integral is from -inf to inf, or 2 x (0 to inf).
-    # This is the total unnormalized surface density.
-    tot = 2 * integrate(spl, 0., zs[end])
-
-    # The actual value of the surface density
-    S = Sigma(r, pars)
-
-    # This quantity allows you to do
-    # rho = norm_rho * exp(un_lnrho(r, z))
-    norm_rho = S/tot
-
-    return norm_rho
-end
-
-function z_phot(r::Float64, pars::ParametersVertical)
-
-    ztop = z_top(r, pars)
-
-    norm_rho = rho_norm(r, pars)
-
-    function rho(z::Float64)
-        return norm_rho * exp(un_lnrho(r, z, pars))
-    end
-
-    # Integrate rho(z) to get the total column
-    function column(z::Float64)
-        val, err = quadgk(rho, ztop, z)
-        return val
-    end
-
-    function f(z::Float64)
-        return thresh - column(z)
-    end
-
-    # Now, calculate the photodissociation height
+    # Calculate the photodissociation height
     # Threshold column density
     thresh_H2 = pars.sigma_s * Av_sigmaH # [n_H2/cm^2]
     thresh = thresh_H2 * (mu_gas * amu / X_H2) # [g/cm^2] of gas
 
-    # Go through each of the z spacings, and use Riemann integration in a while loop to find
-    # at which z point we've finally accumulated the threshold column density.
-    # This is to "bracket the minimum"
-    # then we will use an optimizer to find the exact value
-    #
-    # col = 0.0 # total acumulated column
-    # icolumn::Int = n_z_interpolator # index of the z point
-    # while (col <= thresh) && (icolumn > 1)
-    #     col = column(zs[icolumn])
-    #
-    #     # dz = zs[icolumn] - zs[icolumn - 1]
-    #     # column += dz *  rhos[icolumn]
-    #     icolumn -= 1
-    # end
-
-    # println("thresh ", thresh, " column ", column)
-
-    # now we know that the minumim is between zs[icolumn] and zs[icolumn + 1]
-    ans = optimize(f, 0.0, ztop)
-    # println(ans)
-
-    z_phot = ans.minimum
-
-    return z_phot
-    # z_phot = zs[icolumn]
-end
-
-# Because the calculation for the vertical temperature gradient is a bit more complex than other
-# models, we can save time by caching the expensive quantities in an interpolator.
-# This function returns an interpolator function that can be used to determine rho_gas(r, z)
-function rho_gas_interpolator(pars::ParametersVertical, grid::Grid)
-
-    nr = grid.nr
-    rs = grid.rs # cell centers
-    norms = Array(Float64, nr)
-    # z_phots = Array(Float64, nr)
-
-    for i=1:nr
-        norms[i] = rho_norm(rs[i], pars)
+    # If there is not even enough column density at the midplane in order to exceed the threshold
+    # to protect against photodissociation of CO, just return 0 now
+    if sigma < thresh
+        return constants.rho_gas_zero
     end
 
-    # norm_intp = Spline1D(rs, norms)
-    # The function varies widely, so more accurate to interpolate the logarithm
-    log10_norm_intp = Spline1D(rs, log10(norms))
-    # z_phot_intp = Spline1D(rs, z_phots)
+    # Create an array of heights that goes from the midplane (0, 0.01, ..., ztop)
+    zs = cat(1, [0], logspace(log10(0.01 * AU), log10(ztop), 64 - 1))
 
-    # Create a function that will act like `rho_gas` for a vertical temperature gradient, but
-    # without the added cost of needing to solve the normalization and photodissociation integrals
-    # at each radius.
-    function interpolator(r::Float64, z::Float64, pars::ParametersVertical)
-
-        # # Santity checks to see that we're inside the grid
-        # if r > grid.rs[end] || z > grid.rs[end] || z > z_phot_intp(r)
-        #     return constants.rho_gas_zero
-        # else
-            # find norm(r)
-            # calculate unln(rho)
-        norm_gas = 10^log10_norm_intp(r)
-        rho = norm_gas * exp(un_lnrho(r, z, pars)) * X_freeze(temperature(r, z, pars), pars)
-
-        # If the density is less than our cutoff, just return 0.0
-        if rho < rho_gas_critical
-            return constants.rho_gas_zero
-        # Otherwise, return the density
-        else
-            return rho
-        end
-        # end
+    # Define the ODE at this radius r
+    function f(z, y)
+        # calculate y'
+        dlnrho(r, z, pars) * y
     end
 
-    return interpolator
-end
+    # Choose a starting guess corresponding to the midplane density for an isothermal model.
+    # This helps us get in the ballpark and avoid a lot of the numerical errors that result
+    start = rho_gas_mid(r, pars)
 
+    # Now solve the ODE on the grid of postulated values
+    # For the inner disk, we require a larger value of abstol
+    # We need to experiment with what is best
+    z_out, y_out = ode45(f, start, zs; abstol=1e-18)
+
+    # Integrate the output from the ODE solver to find the total (un-normalized) column density
+    spl = Spline1D(z_out, y_out)
+    tot = integrate(spl, z_out[1], z_out[end])
+
+    # Apply a correction factor to the un-normalized densities
+    cor = sigma / tot
+    rhos = y_out .* cor
+
+    # This is the function that will be minimized
+    function g(zvar::Float64)
+        return abs(thresh - cor * integrate(spl, zvar, z_out[end]))
+    end
+
+    z_phot = optimize(g, z_out[1], z_out[end]).minimum
+
+    # If we are above this height, return the mimimum gas density
+    if z > z_phot
+        return constants.rho_gas_zero
+    # If we are below it, interpolate rhos to this point
+    else
+        rho = cor * evaluate(spl, z)
+        return rho
+    end
+end
 
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.
-
 n_12CO(r::Float64, z::Float64, pars::AbstractParameters) = number_densities["12CO"] * rho_gas(r, z, pars)
 
 n_13CO(r::Float64, z::Float64, pars::AbstractParameters) = number_densities["13CO"] * rho_gas(r, z, pars)
@@ -846,13 +762,10 @@ function write_model(pars::AbstractParameters, basedir::AbstractString, grid::Gr
 
 end
 
-# Because we need to do the density caching for speed purposes, create a separate write_model
 function write_model(pars::ParametersVertical, basedir::AbstractString, grid::Grid, species::AbstractString)
 
-    # Prime the density interpolator
-    rho_gas = rho_gas_interpolator(pars, grid)
     function n_CO(r_cyl, z)
-        return number_densities[species] * rho_gas(r_cyl, z)
+        return number_densities[species] * rho_gas(r_cyl, z, pars)
     end
 
     # numberdens_co.inp
@@ -887,9 +800,11 @@ function write_model(pars::ParametersVertical, basedir::AbstractString, grid::Gr
                 z = r * cos(theta)
                 r_cyl = r * sin(theta)
 
-                @printf(fdens, "%.9e\n", n_CO(r_cyl, z))
+                temp = temperature(r_cyl, z, pars)
+
+                @printf(fdens, "%.9e\n", X_freeze(temp, pars) * n_CO(r_cyl, z))
                 @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, z, pars))
-                @printf(ftemp, "%.9e\n", temperature(r_cyl, pars))
+                @printf(ftemp, "%.9e\n", temp)
                 @printf(fmicro, "%.9e\n", microturbulence(pars))
             end
         end
@@ -922,6 +837,5 @@ function write_dust(pars::AbstractParameters, basedir::AbstractString, grid::Gri
 
     close(fdens)
 end
-
 
 end
