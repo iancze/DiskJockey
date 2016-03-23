@@ -202,9 +202,7 @@ end
         lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
 
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
-        println("sizeau_desired: ", sizeau_desired, " AU")
-        println("sizeau_command: ", sizeau_command, " AU")
-
+        
         # Copy all relevant configuration scripts to the keydir so that RADMC-3D can run.
         # these are mainly setup files that will be static throughout the run
         # they were written by DJInitialize.jl and write_grid()
@@ -244,8 +242,6 @@ end
         end
 
         phys_size = im.pixsize_x * npix/AU
-        println("Physical size of the synthesized image: ", phys_size , " [AU]" )
-        println("Discrepancy ", (sizeau_desired - phys_size)/sizeau_desired)
 
         # Convert raw images to the appropriate distance
         skim = imToSky(im, pars.dpc)

@@ -418,6 +418,40 @@ function lnprior(pars::ParametersCavity, dpc_mu::Float64, dpc_sig::Float64, grid
 
 end
 
+function lnprior(pars::ParametersVertical, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+    # Create a giant short-circuit or loop to test for sensical parameter values.
+    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10a <= 0. || pars.T_10m <= 0. || pars.r_c <= 0.0  || pars.T_10a > 1500. || pars.q_m < 0. || pars.q_a < 0. || pars.q_m > 1.0 || pars.q_a > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0
+        throw(ModelException("Parameters outside of prior range."))
+    end
+
+    # Check to see that the temperatures make sense
+    if pars.T_10m > pars.T_10a
+        throw(ModelException("Atmosphere is cooler than midplane."))
+    end
+
+    # Impose distance prior
+    dlow = dpc_mu - 3. * dpc_sig
+    dhigh = dpc_mu + 3. * dpc_sig
+
+    # hard +/- 3 sigma cutoff
+    if (pars.dpc < dlow) || (pars.dpc > dhigh)
+        throw(ModelException("Distance outside of 3 sigma prior range."))
+    end
+
+    # If we've passed all the hard-cut offs by this point, return the sum of the distance prior and the geometrical inclination prior.
+    lnp = -0.5 * (pars.dpc - dpc_mu)^2 / dpc_sig^2 + log(0.5 * sind(pars.incl))
+
+    r_out = grid.Rs[end]/AU # [AU]
+    # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
+    # to fit on the model grid.
+    if (3 * pars.r_c) > r_out
+        throw(ModelException("Model radius too large for grid size."))
+    else
+        return lnp
+    end
+
+end
+
 # Determine the physical size of the image. Size_arcsec is the full width of the image,
 # and so sizeau is the full size of the image as well (RADMC3D conventions).
 # Because there seems to be a small but constant shift in the size of the image
@@ -624,8 +658,8 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
         return constants.rho_gas_zero
     end
 
-    # Create an array of heights that goes from the midplane (0, 0.01, ..., ztop)
-    zs = cat(1, [0], logspace(log10(0.01 * AU), log10(ztop), 64 - 1))
+    # Create an array of heights that goes from the midplane (0, 0.001, ..., ztop)
+    zs = cat(1, [0], logspace(log10(0.001 * AU), log10(ztop), 64 - 1))
 
     # Define the ODE at this radius r
     function f(z, y)
@@ -640,7 +674,7 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
     # Now solve the ODE on the grid of postulated values
     # For the inner disk, we require a larger value of abstol
     # We need to experiment with what is best
-    z_out, y_out = ode45(f, start, zs; abstol=1e-18)
+    z_out, y_out = ode45(f, start, zs; abstol=1e-19)
 
     # Integrate the output from the ODE solver to find the total (un-normalized) column density
     spl = Spline1D(z_out, y_out)
@@ -663,6 +697,7 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
     # If we are below it, interpolate rhos to this point
     else
         rho = cor * evaluate(spl, z)
+
         return rho
     end
 end

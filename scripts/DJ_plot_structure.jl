@@ -614,10 +614,9 @@ if config["model"] == "vertical"
     plot_ztop(pars, grid)
 end
 
-plot_dens(pars, grid)
-
 plot_topgrid(pars, grid)
 plot_vel(pars, grid)
 plot_temp(pars, grid)
 plot_height(pars, grid)
 plot_surface_density(pars, grid)
+plot_dens(pars, grid)
