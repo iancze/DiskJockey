@@ -165,6 +165,11 @@ function plot_spectrum(img::image.SkyImage; fname="spectrum.png")
 
     spec = imToSpec(img)
 
+    # Calculate integrated line intensity.
+    tot = image.integrateSpec(spec, lam0)
+    println("Total line flux ", tot, " Jy / km / s")
+
+
     ax[:plot](vels, spec[:,2], ls="steps-mid")
 
     ax[:set_ylabel](L"$f_\nu$ [Jy]")

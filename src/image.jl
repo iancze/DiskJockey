@@ -17,6 +17,7 @@ export tauread
 
 using ..constants
 import Images # The Images.jl package, not affiliated w/ DiskJockey
+using Dierckx
 
 import Base.- # extend this for Image
 
@@ -250,6 +251,25 @@ function imToSpec(img::SkyImage)
     spec = hcat(img.lams, flux) #First column is wl, second is flux
 
     return spec
+end
+
+# Calculate the integrated line flux
+function integrateSpec(spec::Matrix{Float64}, lam0::Float64)
+    #First column is wl, second is flux
+
+    wl = spec[:,1]
+    fl = spec[:,2]
+
+    # Convert wl to kms
+    vs = c_kms * (spec[:,1] .- lam0)/lam0
+
+    reverse!(vs)
+    reverse!(fl)
+
+    spl = Spline1D(vs, fl)
+    tot = integrate(spl, vs[1], vs[end])
+
+    return tot
 end
 
 # Storage for zeroth moment map

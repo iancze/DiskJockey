@@ -44,7 +44,10 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     VV = real + imag .* im # Complex visibility
     weight = read(fid, "weight") # [1/Jy^2]
 
-    flag = convert(Array{Bool}, read(fid, "flag"))
+    if !flagged
+        flag = convert(Array{Bool}, read(fid, "flag"))
+    end
+    
     close(fid)
 
     nlam = length(lams)

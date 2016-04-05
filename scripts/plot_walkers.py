@@ -73,6 +73,11 @@ try:
             labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\mathrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
         else:
             labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\mathrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+    elif model == "vertical":
+        if fix_d:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10m}$ [K]", r"$q_m$", r"$T_{10a}$ [K]", r"$q_a$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+        else:
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10m}$ [K]", r"$q_m$", r"$T_{10a}$ [K]", r"$q_a$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     else:
         print("Model type not found, using default labels.")
         labels = ["par {}".format(i) for i in range(ndim)]

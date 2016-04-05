@@ -4,6 +4,10 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.3
 
+## spectrum
+
+plotting now outputs integrated line flux, to be used as a sanity check against your dataset.
+
 ## Half-pixel offset
 
 Has now been addressed.

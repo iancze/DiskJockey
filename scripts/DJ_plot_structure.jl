@@ -541,7 +541,7 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 128
-    zs = linspace(0.0, 50 * AU, nz)
+    zs = linspace(0.0, 100 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
@@ -588,7 +588,7 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
     ax[:plot](rr, ztops ./ AU)
 
     ax[:set_xscale]("log")
-    ax[:set_ylim](0, 50)
+    ax[:set_ylim](0, 100)
 
     # Now, go overlay small grey lines vertically
     # for cell_edge in grid.Rs/AU
