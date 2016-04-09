@@ -103,15 +103,15 @@ To check that you have properly added the scripts (and check that you installed 
 
 Due to the ongoing development of this package, it is easiest to keep your version current by updating off of the git master branch. For example,
 
-  julia> Pkg.dir("DiskJockey")
-  "/home/ian/.julia/DiskJockey
+    julia> Pkg.dir("DiskJockey")
+    "/home/ian/.julia/DiskJockey
 
-  # Exit Julia
-  # Navigate to this directory
-  $ cd /home/ian/.julia/DiskJockey
-  $ git pull
+    # Exit Julia
+    # Navigate to this directory
+    $ cd /home/ian/.julia/DiskJockey
+    $ git pull
 
-For archival purposes, tagged release versions of this package are available [here](https://github.com/iancze/DiskJockey/releases).
+For archival purposes, tagged release versions of this package are available [here](https://github.com/iancze/DiskJockey/releases). 
 
 ### Python scripts
 
