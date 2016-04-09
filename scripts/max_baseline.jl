@@ -80,4 +80,4 @@ sizeau = 0.5 * config["size_arcsec"] * dlow # [AU]
 outer_radius = 1.1 * config["grid"]["r_out"]
 @assert sizeau > outer_radius "The angular size of your image is too small to fully encapsulate the model grid at the closest distances to the source. Increase the angular size of your image via `size_arcsec` or decrease the outer radius of your model grid. Size at the closest distances $sizeau [AU]; outer radius of the grid + 10% $outer_radius [AU]"
 
-println("Image size satisfied. Image size at the closest distances: $sizeau [AU]; outer radius of the grid + 10%: $outer_radius [AU]")
+println("Image size satisfied. Half-Image size at the closest distances: $sizeau [AU]; outer radius of the grid + 10%: $outer_radius [AU]")

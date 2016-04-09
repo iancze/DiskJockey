@@ -74,6 +74,7 @@ molnames = Dict{ASCIIString, ASCIIString}([("12CO", "co"), ("13CO", "13co"), ("C
 # Rest frame wavelengths
 lam0s = Dict{ASCIIString, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
             ("13CO2-1", cc/220.39868e9 * 1e4),
+            ("13CO3-2", cc/330.58797e9 * 1e4),
             ("C18O2-1", cc/219.56036e9 * 1e4),
             ("12CO3-2", cc/345.79599e9 * 1e4)]) # microns
 
