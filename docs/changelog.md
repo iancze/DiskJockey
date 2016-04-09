@@ -4,31 +4,35 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.3
 
-## spectrum
+## FITS export
 
-plotting now outputs integrated line flux, to be used as a sanity check against your dataset.
+Thanks to Jane Huang (@j6626), you can now export a RADMC image to a FITS file via the script `DJ_image_to_FITS.py`. You can then inspect these FITS files with `ds9`, or use them in CASA `simobserve`.
+
+## spectrum.png
+
+The plotting routine now outputs integrated line flux, to be used as a sanity check against your dataset.
 
 ## Half-pixel offset
 
-Has now been addressed.
+Has now been added to the code. This is a result from that RADMC sythesizes an image centered on `(0,0)`, while the FFT routine expects the image to be centered on the middle of the central pixel. The only change you should see is a small, half-pixel sized offset in `mu_RA` and `mu_DEC`.
 
 ## Visualizing the tau=1 surface
 
-The functionality originally stored in RADMC is now exposed via DiskJockey to visualize the tau = 1 (or other value) surface.
+This functionality originally provided in RADMC is now exposed via DiskJockey to visualize the tau = 1 (or other value) surface.
 
-  $ DJinit.jl && tausurf_model.jl && plot_tausurf.jl
+  $ DJ_initialize.jl && tausurf_model.jl && plot_tausurf.jl
 
 This also introduces the `TausurfImage` type in `src/image.jl`. This is useful to see whether the tau=1 surface is in front of or behind the midplane of the disk, projected on the sky.
 
-The more useful plot is in 3D, however.
+It will be more useful to plot this in 3D, however. ParaView export is hopefully coming in a future version.
 
 ## Vertical temperature gradient
 
-Now includes support for fitting a vertical temperature gradient, following the parameterization in Williams and Best 14.
+We now include support for fitting a vertical temperature gradient, via the `vertical` model type. We follow the parameterization in [Williams and Best 14](https://ui.adsabs.harvard.edu/#abs/2014ApJ...788...59W/abstract).
 
 ## model.convert_vector
 
-Has been simplified to ingest *kwargs*, enabling easier selection of model types and parameters.
+This routine is to simplify to ingesting *kwargs*, enabling easier selection of model types and parameters.
 
 ## User-defined priors
 
@@ -36,15 +40,15 @@ As an experimental feature, it is now possible to assign user defined priors. Th
 
 ## Makefiles
 
-Now, we include a makefile that should be copied to each source directory. In a typical analysis workflow, there isn't need to regenerate each intermediate product repeatedly.
+Now, we include a makefile that should be copied to each source directory. In a typical analysis workflow, there isn't need to regenerate each intermediate product repeatedly. Details are in the cookbook.
 
 ## Script renaming
 
-To prevent these scripts from cluttering a users namespace when adding to their `PATH`, we've prefixed everything with `DJ_`. Moreover, for most tasks, the users will not need to run these tasks directly, but from the Makefile.
+To prevent these scripts from cluttering a users namespace when adding to their `PATH`, we've prefixed most things with `DJ_`. Moreover, for most tasks, the users will not need to run these tasks directly, but will just use the Makefile.
 
-## grid
+## model.Grid
 
-`Grid` initialization now relies upon a dictionary.
+`Grid` type initialization now relies upon a dictionary.
 
 # Version 0.1.2
 

@@ -16,7 +16,9 @@ See an explanation of [how dynamical mass measurements](http://iancze.github.io/
 Papers published using DiskJockey:
 
 * *A Disk-based Dynamical Constraint on the Mass of the Young Binary AK Sco*: [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C)
-* *A Disk-based Dynamical Constraint on the Mass of the Young Binary DQ Tau* : [Czekala et al. 2016 2016arXiv160103806C](http://adsabs.harvard.edu/abs/2016arXiv160103806C)
+* *A Disk-based Dynamical Constraint on the Mass of the Young Binary DQ Tau* : [Czekala et al. 2016 ApJ, 818 156C](http://adsabs.harvard.edu/abs/2016ApJ...818..156C)
+
+And we now appear in the [astrophysics source code library](http://ascl.net/1603.011) as well.
 
 # Organization
 
@@ -37,13 +39,13 @@ I have organized the code in this package into source (in the `src` directory) a
 
 You will be able to access any of the modules within `src`. These provide the base functionality for the package in common tasks, such as reading in images produced by RADMC-3D, Fourier transforms, and visibility interpolation. My hope is to make these components as general as possible so if you would like to extend this package to fit a novel type of disk, it will be easy to reuse many of the core functionality.
 
-The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `sythesize_model.jl` synthesizes and a model for your current parameters. These are run from your system shell after adding them to your `PATH`
+The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `DJ_initializ.jl` writes input files to disk, and `DJ_sythesize_model.jl` synthesizes a model using RADMC-3D. These are run from your system shell after adding them to your `PATH`
 
-    $ sythesize_model.jl
+    $ DJ_initialize.jl && DJ_sythesize_model.jl
 
 ## Computational demand
 
-Because spectral line datasets are large, and synthesizing models is computationally expensive, I have designed this package to work in a parallel environment where the calculations for each frequency channel can be distributed to independent processors. Therefore, please keep this architecture in mind when navigating the source code. Due to the computationally expensive nature of the radiative synthesis, fitting sizable datasets (e.g., SMA and ALMA) will **require a substantial amount of CPU cores to explore a posterior distribution in a reasonable timeframe**. For example, to fully explore the posterior for the AK Sco example dataset will require a **few days** of computing time on ~32 cores or more.
+Because spectral line datasets are large, and synthesizing models is computationally expensive, I have designed this package to work in a parallel environment. Therefore, please keep this architecture in mind when navigating the source code. Due to the computationally expensive nature of the radiative synthesis, fitting sizable datasets (e.g., SMA and ALMA) will **require a substantial amount of CPU cores to explore a posterior distribution in a reasonable timeframe**. For example, to fully explore the posterior for the AK Sco example dataset (to a density comparable to the plots in the ApJ paper) will require a **few days** of computing time on ~32 cores or more.
 
 ## Installation
 
@@ -63,6 +65,12 @@ First, you should to install the [Julia programming language](https://github.com
 
     julia> println("Hello world")
     Hello world
+
+Depending on how you choose to install Julia, you may need to take the additional step of adding the Julia executable to your `PATH`. [Here](https://en.wikibooks.org/wiki/Introducing_Julia/Getting_started#Running_directly_from_terminal) are some suggestions for OS X if you are experiencing difficulty.
+
+### Fortran
+
+Some of the packages that DiskJockey requires (e.g. [Dierckx.jl](https://en.wikibooks.org/wiki/Introducing_Julia/Getting_started#Running_directly_from_terminal)) require a Fortran compiler. On linux, try looking to make sure you have `gcc/gfortran` or something like it installed. For OS X, you can download these packages from [here](http://hpc.sourceforge.net/).
 
 ### DiskJockey
 
@@ -107,7 +115,7 @@ For archival purposes, tagged release versions of this package are available [he
 
 ### Python scripts
 
-Lastly, some of the analysis scripts and IO routines require Python and several Python packages. I have only tested the scripts on Python 3.x, although they may work on Python 2.7. Please install the following packages via your own package manager or a distribution like anaconda:
+Lastly, some of the analysis scripts and IO routines require Python and several Python packages. I have only tested the scripts on Python 3.x, although they *may* work on Python 2.7. Please install the following packages via your own package manager or a distribution like anaconda:
 
 * numpy
 * scipy
@@ -115,7 +123,6 @@ Lastly, some of the analysis scripts and IO routines require Python and several 
 * h5py
 * PyYAML
 * Jupyter/IPython
-* Jupyter/IJulia
 * [corner.py](https://github.com/dfm/corner.py)
 
 With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source, in particular the [cookbook](docs/cookbook.md).

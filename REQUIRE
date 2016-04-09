@@ -3,6 +3,7 @@ YAML
 PyPlot
 LaTeXStrings
 Distributions
+IJulia
 PDMats
 HDF5
 ArgParse

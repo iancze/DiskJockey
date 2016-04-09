@@ -355,6 +355,13 @@ end
 function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float64)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10 <= 0. || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
+        println("M_star ", pars.M_star)
+        println("r_c ", pars.r_c)
+        println("T_10 ", pars.T_10)
+        println("q ", pars.q)
+        println("incl ", pars.incl)
+        println("PA ", pars.PA)
+
         throw(ModelException("Parameters outside of prior range."))
     end
 
@@ -373,6 +380,7 @@ function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float6
 end
 
 function lnprior(pars::ParametersStandard, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+
     lnp = lnprior_base(pars, dpc_mu, dpc_sig)
 
     r_out = grid.Rs[end]/AU # [AU]

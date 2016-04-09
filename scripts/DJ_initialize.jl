@@ -27,6 +27,15 @@ s = ArgParseSettings(description="Initialize a new project directory with the ap
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
+    "--vstart", "-s"
+    help = "Starting velocity in km/s."
+    arg_type = Float64
+    "--vend", "-e"
+    help = "Ending velocity in km/s."
+    arg_type = Float64
+    "--nvel", "-n"
+    help = "Number of velocity channels."
+    arg_type = Int
 end
 
 parsed_args = parse_args(ARGS, s)
@@ -157,16 +166,35 @@ if config["gas"]
     vel = pars.vel # [km/s]
     npix = config["npix"] # number of pixels
 
-    # read the wavelengths for all data channels
-    fid = h5open(config["data_file"], "r")
-    freqs = read(fid["freqs"]) # [Hz]
-    # Convert from Hz to wavelengths in μm
-    lams = cc ./freqs * 1e4 # [μm]
-    close(fid)
+    vstart = parsed_args["vstart"]
+    vend = parsed_args["vend"]
+    nvel = parsed_args["nvel"]
+
+    if vstart != nothing
+        # If we have specified the velocities, ignore the data files and Doppler shift
+        # and create an evenly spaced array of velocities
+        vels = linspace(vstart, vend, nvel) # [km/s]
+
+        lam0 = lam0s[species*transition]
+
+        # convert velocities to wavelengths
+        shift_lams = lam0 * (vels/c_kms + 1)
+    else
+        # read the wavelengths for all data channels
+        fid = h5open(config["data_file"], "r")
+        freqs = read(fid["freqs"]) # [Hz]
+        # Convert from Hz to wavelengths in μm
+        lams = cc ./freqs * 1e4 # [μm]
+        close(fid)
+
+        # Doppler shift the dataset wavelength according to the velocity in the parameter file
+        beta = vel/c_kms # relativistic Doppler formula
+        shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
+    end
 
     # Doppler shift the dataset wavelength according to the velocity in the parameter file
-    beta = vel/c_kms # relativistic Doppler formula
-    shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
+    # beta = vel/c_kms # relativistic Doppler formula
+    # shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
 
 
     grd = config["grid"]

@@ -106,7 +106,8 @@ end
 # Determine if we will be including the User-defined prior
 if isfile("prior.jl")
     println("Including user-defined prior from prior.jl")
-    include("prior.jl")
+    include(pwd() * "/prior.jl")
+    # Make a copy to the outdirectory for future reference
     cp("prior.jl", outdir * "prior.jl")
 end
 
@@ -202,7 +203,7 @@ end
         lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
 
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
-        
+
         # Copy all relevant configuration scripts to the keydir so that RADMC-3D can run.
         # these are mainly setup files that will be static throughout the run
         # they were written by DJInitialize.jl and write_grid()

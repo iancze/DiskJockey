@@ -263,8 +263,13 @@ function integrateSpec(spec::Matrix{Float64}, lam0::Float64)
     # Convert wl to kms
     vs = c_kms * (spec[:,1] .- lam0)/lam0
 
-    reverse!(vs)
-    reverse!(fl)
+    if vs[2] - vs[1] < 0
+        reverse!(vs)
+        reverse!(fl)
+    end
+
+    # println(vs)
+    # println(fl)
 
     spl = Spline1D(vs, fl)
     tot = integrate(spl, vs[1], vs[end])
