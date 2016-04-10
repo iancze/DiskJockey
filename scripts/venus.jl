@@ -111,6 +111,8 @@ if isfile("prior.jl")
     cp("prior.jl", outdir * "prior.jl")
 end
 
+println(methods(lnprior))
+
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
