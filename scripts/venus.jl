@@ -106,7 +106,7 @@ end
 # Determine if we will be including the User-defined prior
 if isfile("prior.jl")
     println("Including user-defined prior from prior.jl")
-    include(pwd() * "/prior.jl")
+    @everywhere include(pwd() * "/prior.jl")
     # Make a copy to the outdirectory for future reference
     cp("prior.jl", outdir * "prior.jl")
 end
