@@ -58,6 +58,9 @@ elif model == "truncated":
 elif model == "cavity":
     d_index = 7
 
+elif model == "vertical":
+    d_index = 8
+
 else:
     print("Model type not found.")
 
