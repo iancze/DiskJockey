@@ -54,7 +54,11 @@ lams = imvals[:nlam]
 freqs =  cc / (lams * 1e-4) # [Hz]
 
 CRVAL3 = freqs[0]
-dnu = freqs[1] - freqs[0]
+
+if len(lams) > 1:
+    dnu = freqs[1] - freqs[0]
+else:
+    dnu = 2e9 #[GHz]
 CDELT3 = dnu
 
 pixsize = pixsize_x*pixsize_y/(dpc*pc)**2 #pixel size in steradians

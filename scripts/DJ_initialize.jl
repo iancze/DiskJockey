@@ -136,6 +136,12 @@ end
 # # convert velocities to wavelengths
 # shift_lams = lam0 * (vels/c_kms + 1)
 
+# Do everything common to both models
+pars = convert_dict(config["parameters"], config["model"])
+grd = config["grid"]
+grid = Grid(grd)
+
+
 # Are we using dust or gas?
 # gas
 if config["gas"]
@@ -162,7 +168,7 @@ if config["gas"]
 
     println("Copied over RADMC-3D gas input files.")
 
-    pars = convert_dict(config["parameters"], config["model"])
+
     vel = pars.vel # [km/s]
     npix = config["npix"] # number of pixels
 
@@ -196,11 +202,6 @@ if config["gas"]
     # beta = vel/c_kms # relativistic Doppler formula
     # shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
 
-
-    grd = config["grid"]
-    # grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
-    grid = Grid(grd)
-
     # Write everything to the current working directory
     write_grid("", grid)
     write_model(pars, "", grid, species)
@@ -208,8 +209,18 @@ if config["gas"]
     println("Wrote gas model input files for RADMC-3D.")
 
 # dust
-else
-    throw(ErrorException("Dust features not yet implemented. Only gas."))
+elseif config["dust"]
+
+    # Copy the appropriate files for dust synthesis
+    run(`cp $(assets_dir)radmc3d.inp.dust radmc3d.inp`)
+
+    # Write the dust distribution
+    write_grid("", grid)
+    write_dust(pars, "", grid)
+
+    println("Wrote dust grid and density file for RADMC-3D.")
+
+
     # ff = assets_dir * "radmc3d.inp.dust"
     # run(`cp $ff radmc3d.inp`)
     # ff = assets_dir * "stars.inp"

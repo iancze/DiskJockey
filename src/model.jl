@@ -730,13 +730,9 @@ function X_freeze(temp::Float64, pars::AbstractParameters)
 end
 
 function rho_dust(r::Float64, z::Float64, pars::AbstractParameters)
-    nCO = n_CO(r, z, pars) # number of CO molecules per cm^3
 
-    # Convert from nCO to nH2
-    nH2 = nCO / 7.e-5 # number density ratio
-
-    # Convert from nH2 (assuming nH2 ~ nGas ) to mGas
-    mGas = mu_gas * amu * nH2 # [g]
+    # Use the rho_gas function to get the total density in [g/cm^3]
+    mGas = rho_gas(r, z, pars)
 
     # Convert from mGas to mDust using Gas/Dust ratio of 100
     mDust = mGas * 0.01 # [g]
