@@ -191,6 +191,13 @@ global nlam = length(skim.lams)
 # convert wavelengths to velocities
 global vels = c_kms * (skim.lams .- lam0)/lam0
 
+# Make sure we are always plotting channels from blueshift to redshift.
+if vels[2] < vels[1]
+  println("Flipping channel maps to plot in order of increasing velocity.")
+  skim.data = skim.data[:,:,end:-1:1]
+  vels = vels[end:-1:1]
+end
+
 if parsed_args["linear"]
     plot_chmaps(skim, fname="chmaps_linear.png", contours=false)
 end

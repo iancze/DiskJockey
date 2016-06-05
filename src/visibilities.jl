@@ -11,6 +11,7 @@ import Base.conj! # extend this for DataVis
 import Base.- # extend this for FullModelVis
 
 export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis
+export get_qq
 export plan_interpolate, interpolate_uv
 export transform, rfftfreq, fftfreq, phase_shift!, max_baseline, get_nyquist_pixel
 export lnprob
@@ -47,7 +48,7 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     if !flagged
         flag = convert(Array{Bool}, read(fid, "flag"))
     end
-    
+
     close(fid)
 
     nlam = length(lams)
@@ -129,6 +130,10 @@ function conj!(dvarr::Array{DataVis, 1})
     for dset in dvarr
         conj!(dset) # Swap UV convention
     end
+end
+
+function get_qq(dv::DataVis)
+  sqrt(dv.uu.^2 .+ dv.vv.^2)
 end
 
 # Take in a visibility data set and then write it to the HDF5 file

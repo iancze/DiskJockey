@@ -1,10 +1,8 @@
 # Conventions
 
-We are using the following parameter conventions
-
 ## Inclination
 
-inclination ranges from 0 to 180 degrees. 0 degrees means face on, angular momentum vector pointing at observer; 90 means edge on; and 180 means face on, angular momentum vector pointing away from observer. These are the same as the RADMC-3D conventions.
+Disk inclination ranges from 0 to 180 degrees. 0 degrees means face on, angular momentum vector pointing at observer; 90 means edge on; and 180 means face on, angular momentum vector pointing away from observer. These are the same as the RADMC-3D conventions.
 
 
 ## Position Angle
