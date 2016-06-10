@@ -10,8 +10,9 @@ AU = 1.4959787066e13 # [cm]
 
 # Each of these functions assumes that inputs are in units of either AU or Solar Masses
 
-def sigma_to_logM_standard(r_c, gamma, Sigma_c):
+def logsigma_to_logM_standard(r_c, gamma, logSigma_c):
     r_c = r_c * AU # [cm]
+    Sigma_c = 10**logSigma_c
 
     M_gas = 2 * np.pi * r_c**2 * Sigma_c / (2 - gamma)
     M_gas = M_gas / M_sun # [M_sun]
@@ -19,13 +20,13 @@ def sigma_to_logM_standard(r_c, gamma, Sigma_c):
 
     return logM
 
-def logM_to_sigma_standard(r_c, gamma, logM):
+def logM_to_logsigma_standard(r_c, gamma, logM):
     r_c = r_c * AU
 
     M_gas = 10**logM * M_sun # [g]
     Sigma_c = M_gas * (2 - gamma) / (2 * np.pi * r_c**2) # [g/cm^2]
 
-    return Sigma_c
+    return np.log10(Sigma_c)
 
 
 # On the other hand, conversions for the cavity model are more difficult, because a numerical integral is needed to convert between the two.
@@ -41,29 +42,29 @@ def integral(r_c, r_cav, gamma, gamma_cav):
     I = quad(f, 0.0, 10000 * AU)[0] # [cm^2]
     return I
 
-def sigma_to_logM_cavity(r_c, r_cav, gamma, gamma_cav, Sigma_c):
+def logsigma_to_logM_cavity(r_c, r_cav, gamma, gamma_cav, logSigma_c):
     I = integral(r_c, r_cav, gamma, gamma_cav)
-
+    Sigma_c = 10**logSigma_c
     M_gas = 2 * np.pi * Sigma_c * I # [g]
     M_gas = M_gas / M_sun # [M_sun]
     logM = np.log10(M_gas)
 
     return logM
 
-def logM_to_sigma_cavity(r_c, r_cav, gamma, gamma_cav, logM):
+def logM_to_logsigma_cavity(r_c, r_cav, gamma, gamma_cav, logM):
     I = integral(r_c, r_cav, gamma, gamma_cav)
 
     M_gas = 10**logM * M_sun # [g]
     Sigma_c = M_gas / (2 * np.pi * I) # [g/cm^2]
 
-    return Sigma_c
+    return np.log10(Sigma_c)
 
 
 # Use these dictionaries to get functions.
 
-sigma_to_logM = {"standard":sigma_to_logM_standard, "vertical":sigma_to_logM_standard, "cavity":sigma_to_logM_cavity}
+logsigma_to_logM = {"standard":logsigma_to_logM_standard, "vertical":logsigma_to_logM_standard, "cavity":logsigma_to_logM_cavity}
 
-logM_to_sigma = {"standard":logM_to_sigma_standard, "vertical":logM_to_sigma_standard, "cavity":logM_to_sigma_cavity}
+logM_to_logsigma = {"standard":logM_to_logsigma_standard, "vertical":logM_to_logsigma_standard, "cavity":logM_to_logsigma_cavity}
 
 
 def main():
@@ -75,23 +76,23 @@ def main():
     gamma = 1.0
     gamma_cav = 2.0
 
-    sigma_c_standard = logM_to_sigma_standard(r_c, gamma, logM)
+    logsigma_c_standard = logM_to_logsigma_standard(r_c, gamma, logM)
 
-    logM_standard = sigma_to_logM_standard(r_c, gamma, sigma_c_standard)
+    logM_standard = logsigma_to_logM_standard(r_c, gamma, logsigma_c_standard)
 
     print("standard")
     print("logM original", logM)
-    print("logM to Sigma_c", sigma_c_standard)
+    print("logM to log Sigma_c", logsigma_c_standard)
     print("Sigma_c to logM", logM_standard)
 
-    sigma_c_cavity = logM_to_sigma_cavity(r_c, r_cav, gamma, gamma_cav, logM)
+    logsigma_c_cavity = logM_to_logsigma_cavity(r_c, r_cav, gamma, gamma_cav, logM)
 
-    logM_cavity = sigma_to_logM_cavity(r_c, r_cav, gamma, gamma_cav, sigma_c_cavity)
+    logM_cavity = logsigma_to_logM_cavity(r_c, r_cav, gamma, gamma_cav, logsigma_c_cavity)
 
     print()
     print("cavity")
     print("logM original", logM)
-    print("logM to Sigma_c", sigma_c_cavity)
+    print("logM to log Sigma_c", logsigma_c_cavity)
     print("Sigma_c to logM", logM_cavity)
 
 

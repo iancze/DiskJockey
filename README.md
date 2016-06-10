@@ -90,6 +90,12 @@ Your PATH will vary. The scripts are located inside of the `scripts` directory, 
 
     export PATH="/home/ian/.julia/DiskJockey/scripts:$PATH"
 
+inside of your `.bashrc` or `.zshrc` file.
+
+Some of the Python scripts also depend on imports from this directory, so you will also need to add
+
+    export PYTHONPATH="/home/ian/.julia/DiskJockey/scripts:$PYTHONPATH"
+
 inside of your `.bashrc` or `.zshrc` file. Finally,
 
     $ source ~/.zshrc
@@ -126,6 +132,12 @@ Lastly, some of the analysis scripts and IO routines require Python and several 
 * [corner.py](https://github.com/dfm/corner.py)
 
 With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source, in particular the [cookbook](docs/cookbook.md).
+
+If you'd like to run the test suite to make sure everything checks out, start Julia and run
+
+    julia> Pkg.test("DiskJockey")
+
+this may take about 10 minutes or so. If you catch any errors for your specific machine, please report them via an Issue on the github repository.
 
 The code package is designed to interface with visibilities in the UVHDF5 format, described [here](https://github.com/Astrochem/UVHDF5). There are also scripts within this repository to convert to and from UVFITS and CASA measurement sets.
 

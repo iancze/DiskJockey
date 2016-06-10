@@ -29,11 +29,11 @@ model : standard # choices of {standard, truncated, vertical, cavity, etc..}
 # parameters, either used for model synthesis or visualization. Be careful that all of these are Float64 and not Int
 parameters:
   M_star: 1.03 # [M_sun] stellar mass
-  r_c: 500.00 # [AU] characteristic radius
+  r_c: 80.00 # [AU] characteristic radius
   T_10: 91.85 # [K] temperature at 10 AU
   q: 0.5 # temperature gradient exponent
   gamma: 1.0 # surface density gradient
-  logM_gas: -3.8 # [M_Sun] disk mass of gas
+  logSigma_c: -3.8 # [M_Sun] disk mass of gas
   ksi: 0.2 # [km/s] microturbulence
   dpc: 145. # [pc] distance
   incl: 45.0 # [degrees] inclination

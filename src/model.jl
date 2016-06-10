@@ -177,7 +177,7 @@ type ParametersStandard <: AbstractParameters
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface temperature gradient exponent
-    M_gas::Float64 # [M_Sun] disk mass of gas
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -194,7 +194,7 @@ type ParametersTruncated <: AbstractParameters
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface temperature gradient exponent
-    M_gas::Float64 # [M_Sun] disk mass of gas
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -212,7 +212,7 @@ type ParametersCavity <: AbstractParameters
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface density gradient exponent
     gamma_cav::Float64 # surface density gradient exponent for inner cavity
-    M_gas::Float64 # [M_Sun] disk mass of gas
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -235,7 +235,7 @@ type ParametersVertical <: AbstractParameters
     gamma::Float64 # surface temperature gradient exponent
     h::Float64 # Number of scale heights that z_q is at, typically fixed to 4
     delta::Float64 # Shape exponent, currently fixed to 2
-    M_gas::Float64 # [M_Sun] disk mass of gas
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] micsroturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -254,39 +254,39 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_d::Bool; 
         if fix_d
             # distance is fixed and provided by the args
             dpc = args[:dpc]
-            M_star, r_c, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, T_10, q, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
         else
             # we are fitting with distance as a parameter
-            M_star, r_c, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, T_10, q, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
         end
 
-        M_gas = 10^logM_gas
-        return ParametersStandard(M_star, r_c, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        Sigma_c = 10^logSigma_c
+        return ParametersStandard(M_star, r_c, T_10, q, gamma, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     elseif model == "truncated"
         # Take gamma from the args
         gamma = args[:gamma]
         if fix_d
             dpc = args[:dpc]
-            M_star, r_in, r_out, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_in, r_out, T_10, q, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
         else
-            M_star, r_in, r_out, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_in, r_out, T_10, q, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
         end
 
-        M_gas = 10^logM_gas
-        return ParametersTruncated(M_star, r_in, r_out, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        Sigma_c = 10^logSigma_c
+        return ParametersTruncated(M_star, r_in, r_out, T_10, q, gamma, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     elseif model == "cavity"
         gamma = args[:gamma]
         if fix_d
             dpc = args[:dpc]
-            M_star, r_c, r_cav, T_10, q, gamma_cav, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, r_cav, T_10, q, gamma_cav, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
         else
-            M_star, r_c, r_cav, T_10, q, gamma_cav, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, r_cav, T_10, q, gamma_cav, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
         end
 
-        M_gas = 10^logM_gas
-        return ParametersCavity(M_star, r_c, r_cav, T_10, q, gamma, gamma_cav, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        Sigma_c = 10^logSigma_c
+        return ParametersCavity(M_star, r_c, r_cav, T_10, q, gamma, gamma_cav, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     elseif model == "vertical"
         gamma = args[:gamma]
@@ -297,13 +297,13 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_d::Bool; 
         delta = args[:delta]
         if fix_d
             dpc = args[:dpc]
-            M_star, r_c, T_10m, q_m, T_10a, q_a, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, T_10m, q_m, T_10a, q_a, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
         else
-            M_star, r_c, T_10m, q_m, T_10a, q_a, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, T_10m, q_m, T_10a, q_a, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
         end
 
-        M_gas = 10^logM_gas
-        return ParametersVertical(M_star, r_c, T_10m, q_m, T_10a, q_a, T_freeze, X_freeze, sigma_s, gamma, h, delta, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        Sigma_c = 10^logSigma_c
+        return ParametersVertical(M_star, r_c, T_10m, q_m, T_10a, q_a, T_freeze, X_freeze, sigma_s, gamma, h, delta, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
     else
         # Raise an error that we don't know this model.
         throw(ErrorException("Model type $model not yet implemented in model.jl"))
@@ -313,7 +313,7 @@ end
 """Used to turn a dictionary of parameter values (from config.yaml) into a parameter type."""
 function convert_dict(p::Dict, model::AbstractString)
     if model == "standard"
-        names = ["M_star", "r_c", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+        names = ["M_star", "r_c", "T_10", "q", "gamma", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
         vec = Float64[p[name] for name in names]
         vec[6] = 10^vec[6]# 10^ gas
@@ -322,7 +322,7 @@ function convert_dict(p::Dict, model::AbstractString)
         return ParametersStandard(vec...)
 
     elseif model == "truncated"
-        names = ["M_star", "r_in", "r_out", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+        names = ["M_star", "r_in", "r_out", "T_10", "q", "gamma", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
         vec = Float64[p[name] for name in names]
         vec[7] = 10^vec[7]# 10^ gas
@@ -330,7 +330,7 @@ function convert_dict(p::Dict, model::AbstractString)
         # Unroll these into an actual parameter
         return ParametersTruncated(vec...)
     elseif model == "cavity"
-        names = ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+        names = ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
         vec = Float64[p[name] for name in names]
         vec[8] = 10^vec[8]# 10^ gas
@@ -338,7 +338,7 @@ function convert_dict(p::Dict, model::AbstractString)
         # Unroll these into an actual parameter
         return ParametersCavity(vec...)
     elseif model == "vertical"
-        names = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+        names = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
         vec = Float64[p[name] for name in names]
         vec[13] = 10^vec[13]# 10^ gas
@@ -534,9 +534,7 @@ function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical})
     r_c = pars.r_c * AU
 
     gamma = pars.gamma
-    M_gas = pars.M_gas * M_sun
-
-    Sigma_c = M_gas * (2 - pars.gamma) / (2 * pi * r_c^2)
+    Sigma_c = pars.Sigma_c
 
     S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
 
@@ -548,8 +546,9 @@ function Sigma(r::Float64, pars::ParametersTruncated)
     r_in = pars.r_in * AU
     r_out = pars.r_out * AU
 
+    Sigma_c = pars.Sigma_c
+
     if r > r_in && r < r_out
-        Sigma_c = pars.M_gas * M_sun * (2 - pars.gamma) / (2 * pi * r_c^2 * ((r_out/r_c)^(2 - pars.gamma) - (r_in/r_c)^(2 - pars.gamma)))
         return Sigma_c * (r/r_c)^(-pars.gamma)
     else
         return 0.0
@@ -562,9 +561,7 @@ function Sigma(r::Float64, pars::ParametersCavity)
 
     gamma = pars.gamma
     gamma_cav = pars.gamma_cav
-    M_gas = pars.M_gas * M_sun
-
-    Sigma_c = M_gas * (2 - pars.gamma) / (2 * pi * r_c^2)
+    Sigma_c = pars.Sigma_c
 
     inner_taper = exp(-(r_cav/r)^gamma_cav)
     outer_taper = exp(-(r/r_c)^(2 - gamma))
