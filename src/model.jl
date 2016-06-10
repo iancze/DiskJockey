@@ -210,7 +210,8 @@ type ParametersCavity <: AbstractParameters
     r_cav::Float64 # [AU] inner radius of the disk, where an exponentially depleted cavity starts
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface temperature gradient exponent
+    gamma::Float64 # surface density gradient exponent
+    gamma_cav::Float64 # surface density gradient exponent for inner cavity
     M_gas::Float64 # [M_Sun] disk mass of gas
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
@@ -279,13 +280,13 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_d::Bool; 
         gamma = args[:gamma]
         if fix_d
             dpc = args[:dpc]
-            M_star, r_c, r_cav, T_10, q, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, r_cav, T_10, q, gamma_cav, logM_gas, ksi, incl, PA, vel, mu_RA, mu_DEC = p
         else
-            M_star, r_c, r_cav, T_10, q, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, r_cav, T_10, q, gamma_cav, logM_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
         end
 
         M_gas = 10^logM_gas
-        return ParametersCavity(M_star, r_c, r_cav, T_10, q, gamma, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        return ParametersCavity(M_star, r_c, r_cav, T_10, q, gamma, gamma_cav, M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     elseif model == "vertical"
         gamma = args[:gamma]
@@ -329,10 +330,10 @@ function convert_dict(p::Dict, model::AbstractString)
         # Unroll these into an actual parameter
         return ParametersTruncated(vec...)
     elseif model == "cavity"
-        names = ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+        names = ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
         vec = Float64[p[name] for name in names]
-        vec[7] = 10^vec[7]# 10^ gas
+        vec[8] = 10^vec[8]# 10^ gas
 
         # Unroll these into an actual parameter
         return ParametersCavity(vec...)

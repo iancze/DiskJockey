@@ -37,9 +37,10 @@ parameters:
   T_10: 91.85 # [K] temperature at 10 AU
   q: 0.5 # temperature gradient exponent
   gamma: 1.0 # surface density gradient
+  gamma_cav: 2.0 # surface density cavity exponent
   logM_gas: -2.65 # [M_Sun] disk mass of gas
   ksi: 0.2 # [km/s] microturbulence
-  dpc: 140. # [pc] distance
+  dpc: 145. # [pc] distance
   incl: 45.0 # [degrees] inclination
   PA: 10.0 # [degrees] position angle
   vel: 0.00 # [km/s]
@@ -51,6 +52,7 @@ parameters:
 data_file: data.hdf5
 
 # Image setup
+size_arcsec : 60.0 # [arcsec] full width/height of image
 npix: 256
 
 # Starting positions of walkers

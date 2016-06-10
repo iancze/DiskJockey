@@ -62,6 +62,16 @@ if parsed_args["prior"]
     quit()
 end
 
+using DiskJockey.constants
+
+# This is just for new users to test that the package is successfully installed.
+if parsed_args["version"]
+    println("Your DiskJockey scripts are successfully linked.")
+    println("You are running DiskJockey $DISKJOCKEY_VERSION")
+    println("Exiting")
+    quit()
+end
+
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
@@ -81,16 +91,6 @@ if parsed_args["M"]
     end
 
     println(str)
-    quit()
-end
-
-using DiskJockey.constants
-
-# This is just for new users to test that the package is successfully installed.
-if parsed_args["version"]
-    println("Your DiskJockey scripts are successfully linked.")
-    println("You are running DiskJockey $DISKJOCKEY_VERSION")
-    println("Exiting")
     quit()
 end
 

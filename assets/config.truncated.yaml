@@ -39,7 +39,7 @@ parameters:
   gamma: 1.0 # surface density gradient
   logM_gas: -0.65 # [M_Sun] disk mass of gas
   ksi: 0.2 # [km/s] microturbulence
-  dpc: 140. # [pc] distance
+  dpc: 145. # [pc] distance
   incl: 45.0 # [degrees] inclination
   PA: 10.0 # [degrees] position angle
   vel: 0.00 # [km/s]
