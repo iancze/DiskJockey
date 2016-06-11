@@ -418,8 +418,8 @@ function lnprior(pars::ParametersCavity, dpc_mu::Float64, dpc_sig::Float64, grid
     # to fit on the model grid.
 
     # Also check to make sure that r_cav is less than r_c but larger than r_in.
-    if (3 * pars.r_c) > r_out || pars.r_cav < r_in || pars.r_cav > pars.r_c
-        throw(ModelException("Model radius too large for grid size or cavity too large."))
+    if (3 * pars.r_c) > r_out || pars.r_cav < r_in || pars.r_cav > pars.r_c || pars.gamma_cav < 0.0
+        throw(ModelException("Model radius too large, grid size or cavity too large, or gamma_cav less than zero."))
     else
         return lnp
     end
