@@ -397,11 +397,9 @@ end
 function lnprior(pars::ParametersTruncated, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
     lnp = lnprior_base(pars, dpc_mu, dpc_sig)
 
-    # Hard cutoff on inner and outer edges.
-    r_in = grid.Rs[1]/AU # [AU]
     r_out = grid.Rs[end]/AU # [AU]
 
-    if pars.r_in < r_in || pars.r_out > r_out || pars.gamma_e > 2.0
+    if (3 * pars.r_c) > r_out || pars.gamma_e > 2.0
         throw(ModelException("Disk radii outside model grid radius, or outer power law too flat."))
     else
         return lnp

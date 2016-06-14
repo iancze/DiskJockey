@@ -12,6 +12,10 @@ Now supports a cavity model, with parameters for the size of the cavity, as well
 
 Now includes a model that has a variable outer exponential taper, allowing it to be steeper or shallower than the traditional (2 - gamma).
 
+## Change to Sigma_c
+
+Instead of fitting with the parameter total gas mass, we will fit with the surface density normalization at the critical radius, `Sigma_c`. Note that this only truley the normalization constant for the `standard`, `truncated`, and `vertical` models. The reason for the switch from `M_gas` to `Sigma_c` is that for more complicated models, there is no analytic formula for the total gas mass, meaning that a numerical integral would be needed for each model evaluation. It is simpler and more accurate to sample in `Sigma_c` and then later convert the samples to `M_gas` if desired.
+
 ## FITS export
 
 Thanks to Jane Huang (@j6626), you can now export a RADMC image to a FITS file via the script `DJ_image_to_FITS.py`. You can then inspect these FITS files with `ds9`, or use them in CASA `simobserve`.
