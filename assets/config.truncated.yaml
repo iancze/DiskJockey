@@ -1,9 +1,6 @@
 name: disk
 
 out_base: output/
-# Normally, we should not need to add the RADMC_PATH if it is already on your system PATH. However, due to some HPC quirks it is sometimes necessary to add this in the running script.
-RADMC_PATH: ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
-
 
 gas: true
 species : 12CO # Possible choices: 12CO, 13CO, C18O. Future may include HCN, etc...
@@ -27,16 +24,16 @@ dpc_prior:
   sig : 20.
 
 # What type of model will we be fitting? This also affects which parameters to include.
-model : standard # choices of {standard, truncated, vertical, cavity, etc..}
+model : truncated # choices of {standard, truncated, vertical, cavity, etc..}
 
 # parameters, either used for model synthesis or visualization. Be careful that all of these are Float64 and not Int
 parameters:
   M_star: 2.0 # [M_sun] stellar mass
-  r_in : 1.0 # [AU]
-  r_out : 40.0 # [AU]
+  r_c : 20.0 # [AU]
   T_10: 91.85 # [K] temperature at 10 AU
   q: 0.5 # temperature gradient exponent
   gamma: 1.0 # surface density gradient
+  gamma_e: 1.0 # outer exponential surface density taper
   logSigma_c: -0.65 # [M_Sun] disk mass of gas
   ksi: 0.2 # [km/s] microturbulence
   dpc: 145. # [pc] distance
@@ -51,6 +48,7 @@ parameters:
 data_file: data.hdf5
 
 # Image setup
+size_arcsec : 60.0 # [arcsec] full width/height of image
 npix: 256
 
 # Starting positions of walkers

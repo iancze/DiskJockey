@@ -4,6 +4,14 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.3
 
+## Cavity model
+
+Now supports a cavity model, with parameters for the size of the cavity, as well as the steepness.
+
+## Truncated model
+
+Now includes a model that has a variable outer exponential taper, allowing it to be steeper or shallower than the traditional (2 - gamma).
+
 ## FITS export
 
 Thanks to Jane Huang (@j6626), you can now export a RADMC image to a FITS file via the script `DJ_image_to_FITS.py`. You can then inspect these FITS files with `ds9`, or use them in CASA `simobserve`.

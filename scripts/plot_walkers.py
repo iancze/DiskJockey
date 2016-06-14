@@ -8,6 +8,7 @@ parser.add_argument("--draw", type=int, help="If specified, print out a random s
 parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
 parser.add_argument("--config", help="name of the config file used for the run.", default="config.yaml")
 parser.add_argument("--tri", help="Plot the triangle too.", action="store_true")
+parser.add_argument("--drop", action="store_true", help="Drop the samples which have lnp==-np.inf")
 
 args = parser.parse_args()
 import numpy as np
@@ -21,6 +22,8 @@ chain = np.load("chain.npy")
 lnprobs = np.load("lnprob.npy")
 # Truncate for burn in, shape (nwalkers, niter)
 lnprobs = lnprobs[:, args.burn:]
+
+flat_lnprobs = lnprobs.flatten()
 
 # Set a colorscale for the lnprobs
 cmap = matplotlib.cm.get_cmap("brg")
@@ -43,6 +46,11 @@ nsamples = nwalkers * niter
 # Flatchain is made after the walkers have been burned
 flatchain = np.reshape(chain, (nsamples, ndim))
 
+# Keep only the samples which haven't evaluated to -np.inf (the prior disallows them). This usually originates from using a starting position which is already outside the prior.
+if args.drop:
+    ind = flat_lnprobs > -np.inf
+    flatchain = flatchain[ind]
+
 # Save it after cutting out burn-in
 print("Overwriting flatchain.npy")
 np.save("flatchain.npy", flatchain)
@@ -60,24 +68,24 @@ try:
 
     if model == "standard":
         if fix_d:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
         else:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     elif model == "truncated":
         if fix_d:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_in$ [AU]", r"$r_out$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\gamma_e$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
         else:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_in$ [AU]", r"$r_out$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\gamma_e$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     elif model == "cavity":
         if fix_d:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\mathrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\mathrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\gamma_\textrm{cav}$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
         else:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\mathrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\mathrm{cav}$ [AU]",       r"$T_{10}$ [K]", r"$q$", r"$\gamma_\textrm{cav}$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     elif model == "vertical":
         if fix_d:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10m}$ [K]", r"$q_m$", r"$T_{10a}$ [K]", r"$q_a$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10m}$ [K]", r"$q_m$", r"$T_{10a}$ [K]", r"$q_a$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
         else:
-            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10m}$ [K]", r"$q_m$", r"$T_{10a}$ [K]", r"$q_a$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
+            labels = [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10m}$ [K]", r"$q_m$", r"$T_{10a}$ [K]", r"$q_a$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"]
     else:
         print("Model type not found, using default labels.")
         labels = ["par {}".format(i) for i in range(ndim)]
@@ -133,8 +141,6 @@ for i in range(ndim):
 ax[-1].set_xlabel("Iteration")
 
 fig.savefig("walkers.png", dpi=300)
-
-flatchain = np.load("flatchain.npy")
 
 def hdi(samples, bins=40):
 

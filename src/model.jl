@@ -189,11 +189,11 @@ end
 
 type ParametersTruncated <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
-    r_in::Float64 # [AU] hard inner radius of the disk
-    r_out::Float64 # [AU] radius at which density is depleted by delta
+    r_c::Float64 # [AU] Characteristic radius
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface temperature gradient exponent
+    gamma_e::Float64 # exponent for outer exponential surface density taper
     Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
@@ -268,13 +268,13 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_d::Bool; 
         gamma = args[:gamma]
         if fix_d
             dpc = args[:dpc]
-            M_star, r_in, r_out, T_10, q, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, T_10, q, gamma_e, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
         else
-            M_star, r_in, r_out, T_10, q, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
+            M_star, r_c, T_10, q, gamma_e, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
         end
 
         Sigma_c = 10^logSigma_c
-        return ParametersTruncated(M_star, r_in, r_out, T_10, q, gamma, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+        return ParametersTruncated(M_star, r_c, T_10, q, gamma, gamma_e, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     elseif model == "cavity"
         gamma = args[:gamma]
@@ -322,7 +322,7 @@ function convert_dict(p::Dict, model::AbstractString)
         return ParametersStandard(vec...)
 
     elseif model == "truncated"
-        names = ["M_star", "r_in", "r_out", "T_10", "q", "gamma", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
+        names = ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
         vec = Float64[p[name] for name in names]
         vec[7] = 10^vec[7]# 10^ gas
@@ -401,8 +401,8 @@ function lnprior(pars::ParametersTruncated, dpc_mu::Float64, dpc_sig::Float64, g
     r_in = grid.Rs[1]/AU # [AU]
     r_out = grid.Rs[end]/AU # [AU]
 
-    if pars.r_in < r_in || pars.r_out > r_out
-        throw(ModelException("Disk radii outside model grid radius."))
+    if pars.r_in < r_in || pars.r_out > r_out || pars.gamma_e > 2.0
+        throw(ModelException("Disk radii outside model grid radius, or outer power law too flat."))
     else
         return lnp
     end
@@ -542,17 +542,13 @@ function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical})
 end
 
 function Sigma(r::Float64, pars::ParametersTruncated)
-    r_c = 1. * AU # [cm]
-    r_in = pars.r_in * AU
-    r_out = pars.r_out * AU
-
+    r_c = pars.r_c * AU # [cm]
+    gamma = pars.gamma
+    gamma_e = pars.gamma_e
     Sigma_c = pars.Sigma_c
 
-    if r > r_in && r < r_out
-        return Sigma_c * (r/r_c)^(-pars.gamma)
-    else
-        return 0.0
-    end
+    S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma_e))
+    return S
 end
 
 function Sigma(r::Float64, pars::ParametersCavity)
