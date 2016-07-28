@@ -43,6 +43,18 @@ transition = config["transition"]
 lam0 = lam0s[species*transition]
 model = config["model"]
 
+# Read the incination, position angle, and (grid) radius of the disk. Plot ellipses.
+pars = config["parameters"]
+r_c = pars["r_c"]
+incl = pars["incl"]
+PA = pars["PA"]
+dpc = pars["dpc"]
+
+# from matplotlib.patches import Ellipse
+#     ax[:add_artist](PyPlot.matplotlib[:patches][:Ellipse](xy=xy, width=BMIN, height=BMAJ, angle=BPA, facecolor="0.8", linewidth=0.2))
+width = r_c/dpc # [arcsec]
+height = width * cosd(incl) # [arcsec]
+
 # cmap = plt[:get_cmap]("viridis")
 # cmap = plt[:get_cmap]("inferno")
 cmap = plt[:get_cmap]("plasma")
@@ -127,6 +139,7 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
                     frame += 1e-15 #Add a tiny bit so that we don't have log10(0)
                     lframe = log10(frame)
                     im = ax[row, col][:imshow](lframe, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
+
                 else
                     im = ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
 
@@ -135,6 +148,8 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
                     end
 
                 end
+
+                ax[row, col][:add_artist](PyPlot.matplotlib[:patches][:Ellipse]((0,0), width, height, PA, linewidth=0.15, facecolor="none", edgecolor="w"))
 
                 if iframe==1
                     # Plot the colorbar

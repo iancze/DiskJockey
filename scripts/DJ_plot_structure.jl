@@ -305,6 +305,7 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
 end
 
 
+
 # density structure
 function plot_dens(pars::AbstractParameters, grid)
 

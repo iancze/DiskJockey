@@ -5,10 +5,12 @@ import argparse
 parser = argparse.ArgumentParser(description="Measure statistics across multiple chains.")
 parser.add_argument("--burn", type=int, default=0, help="How many samples to discard from the beginning of the chain for burn in.")
 parser.add_argument("--draw", type=int, help="If specified, print out a random sample of N draws from the posterior, after burn in.")
+parser.add_argument("--filter", type=float, default=0.0, help="Used in conjunction with --draw. Only take samples with lnprob this percentile[0 - 100) and above. Default is to take all.")
 parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
 parser.add_argument("--config", help="name of the config file used for the run.", default="config.yaml")
 parser.add_argument("--tri", help="Plot the triangle too.", action="store_true")
 parser.add_argument("--drop", action="store_true", help="Drop the samples which have lnp==-np.inf")
+parser.add_argument("--interactive", action="store_true", help="Pop up the walker window so that you can zoom around.")
 
 args = parser.parse_args()
 import numpy as np
@@ -42,6 +44,8 @@ chain = chain[:, args.burn:, :]
 # However, when written to disk, we should have been following the emcee convention
 nwalkers, niter, ndim = chain.shape
 
+print("Previous run used {} walkers.".format(nwalkers))
+
 nsamples = nwalkers * niter
 # Flatchain is made after the walkers have been burned
 flatchain = np.reshape(chain, (nsamples, ndim))
@@ -49,9 +53,12 @@ flatchain = np.reshape(chain, (nsamples, ndim))
 # Keep only the samples which haven't evaluated to -np.inf (the prior disallows them). This usually originates from using a starting position which is already outside the prior.
 if args.drop:
     ind = flat_lnprobs > -np.inf
+    flat_lnprobs = flat_lnprobs[ind]
     flatchain = flatchain[ind]
 
-# Save it after cutting out burn-in
+nsamples = flatchain.shape[0]
+
+# Save it after cutting out burn-in and -np.inf samples
 print("Overwriting flatchain.npy")
 np.save("flatchain.npy", flatchain)
 
@@ -97,8 +104,13 @@ except:
 if args.draw is not None:
     # draw samples from the posterior
 
-    inds = np.random.randint(nsamples, size=args.draw)
-    pos0 = flatchain[inds]
+    # Take only those samples above some lnprob floor.
+    # This functionality allows us to discard problematic walkers carried over between runs.
+    floor = np.percentile(flat_lnprobs, args.filter)
+    flatchain_filtered = flatchain[(flat_lnprobs > floor)]
+
+    inds = np.random.randint(len(flatchain_filtered), size=args.draw)
+    pos0 = flatchain_filtered[inds]
 
     for i in range(args.draw):
         print(pos0[i])
@@ -140,7 +152,11 @@ for i in range(ndim):
 
 ax[-1].set_xlabel("Iteration")
 
-fig.savefig("walkers.png", dpi=300)
+if args.interactive:
+    fig.subplots_adjust(bottom=0.0, top=1.0, right=1.0, hspace=0.0)
+    plt.show()
+else:
+    fig.savefig("walkers.png", dpi=300)
 
 def hdi(samples, bins=40):
 
@@ -210,6 +226,14 @@ try:
     plot_hdis(flatchain)
 except IndexError:
     pass
+
+# Compute the autocorrelation time, following emcee
+
+# and we can import autocorr here
+print("Autocorrelation time")
+from emcee import autocorr
+print(autocorr.integrated_time(np.mean(chain, axis=0), axis=0, window=50, fast=False))
+
 
 # Make the triangle plot
 if args.tri:

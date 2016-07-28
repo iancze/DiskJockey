@@ -1,9 +1,6 @@
 name: disk
 
 out_base: output/
-# Normally, we should not need to add the RADMC_PATH if it is already on your system PATH. However, due to some HPC quirks it is sometimes necessary to add manually after the script has started running.
-RADMC_PATH: ":/n/home07/iczekala/.build/radmc-3d/version_0.38/src"
-
 
 gas: true
 species : 12CO # Possible choices: 12CO, 13CO, C18O. Future may include HCN, etc...

@@ -56,7 +56,7 @@ elif model == "truncated":
     d_index = 7
 
 elif model == "cavity":
-    d_index = 7
+    d_index = 8
 
 elif model == "vertical":
     d_index = 8
