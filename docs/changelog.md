@@ -4,9 +4,15 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.3
 
+## Fix parameters
+
+Now there is a flexible way to fix or free parameters in a fit.
+
+To do this requires new config files (which you may need to copy over from `assets/`) that include a `params_fixed` field, where you list the parameters to fix. Then, it may also require modifying the `InitializeWalkers.ipynb` notebooks to incorporate more or fewer parameters than are currently available.
+
 ## Cavity model
 
-Now supports a cavity model, with parameters for the size of the cavity, as well as the steepness.
+Now supports a cavity model, with parameters for the size of the cavity (`r_cav`), as well as the steepness (`gamma_cav`).
 
 ## Truncated model
 
@@ -14,7 +20,7 @@ Now includes a model that has a variable outer exponential taper, allowing it to
 
 ## Change to Sigma_c
 
-Instead of fitting with the parameter total gas mass, we will fit with the surface density normalization at the critical radius, `Sigma_c`. Note that this only truley the normalization constant for the `standard`, `truncated`, and `vertical` models. The reason for the switch from `M_gas` to `Sigma_c` is that for more complicated models, there is no analytic formula for the total gas mass, meaning that a numerical integral would be needed for each model evaluation. It is simpler and more accurate to sample in `Sigma_c` and then later convert the samples to `M_gas` if desired.
+Instead of fitting with the parameter total gas mass, we now fit with the surface density normalization at the critical radius, `Sigma_c`. Note that this only truly the normalization constant for the `standard`, `truncated`, and `vertical` models. The reason for the switch from `M_gas` to `Sigma_c` is that for more complicated models, there is no analytic formula for the total gas mass, meaning that a numerical integral would be needed for each model evaluation. It is simpler and more accurate to sample in `Sigma_c` and then later convert the samples to `M_gas` if desired.
 
 ## FITS export
 
@@ -22,11 +28,11 @@ Thanks to Jane Huang (@j6626), you can now export a RADMC image to a FITS file v
 
 ## spectrum.png
 
-The plotting routine now outputs integrated line flux, to be used as a sanity check against your dataset.
+The plotting routine now outputs integrated line flux, to be used as a sanity check against the measured value from a dataset.
 
 ## Half-pixel offset
 
-Has now been added to the code. This is a result from that RADMC sythesizes an image centered on `(0,0)`, while the FFT routine expects the image to be centered on the middle of the central pixel. The only change you should see is a small, half-pixel sized offset in `mu_RA` and `mu_DEC`.
+Has now been added to the code. This is a result from that RADMC synthesizes an image centered on `(0,0)`, while the FFT routine expects the image to be centered on the middle of the central pixel. The only change you should see is a small, half-pixel sized offset in `mu_RA` and `mu_DEC`.
 
 ## Visualizing the tau=1 surface
 

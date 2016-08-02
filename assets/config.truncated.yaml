@@ -17,8 +17,6 @@ grid:
 # exclude: [35, 36, 37, 38]
 
 # Distance prior setup
-fix_d : false
-
 dpc_prior:
   mu : 140.
   sig : 20.
@@ -42,6 +40,9 @@ parameters:
   vel: 0.00 # [km/s]
   mu_RA: 0.00 # [arcsec] centroid location
   mu_DEC: 0.00 # [arcsec]
+
+# List the parameters you want fixed here.
+fix_params: ["gamma", "dpc"]
 
 
 # The HDF5 file containing the visibilities

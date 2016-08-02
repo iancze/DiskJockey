@@ -142,9 +142,12 @@ println("Mapped variables to all processes")
 # method
 @everywhere xargs = convert(Dict{Symbol}{Float64}, cfg["parameters"])
 
-# Set the correct model
+# Read the fixed and free parameters from the config.yaml file
+@everywhere fix_params = cfg["fix_params"]
+
+# Set the correct model, and the parameters that will be fixed
 @everywhere function convert_p(p::Vector{Float64})
-    return convert_vector(p, cfg["model"], cfg["fix_d"]; xargs...)
+    return convert_vector(p, cfg["model"], fix_params; xargs...)
 end
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate
@@ -161,7 +164,6 @@ end
 
 # Create the model grid
 @everywhere grd = cfg["grid"]
-# @everywhere grid = Grid(grd["nr"], grd["ntheta"], grd["r_in"], grd["r_out"], true)
 @everywhere grid = Grid(grd)
 
 @everywhere dpc_mu = cfg["dpc_prior"]["mu"]

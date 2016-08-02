@@ -17,8 +17,6 @@ grid:
 # exclude: [35, 36, 37, 38]
 
 # Distance prior setup
-fix_d : true
-
 dpc_prior:
   mu : 145.
   sig : 20.
@@ -48,6 +46,10 @@ parameters:
   vel: 0.0 # [km/s] systemic velocity (positive is redshift/receeding)
   mu_RA: 0.0 # [arcsec] central offset in RA
   mu_DEC: 0.0 # [arcsec] central offset in DEC
+
+# List the parameters you want fixed here.
+fix_params: ["T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "dpc"]
+
 
 # The HDF5 file containing the visibilities
 data_file: data.hdf5
