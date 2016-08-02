@@ -143,7 +143,7 @@ The code package is designed to interface with visibilities in the UVHDF5 format
 
 For those interested in the source code, the most important files to start browsing are
 
-**model.jl**: Contains the actual specification of the parametric disk model, as well as the tools to write to disk the synthesis files RADMC-3D requires.
+**model.jl**: Contains the specification of the parametric disk model, as well as the tools to write to disk the synthesis files RADMC-3D requires.
 
 **image.jl**: Contains type definitions to read images produced by RADMC-3D, as well as convert from physical coordinates to sky coordinates.
 
