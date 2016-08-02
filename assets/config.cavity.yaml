@@ -11,7 +11,7 @@ grid:
   ntheta: 46 # if mirrored about the equator, total of 64
   nphi: 1
   r_in: 0.1 # [AU] # Inner edge of model grid
-  r_out: 600. # [AU] # Outer edge of model grid
+  r_out: 2000. # [AU] # Outer edge of model grid
 
 # Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
 # exclude: [35, 36, 37, 38]
