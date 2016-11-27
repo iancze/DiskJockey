@@ -62,9 +62,9 @@ X_H2 = 0.8
 # This means that the new total disk mass we use will be 1/1.6 times smaller than the old time.
 
 # Use this to multiply against rho_gas to get n_12CO or n_13CO
-number_densities = Dict{ASCIIString, Float64}([("12CO", X_H2 * X_12CO/(mu_gas * amu)), ("13CO", X_H2 * X_13CO/(mu_gas * amu)), ("C18O", X_H2 * X_C18O/(mu_gas * amu))])
+number_densities = Dict{String, Float64}([("12CO", X_H2 * X_12CO/(mu_gas * amu)), ("13CO", X_H2 * X_13CO/(mu_gas * amu)), ("C18O", X_H2 * X_C18O/(mu_gas * amu))])
 
-molnames = Dict{ASCIIString, ASCIIString}([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
+molnames = Dict{String, String}([("12CO", "co"), ("13CO", "13co"), ("C18O", "c18o")])
 
 # Species can be "12CO", "13CO", etc.
 # Transition can be "3-2", "2-1", etc.
@@ -72,7 +72,7 @@ molnames = Dict{ASCIIString, ASCIIString}([("12CO", "co"), ("13CO", "13co"), ("C
 # Key to this dictionary is then species * transition
 
 # Rest frame wavelengths
-lam0s = Dict{ASCIIString, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
+lam0s = Dict{String, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
             ("13CO2-1", cc/220.39868e9 * 1e4),
             ("13CO3-2", cc/330.58797e9 * 1e4),
             ("C18O2-1", cc/219.56036e9 * 1e4),
@@ -139,11 +139,11 @@ abstract DiskJockeyException <: Exception
 
 # Define the various types of Errors that we can Raise
 type ModelException <: DiskJockeyException
-    msg::ASCIIString
+    msg::String
 end
 
 type ImageException <: DiskJockeyException
-    msg::ASCIIString
+    msg::String
 end
 
 end # Module

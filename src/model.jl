@@ -584,10 +584,14 @@ end
 function temperature(r::Float64, z::Float64, pars::ParametersVertical)
     zq = z_q(r, pars)
     Ta = T_atm(r, pars)
+    Tm = T_mid(r, pars)
+    if Tm > Ta
+      return Ta
+    end
+
     if z >= zq
         return Ta
     else
-        Tm = T_mid(r, pars)
         # return Ta + (Tm - Ta) * cos(pi * z/ (2 * zq))^pars.delta # Dartois
         return Tm + (Ta - Tm) * sin(pi * z/ (2 * zq))^(2 * pars.delta) # Williams and Best 14
     end

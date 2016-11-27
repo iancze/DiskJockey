@@ -117,6 +117,8 @@ println(methods(lnprior))
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
 
+# The data are stored in increasing frequency, so
+# exclude 0 means exclude the most redshifted channel
 if haskey(config, "exclude")
     exclude = config["exclude"]
     # which channels of the dset to fit
@@ -137,7 +139,7 @@ for process in procs()
 end
 println("Mapped variables to all processes")
 
-# Convert the parameter values from the config.yaml file from Dict{ASCIIString, Float64} to
+# Convert the parameter values from the config.yaml file from Dict{String, Float64} to
 # Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector
 # method
 @everywhere xargs = convert(Dict{Symbol}{Float64}, cfg["parameters"])

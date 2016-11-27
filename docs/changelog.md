@@ -2,6 +2,33 @@
 
 The following are the changes that have been implemented since the previous version. All versions are tagged as releases and available as a clone off of the master branch.
 
+# Version 0.1.4
+
+Upgraded to Julia version 0.5. To upgrade to this version of DiskJockey, you will first need to upgrade your own Julia distribution to 0.5 as well. I apologize for the frequent upgrades of Julia, but since Julia is itself a fast-developing language, it makes the most sense to just bite the bullet and upgrade every time the programming language upgrades as well. Once Julia reaches v1.0 (sometime in 2017, perhaps), these changes should become less frequent.
+
+After you install the new version of julia, make sure that it actually loads as
+
+    $ julia
+                   _
+       _       _ _(_)_     |  A fresh approach to technical computing
+      (_)     | (_) (_)    |  Documentation: http://docs.julialang.org
+       _ _   _| |_  __ _   |  Type "?help" for help.
+      | | | | | | |/ _` |  |
+      | | |_| | | | (_| |  |  Version 0.5.1-pre+31 (2016-11-17 17:50 UTC)
+     _/ |\__'_|_|_|\__'_|  |  Commit 6a1e339* (7 days old release-0.5)
+    |__/                   |  x86_64-pc-linux-gnu
+
+    julia>
+
+
+And then you will need to reinstall DiskJockey in this new version, which should automatically pull down all of the other packages.
+
+    julia> Pkg.clone("https://github.com/iancze/DiskJockey.git")
+
+## Renaming
+
+The script `max_baseline.jl` is now `DJ_max_baseline.jl`
+
 # Version 0.1.3
 
 ## Fix parameters
