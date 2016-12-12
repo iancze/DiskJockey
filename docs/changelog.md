@@ -27,7 +27,11 @@ And then you will need to reinstall DiskJockey in this new version, which should
 
 ## Renaming
 
-The script `max_baseline.jl` is now `DJ_max_baseline.jl`
+The script `max_baseline.jl` is now `DJ_max_baseline.jl`. `plot_walkers.py` is now `DJ_plot_walkers.py`.
+
+## DJ_plot_walkers.py
+
+Now has proper labeling for models that fix parameters.
 
 # Version 0.1.3
 

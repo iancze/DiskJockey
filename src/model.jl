@@ -713,7 +713,7 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
         return constants.rho_gas_zero
     end
 
-    # Calculate what the column density should be at the midplane
+    # Calculate what the maximum surface density would be if we integrated all the way to  the midplane
     sigma = Sigma(r, pars) / 2
 
     # Calculate the photodissociation height
@@ -723,9 +723,9 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
 
     # If there is not even enough column density at the midplane in order to exceed the threshold
     # to protect against photodissociation of CO, just return 0 now
-    if sigma < thresh
-        return constants.rho_gas_zero
-    end
+    # if sigma < thresh
+    #     return constants.rho_gas_zero
+    # end
 
     # Create an array of heights that goes from the midplane (0, 0.001, ..., ztop)
     zs = cat(1, [0], logspace(log10(0.001 * AU), log10(ztop), 64 - 1))
@@ -743,9 +743,13 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
     # Now solve the ODE on the grid of postulated values
     # For the inner disk, we require a larger value of abstol
     # We need to experiment with what is best
-    z_out, y_out = ode45(f, start, zs; abstol=1e-19)
+    abstol=1e-22
+    z_out, y_out = ode45(f, start, zs; abstol=1e-22)
 
-    # Integrate the output from the ODE solver to find the total (un-normalized) column density
+    # where y_out is less than the minimum accuracy we can trust, just set it to the minimum value
+    y_out[y_out .< abstol] = abstol
+
+    # Integrate the output from the ODE solver to find the total (un-normalized) surface density
     spl = Spline1D(z_out, y_out)
     tot = integrate(spl, z_out[1], z_out[end])
 
@@ -760,15 +764,21 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
 
     z_phot = optimize(g, z_out[1], z_out[end]).minimum
 
-    # If we are above this height, return the mimimum gas density
-    if z > z_phot
-        return constants.rho_gas_zero
-    # If we are below it, interpolate rhos to this point
-    else
-        rho = cor * evaluate(spl, z)
+    # Evaluate rho at this point
+    rho = cor * evaluate(spl, z)
 
-        return rho
+    # If we are above this height, return the gas density reduced by a factor of 100
+    if z > z_phot
+        rho = 1e-2 * rho
     end
+
+    if rho < 0.0
+      println("r ", r/AU, " z ", z/AU, " z_top ", ztop/AU, " z_phot ", z_phot/AU, " y_out ", y_out)
+      return (start, z_out, y_out)
+      throw(ModelException("Rho less than 0.0"))
+    end
+
+    return rho
 end
 
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.
