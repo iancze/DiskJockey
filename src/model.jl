@@ -644,13 +644,7 @@ function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
     # Calculate the density
     rho = S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
 
-    # If the density is less than our cutoff, just return 0.0
-    if rho < rho_gas_critical
-        return constants.rho_gas_zero
-    # Otherwise, return the density at this height
-    else
-        return rho
-    end
+    return rho
 end
 
 # Determines the midplane density assuming vertically isothermal
@@ -661,13 +655,8 @@ function rho_gas_mid(r::Float64, pars::AbstractParameters)
     # Calculate the density at the midplane
     rho = S/(sqrt(2. * pi) * H)
 
-    # If the density is less than our cutoff, just return 0.0
-    if rho < rho_gas_critical
-        return constants.rho_gas_zero
-    # Otherwise, return the density at this height
-    else
-        return rho
-    end
+    return rho
+
 end
 
 # The temperature change, dT/dz
