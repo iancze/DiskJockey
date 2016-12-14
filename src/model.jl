@@ -718,7 +718,7 @@ function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
 
     # Calculate the photodissociation height
     # Threshold column density
-    thresh_H2 = pars.sigma_s * Av_sigmaH # [n_H2/cm^2]
+    thresh_H2 = pars.sigma_s * Av_sigmaH / 2 # [n_H2/cm^2]
     thresh = thresh_H2 * (mu_gas * amu / X_H2) # [g/cm^2] of gas
 
     # If there is not even enough column density at the midplane in order to exceed the threshold

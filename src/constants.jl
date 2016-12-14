@@ -79,8 +79,9 @@ lam0s = Dict{String, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
             ("12CO3-2", cc/345.79599e9 * 1e4)]) # microns
 
 
-# Convert from Av to hydrogen column density for interstellar dust
-Av_sigmaH = 1.59e21 # [cm^-2]
+# Convert from Av to hydrogen *nuclei* column density for interstellar dust
+# Av_sigmaH = 1.59e21 # [cm^-2] # "standard" number
+Av_sigmaH = 1.0e20 # [cm^-2] # Charlie's number
 
 # convert from arcseconds to radians
 arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
