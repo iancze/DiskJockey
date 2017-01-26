@@ -293,71 +293,6 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     return registered_types[model](par_vec...)
 
 end
-#
-# """Used to unroll a vector of parameter values into a parameter type."""
-# function convert_vector(p::Vector{Float64}, model::AbstractString, fix_d::Bool; args...)
-#     args = Dict{Symbol}{Float64}(args)
-#     if model == "standard"
-#         # Take gamma from the args
-#         gamma = args[:gamma]
-#         if fix_d
-#             # distance is fixed and provided by the args
-#             dpc = args[:dpc]
-#             M_star, r_c, T_10, q, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-#         else
-#             # we are fitting with distance as a parameter
-#             M_star, r_c, T_10, q, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-#         end
-#
-#         Sigma_c = 10^logSigma_c
-#         return ParametersStandard(M_star, r_c, T_10, q, gamma, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-#
-#     elseif model == "truncated"
-#         # Take gamma from the args
-#         gamma = args[:gamma]
-#         if fix_d
-#             dpc = args[:dpc]
-#             M_star, r_c, T_10, q, gamma_e, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-#         else
-#             M_star, r_c, T_10, q, gamma_e, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-#         end
-#
-#         Sigma_c = 10^logSigma_c
-#         return ParametersTruncated(M_star, r_c, T_10, q, gamma, gamma_e, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-#
-#     elseif model == "cavity"
-#         gamma = args[:gamma]
-#         if fix_d
-#             dpc = args[:dpc]
-#             M_star, r_c, r_cav, T_10, q, gamma_cav, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-#         else
-#             M_star, r_c, r_cav, T_10, q, gamma_cav, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-#         end
-#
-#         Sigma_c = 10^logSigma_c
-#         return ParametersCavity(M_star, r_c, r_cav, T_10, q, gamma, gamma_cav, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-#
-#     elseif model == "vertical"
-#         gamma = args[:gamma]
-#         T_freeze = args[:T_freeze]
-#         X_freeze = args[:X_freeze]
-#         sigma_s = args[:sigma_s]
-#         h = args[:h]
-#         delta = args[:delta]
-#         if fix_d
-#             dpc = args[:dpc]
-#             M_star, r_c, T_10m, q_m, T_10a, q_a, logSigma_c, ksi, incl, PA, vel, mu_RA, mu_DEC = p
-#         else
-#             M_star, r_c, T_10m, q_m, T_10a, q_a, logSigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC = p
-#         end
-#
-#         Sigma_c = 10^logSigma_c
-#         return ParametersVertical(M_star, r_c, T_10m, q_m, T_10a, q_a, T_freeze, X_freeze, sigma_s, gamma, h, delta, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
-#     else
-#         # Raise an error that we don't know this model.
-#         throw(ErrorException("Model type $model not yet implemented in model.jl"))
-#     end
-# end
 
 """Used to turn a dictionary of parameter values (from config.yaml) directly into a parameter type. Generally used for synthesis and plotting command line scripts."""
 function convert_dict(p::Dict, model::AbstractString)
@@ -376,47 +311,6 @@ function convert_dict(p::Dict, model::AbstractString)
 
 end
 
-# """Used to turn a dictionary of parameter values (from config.yaml) into a parameter type. Generally used for synthesis and plotting command line scripts."""
-# function convert_dict(p::Dict, model::AbstractString)
-#     if model == "standard"
-#         names = ["M_star", "r_c", "T_10", "q", "gamma", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-#
-#         vec = Float64[p[name] for name in names]
-#         vec[6] = 10^vec[6]# 10^ gas
-#
-#         # Unroll these into an actual parameter
-#         return ParametersStandard(vec...)
-#
-#     elseif model == "truncated"
-#         names = ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-#
-#         vec = Float64[p[name] for name in names]
-#         vec[7] = 10^vec[7]# 10^ gas
-#
-#         # Unroll these into an actual parameter
-#         return ParametersTruncated(vec...)
-#     elseif model == "cavity"
-#         names = ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-#
-#         vec = Float64[p[name] for name in names]
-#         vec[8] = 10^vec[8]# 10^ gas
-#
-#         # Unroll these into an actual parameter
-#         return ParametersCavity(vec...)
-#     elseif model == "vertical"
-#         names = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-#
-#         vec = Float64[p[name] for name in names]
-#         vec[13] = 10^vec[13]# 10^ gas
-#
-#         # Unroll these into an actual parameter
-#         return ParametersVertical(vec...)
-#
-#     else
-#         # Raise an error that we don't know this model.
-#         throw(ErrorException("Model type $model not yet implemented in model.jl"))
-#     end
-# end
 
 """The common sense priors that apply to all parameter values"""
 function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float64)
