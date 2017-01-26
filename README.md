@@ -51,7 +51,7 @@ Because spectral line datasets are large, and synthesizing models is computation
 
 ### Julia
 
-First, you should to install the [Julia programming language](https://github.com/Astrochem/UVHDF5) on your machine. Instructions can be found [here](http://julialang.org/downloads/). I have found it exciting to install from source via the [github repo](https://github.com/JuliaLang/julia/), but it may be a bit quicker to use a pre-compiled binary. If you've successfully installed everything, you should be able to open up a Julia interpreter and type
+First, you should to install the [Julia programming language](http://julialang.org/) on your machine. Instructions can be found [here](http://julialang.org/downloads/). I have found it exciting to install from source via the [github repo](https://github.com/JuliaLang/julia/), but it may be a bit quicker to use a pre-compiled binary. If you've successfully installed everything, you should be able to open up a Julia interpreter and type
 
     $ julia
                    _
