@@ -60,7 +60,7 @@ Now come parameters that can be used to synthesize and plot models. Due to a qui
       T_10: 91.85 # [K] temperature at 10 AU
       q: 0.51 # temperature gradient exponent
       gamma: 1.0 # surface density gradient
-      logSigma_c: -3.8 # log surface density at char. radius
+      logSigma_c: 3.0 # log surface density at char. radius
       ksi: 0.31 # [km/s] microturbulence
       dpc: 142. # [pc] distance
       incl: 109.4 # [degrees] inclination
