@@ -51,7 +51,7 @@ Because spectral line datasets are large, and synthesizing models is computation
 
 ### Julia
 
-First, you should to install the [Julia programming language](http://julialang.org/) on your machine. Instructions can be found [here](http://julialang.org/downloads/). I have found it exciting to install from source via the [github repo](https://github.com/JuliaLang/julia/), but it may be a bit quicker to use a pre-compiled binary. If you've successfully installed everything, you should be able to open up a Julia interpreter and type
+First, you should install the [Julia programming language](http://julialang.org/) on your machine. Instructions can be found [here](http://julialang.org/downloads/). I have found it exciting to install from source via the [github repo](https://github.com/JuliaLang/julia/), but it may be a bit quicker to use a pre-compiled binary. If you've successfully installed everything, you should be able to open up a Julia interpreter and type
 
     $ julia
                    _
@@ -70,7 +70,7 @@ Depending on how you choose to install Julia, you may need to take the additiona
 
 ### Fortran
 
-Some of the packages that DiskJockey requires (e.g. [Dierckx.jl](https://en.wikibooks.org/wiki/Introducing_Julia/Getting_started#Running_directly_from_terminal)) require a Fortran compiler. On linux, try looking to make sure you have `gcc/gfortran` or something like it installed. For OS X, you can download these packages from [here](http://hpc.sourceforge.net/).
+Some of the packages that DiskJockey requires (e.g. [Dierckx.jl](https://github.com/kbarbary/Dierckx.jl)) require a Fortran compiler. On linux, try looking to make sure you have `gcc/gfortran` or something like it installed. For OS X, you can download these packages from [here](http://hpc.sourceforge.net/).
 
 ### DiskJockey
 
@@ -79,7 +79,7 @@ Next, we will install the `DiskJockey` package itself. Because this is not yet a
     julia> Pkg.clone("https://github.com/iancze/DiskJockey.git")
     julia> Pkg.build("DiskJockey")
 
-This process may take a few minutes as the relevant packages (including RADMC-3D) are downloaded from the web and installed. So far, I have only been able to extensively test this installation process on Linux machines. If you run into errors in this build process, please file an [issue](https://github.com/iancze/DiskJockey/issues) on the github repository so that we may try to fix this. If you already have RADMC-3D installed on your system, this process won't interfere with that installation, `DiskJockey` will use the version of RADMC-3D it downloaded.
+This process may take a few minutes as the relevant packages (including RADMC-3D) are downloaded from the web and installed. So far, I have only been able to extensively test this installation process on Linux machines. If you run into errors in this build process, please file an [issue](https://github.com/iancze/DiskJockey/issues) on the github repository so that we may try to fix this. If you already have RADMC-3D installed on your system, this process won't interfere with that installation, but `DiskJockey` will simply use the version of RADMC-3D it downloaded.
 
 As mentioned previously, there are several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your system PATH. To figure out where the package is installed
 
@@ -149,6 +149,6 @@ For those interested in the source code, the most important files to start brows
 
 **visibilities.jl**: Contains type definitions to hold the dataset and the model visibilities. Additionally contains functions to apply phase shifts to the visibilities corresponding to shifts in the image plane. Also contains functions to FFT images to the visibility plane.
 
-**gridding.jl**: Contains the prolate-spheroidal wave function definitions from Schwab 1984, used when doing the visibility interpolations.
+**gridding.jl**: Contains the prolate-spheroidal wave function definitions from [Schwab 1984](http://adsabs.harvard.edu/abs/1984iimp.conf..333S), used when doing the visibility interpolations.
 
 **venus.jl**: This implementation uses the Ensemble Sampler (a Julia port of Dan Foreman-Mackey's `emcee` python package) to sample the posterior distribution using parallelized walkers.
