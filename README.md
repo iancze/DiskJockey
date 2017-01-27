@@ -39,9 +39,9 @@ I have organized the code in this package into source (in the `src` directory) a
 
 You will be able to access any of the modules within `src`. These provide the base functionality for the package in common tasks, such as reading in images produced by RADMC-3D, Fourier transforms, and visibility interpolation. My hope is to make these components as general as possible so if you would like to extend this package to fit a novel type of disk, it will be easy to reuse many of the core functionality.
 
-The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `DJ_initializ.jl` writes input files to disk, and `DJ_sythesize_model.jl` synthesizes a model using RADMC-3D. These are run from your system shell after adding them to your `PATH`
+The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `DJ_initialize.jl` writes input files to disk, and `DJ_synthesize_model.jl` synthesizes a model using RADMC-3D. These are run from your system shell after adding them to your `PATH`
 
-    $ DJ_initialize.jl && DJ_sythesize_model.jl
+    $ DJ_initialize.jl && DJ_synthesize_model.jl
 
 ## Computational demand
 
@@ -102,7 +102,7 @@ inside of your `.bashrc` or `.zshrc` file. Finally,
 
 To check that you have properly added the scripts (and check that you installed the correct version), you can try in your system shell
 
-    $ DJInitialize.jl --version
+    $ DJ_initialize.jl --version
     Your DiskJockey scripts are successfully linked.
     You are running DiskJockey 0.1.1
     Exiting
