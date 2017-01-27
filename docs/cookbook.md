@@ -19,33 +19,40 @@ Now, you'll want to initialize this directory with a config file. This config fi
 
 `--new-project` also has other than `standard`, such as `cavity` and `vertical` in order to fit more exotic models. Now, open up `config.yaml` with your favorite text editor and change the fields as you see fit, including which transition of CO you would like to fit. Currently (v0.1.3), this package only includes functionality for 12CO, 13CO, and C18O in LTE. Please create an issue on the github repository if you would like a new species added.
 
-To help get you started, here are some reasonable fields for the config.yaml file for AK Sco
+To help get you started, here are some reasonable fields for the `config.yaml` file for AK Sco:
 
-General synthesis parameters
+General synthesis parameters:
 
     name: AKSco
     gas: true
     species : 12CO # Possible choices: 12CO, 13CO, C18O. Future may include HCN, etc...
     transition: 2-1 # J =
 
-The model grid setup
+The model grid setup:
 
     grid:
       nr: 128
-      ntheta: 40 # if mirrored about the equator, total of 64
+      ntheta: 40 # if mirrored about the equator, total of 80
       nphi: 1
       r_in: 0.1 # [AU] # Inner edge of model grid
       r_out: 300. # [AU] # Outer edge of model grid
 
-The distance parameters. For now, we will keep distance fixed.
+The distance parameters. For now, we will keep distance fixed:
 
-    fix_d : true
+	fix_params : ["dpc"]
 
-Choose what type of model will we be fitting.
+Even though we are keeping the distance fixed, we need to specify these prior parameters:
+
+	dpc_prior:
+		mu: 142.
+		sig: 20. 
+
+
+Choose what type of model will we be fitting:
 
     model : standard # choices of {standard, truncated, vertical, cavity, etc..}
 
-Now comes parameters that can be used to synthesize and plot models. Due to a quirk of how YAML files are read, make sure that each of these parameter values is a float and not an int (i.e., `1.0` vs. `1`).
+Now come parameters that can be used to synthesize and plot models. Due to a quirk of how YAML files are read, make sure that each of these parameter values is a float and not an int (i.e., `1.0` vs. `1`).
 
     parameters:
       M_star: 2.49 # [M_sun] stellar mass
@@ -53,7 +60,7 @@ Now comes parameters that can be used to synthesize and plot models. Due to a qu
       T_10: 91.85 # [K] temperature at 10 AU
       q: 0.51 # temperature gradient exponent
       gamma: 1.0 # surface density gradient
-      logM_gas: -3.42 # [M_Sun] disk mass of gas
+      logSigma_c: -3.8 # log surface density at char. radius
       ksi: 0.31 # [km/s] microturbulence
       dpc: 142. # [pc] distance
       incl: 109.4 # [degrees] inclination
@@ -80,18 +87,18 @@ The final section is parameters that roughly describe the RMS in the observation
 
 Now, a good thing to check is that our setup parameters actually satisfy the Nyquist theorem. There is a helper script for this
 
-    $ max_baseline.jl  
+    $ max_baseline.jl
     Dataset channels are velocities from -10.517295788189767 to -42.656605289812504 and span -32.13930950162273 km/s.
     Midpoint is -26.586950539001137 km/s.
     Max baseline 338.5121039138373 kilolambda
     Nyquist sampling satisfied. dRA: 0.0234375 [arcsec/pix] ; dRA_max: 0.2769671424693894 [arcsec/pix]
     Image size satisfied. Image size at the closest distances: 510.0 [AU]; outer radius of the grid + 10%: 330.0 [AU]
 
-It looks like everything is OK to start!
+It looks like everything is OK to start!  (If you see very different velocities here for the channels, check that you have correctly specified `species` and `transition` in `config.yaml` to match the spectral line actually observed in your dataset.) 
 
 ## Makefile
 
-New in v0.1.3, I've written a Makefile which should simplify a lot of the necessary tasks within the directory for a sigle object. You can generally do everything you need to via `make <target>`, where the various targets will now be described.
+New in v0.1.3, I've written a Makefile which should simplify a lot of the necessary tasks within the directory for a single object. You can generally do everything you need to via `make <target>`, where the various targets will now be described.
 
 ## Plotting up the model structure
 
@@ -115,7 +122,7 @@ To jump right in, just try
 
     $ make chmaps
 
-And the code will start synthesizing channel maps. Because the AK Sco contains a lot of channels, this may take about 5 minutes to get everything done. During this process, the output from RADMC-3D is piped to `STDOUT`. This may be a good place to debug if anything looks fishy.
+And the code will start synthesizing channel maps. Because the AK Sco dataset contains a lot of channels, this may take about 5 minutes to get everything done. During this process, the output from RADMC-3D is piped to `STDOUT`. This may be a good place to debug if anything looks fishy.
 
 When complete, this should leave you with several `chmaps_*.png` files in your current directory. Take a look and see if these appear reasonable.
 
