@@ -13,7 +13,7 @@ Make sure to download the dataset in HDF5 format [here](https://figshare.com/art
 
 Now, you'll want to initialize this directory with a config file. This config file will store all of the options that are specific to fitting this disk and is frequently used by many of the scripts in this package. To initialize,
 
-    $ DJ_Initialize.jl --new-project=standard
+    $ DJ_initialize.jl --new-project=standard
     Copied default config.yaml, InitializeWalkers.ipynb, and Makefile for the standard model to current working directory.
     Exiting
 
@@ -140,7 +140,7 @@ If you'd like to make a spatially-integrated spectrum, you can also do
 
 As you just experienced, model synthesis can take a very long time, generally 1 - 5 minutes per model in the case of AK Sco. In order to explore the posterior in a reasonable amount of time, we need to parallelize the synthesis and evaluation of the likelihood function across multiple compute cores. This is done using a Julia port of the Ensemble Sampler by Goodman and Weare 2010, implemented in Python by Foreman-Mackey et al. as `emcee`. For more information about this great sampler, see [here](http://dan.iel.fm/emcee/current/).
 
-Much like `emcee`, starting out requires deciding upon the positions of the walkers. To aid in placing these, the `DJ_initialize.jl` script copied over a Jupyter/Python notebook to your current directory. Now, open up `InitilializeWalkers.ipynb` with a Jupyter notebook. We will change these following values to correspond to your disk of choice.
+Much like `emcee`, starting out requires deciding upon the positions of the walkers. To aid in placing these, the `DJ_initialize.jl` script copied over a Jupyter/Python notebook to your current directory. Now, open up `InitializeWalkers.ipynb` with a Jupyter notebook. We will change these following values to correspond to your disk of choice.
 
 To save you some computational time otherwise spent on burn-in, I found that the following walker starting positions worked well for AK Sco
 
