@@ -39,9 +39,9 @@ I have organized the code in this package into source (in the `src` directory) a
 
 You will be able to access any of the modules within `src`. These provide the base functionality for the package in common tasks, such as reading in images produced by RADMC-3D, Fourier transforms, and visibility interpolation. My hope is to make these components as general as possible so if you would like to extend this package to fit a novel type of disk, it will be easy to reuse many of the core functionality.
 
-The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `DJ_initializ.jl` writes input files to disk, and `DJ_sythesize_model.jl` synthesizes a model using RADMC-3D. These are run from your system shell after adding them to your `PATH`
+The scripts are not technically part of the Julia package (you cannot import them like the modules) but instead provide "driver scripts" that utilize the core modules to address a certain research question. For example, `DJ_initialize.jl` writes input files to disk, and `DJ_synthesize_model.jl` synthesizes a model using RADMC-3D. These are run from your system shell after adding them to your `PATH`
 
-    $ DJ_initialize.jl && DJ_sythesize_model.jl
+    $ DJ_initialize.jl && DJ_synthesize_model.jl
 
 ## Computational demand
 
@@ -51,7 +51,7 @@ Because spectral line datasets are large, and synthesizing models is computation
 
 ### Julia
 
-First, you should to install the [Julia programming language](https://github.com/Astrochem/UVHDF5) on your machine. Instructions can be found [here](http://julialang.org/downloads/). I have found it exciting to install from source via the [github repo](https://github.com/JuliaLang/julia/), but it may be a bit quicker to use a pre-compiled binary. If you've successfully installed everything, you should be able to open up a Julia interpreter and type
+First, you should install the [Julia programming language](http://julialang.org/) on your machine. Instructions can be found [here](http://julialang.org/downloads/). I have found it exciting to install from source via the [github repo](https://github.com/JuliaLang/julia/), but it may be a bit quicker to use a pre-compiled binary. If you've successfully installed everything, you should be able to open up a Julia interpreter and type
 
     $ julia
                    _
@@ -70,7 +70,7 @@ Depending on how you choose to install Julia, you may need to take the additiona
 
 ### Fortran
 
-Some of the packages that DiskJockey requires (e.g. [Dierckx.jl](https://en.wikibooks.org/wiki/Introducing_Julia/Getting_started#Running_directly_from_terminal)) require a Fortran compiler. On linux, try looking to make sure you have `gcc/gfortran` or something like it installed. For OS X, you can download these packages from [here](http://hpc.sourceforge.net/).
+Some of the packages that DiskJockey requires (e.g. [Dierckx.jl](https://github.com/kbarbary/Dierckx.jl)) require a Fortran compiler. On linux, try looking to make sure you have `gcc/gfortran` or something like it installed. For OS X, you can download these packages from [here](http://hpc.sourceforge.net/).
 
 ### DiskJockey
 
@@ -79,7 +79,7 @@ Next, we will install the `DiskJockey` package itself. Because this is not yet a
     julia> Pkg.clone("https://github.com/iancze/DiskJockey.git")
     julia> Pkg.build("DiskJockey")
 
-This process may take a few minutes as the relevant packages (including RADMC-3D) are downloaded from the web and installed. So far, I have only been able to extensively test this installation process on Linux machines. If you run into errors in this build process, please file an [issue](https://github.com/iancze/DiskJockey/issues) on the github repository so that we may try to fix this. If you already have RADMC-3D installed on your system, this process won't interfere with that installation, `DiskJockey` will use the version of RADMC-3D it downloaded.
+This process may take a few minutes as the relevant packages (including RADMC-3D) are downloaded from the web and installed. So far, I have only been able to extensively test this installation process on Linux machines. If you run into errors in this build process, please file an [issue](https://github.com/iancze/DiskJockey/issues) on the github repository so that we may try to fix this. If you already have RADMC-3D installed on your system, this process won't interfere with that installation, but `DiskJockey` will simply use the version of RADMC-3D it downloaded.
 
 As mentioned previously, there are several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your system PATH. To figure out where the package is installed
 
@@ -102,7 +102,7 @@ inside of your `.bashrc` or `.zshrc` file. Finally,
 
 To check that you have properly added the scripts (and check that you installed the correct version), you can try in your system shell
 
-    $ DJInitialize.jl --version
+    $ DJ_initialize.jl --version
     Your DiskJockey scripts are successfully linked.
     You are running DiskJockey 0.1.1
     Exiting
@@ -149,6 +149,6 @@ For those interested in the source code, the most important files to start brows
 
 **visibilities.jl**: Contains type definitions to hold the dataset and the model visibilities. Additionally contains functions to apply phase shifts to the visibilities corresponding to shifts in the image plane. Also contains functions to FFT images to the visibility plane.
 
-**gridding.jl**: Contains the prolate-spheroidal wave function definitions from Schwab 1984, used when doing the visibility interpolations.
+**gridding.jl**: Contains the prolate-spheroidal wave function definitions from [Schwab 1984](http://adsabs.harvard.edu/abs/1984iimp.conf..333S), used when doing the visibility interpolations.
 
 **venus.jl**: This implementation uses the Ensemble Sampler (a Julia port of Dan Foreman-Mackey's `emcee` python package) to sample the posterior distribution using parallelized walkers.
