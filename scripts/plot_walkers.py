@@ -232,8 +232,12 @@ except IndexError:
 # and we can import autocorr here
 print("Autocorrelation time")
 from emcee import autocorr
-print(autocorr.integrated_time(np.mean(chain, axis=0), axis=0, fast=False))
 
+try:
+    print(autocorr.integrated_time(np.mean(chain, axis=0), axis=0, fast=False))
+except autocorr.AutocorrError:
+    print("Could not calculate autocorrelation time - the chain (n={})"
+          " is too short.".format(niter))
 
 # Make the triangle plot
 if args.tri:
