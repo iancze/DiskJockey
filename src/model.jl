@@ -272,7 +272,7 @@ registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "
 ("truncated", ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("cavity", ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "eta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
+("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
 
 registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta)])
 
