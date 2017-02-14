@@ -182,7 +182,7 @@ function plot_temp(pars::AbstractParameters, grid::Grid)
 end
 
 
-function plot_temp(pars::ParametersVertical, grid::Grid)
+function plot_temp(pars::Union{ParametersVertical, ParametersVerticalEta}, grid::Grid)
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
     zs = linspace(0.0, 20 * AU, nz)

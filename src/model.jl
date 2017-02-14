@@ -1,7 +1,7 @@
 module model
 
 export write_grid, write_model, write_lambda, write_dust, Grid, size_au
-export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, convert_vector, convert_dict
+export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, ParametersVerticalEta, convert_vector, convert_dict
 export lnprior
 
 # The double dot is because we are now inside the model module, and we want to import the
@@ -245,13 +245,36 @@ type ParametersVertical <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+type ParametersVerticalEta <: AbstractParameters
+    M_star::Float64 # [M_sun] stellar mass
+    r_c::Float64 # [AU] characteristic radius
+    T_10m::Float64 # [K] temperature at 10 AU, midplane
+    q_m::Float64 # midplane temperature gradient exponent
+    T_freeze::Float64 # [K] temperature below which to reduce CO abundance
+    X_freeze::Float64 # [ratio] amount to reduce CO abundance
+    sigma_s::Float64 # Photodissociation boundary in units of A_V.
+    gamma::Float64 # surface temperature gradient exponent
+    h::Float64 # Number of scale heights that z_q is at, typically fixed to 4
+    eta::Float64 # Exponent for zq profile
+    delta::Float64 # Shape exponent, currently fixed to 2
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    ksi::Float64 # [cm s^{-1}] micsroturbulence
+    dpc::Float64 # [pc] distance to system
+    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
+    PA::Float64 # [degrees] position angle (East of North)
+    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
+    mu_RA::Float64 # [arcsec] central offset in RA
+    mu_DEC::Float64 # [arcsec] central offset in DEC
+end
+
 """A dictionary of parameter lists for conversion."""
 registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("truncated", ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("cavity", ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
+("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
+("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "eta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
 
-registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical)])
+registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta)])
 
 """Unroll a vector of parameter values into a parameter type."""
 function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::Vector; args...)
@@ -418,6 +441,35 @@ function lnprior(pars::ParametersVertical, dpc_mu::Float64, dpc_sig::Float64, gr
 
 end
 
+function lnprior(pars::ParametersVerticalEta, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+    # Create a giant short-circuit or loop to test for sensical parameter values.
+    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10m <= 0. || pars.r_c <= 0.0  || pars.q_m < 0. || pars.q_m > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0 || pars.eta < 1.0 || pars.eta > 3.0
+        throw(ModelException("Parameters outside of prior range."))
+    end
+
+    # Impose distance prior
+    dlow = dpc_mu - 3. * dpc_sig
+    dhigh = dpc_mu + 3. * dpc_sig
+
+    # hard +/- 3 sigma cutoff
+    if (pars.dpc < dlow) || (pars.dpc > dhigh)
+        throw(ModelException("Distance outside of 3 sigma prior range."))
+    end
+
+    # If we've passed all the hard-cut offs by this point, return the sum of the distance prior and the geometrical inclination prior.
+    lnp = -0.5 * (pars.dpc - dpc_mu)^2 / dpc_sig^2 + log(0.5 * sind(pars.incl))
+
+    r_out = grid.Rs[end]/AU # [AU]
+    # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
+    # to fit on the model grid.
+    if (3 * pars.r_c) > r_out
+        throw(ModelException("Model radius too large for grid size."))
+    else
+        return lnp
+    end
+
+end
+
 # Determine the physical size of the image. Size_arcsec is the full width of the image,
 # and so sizeau is the full size of the image as well (RADMC3D conventions).
 # Because there seems to be a small but constant shift in the size of the image
@@ -452,6 +504,7 @@ function velocity(r::Float64, z::Float64, M_star::Float64)
     sqrt(G * M_star / (r^2 + z^2)^(3./2)) * r
 end
 velocity(r::Float64, z::Float64, pars::ParametersVertical) = velocity(r, z, pars.M_star * M_sun)
+velocity(r::Float64, z::Float64, pars::ParametersVerticalEta) = velocity(r, z, pars.M_star * M_sun)
 
 function temperature{T}(r::T, T_10::Float64, q::Float64)
     T_10 * (r ./ (10. * AU)).^(-q)
@@ -464,15 +517,40 @@ function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
 end
 Hp{T}(r::T,  pars::AbstractParameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 # Scale height computed from midplane temperature for vertical temperature gradient model
-Hp{T}(r::T,  pars::ParametersVertical) = Hp(r, pars.M_star * M_sun, pars.T_10m, pars.q_m)
+Hp{T}(r::T,  pars::Union{ParametersVertical,ParametersVerticalEta}) = Hp(r, pars.M_star * M_sun, pars.T_10m, pars.q_m)
 
 # For the vertical temperature gradient model
 T_mid{T}(r::T, pars::ParametersVertical) = temperature(r, pars.T_10m, pars.q_m)
 T_atm{T}(r::T, pars::ParametersVertical) = temperature(r, pars.T_10a, pars.q_a)
 
+T_mid{T}(r::T, pars::ParametersVerticalEta) = temperature(r, pars.T_10m, pars.q_m)
+
+function T_atm{T}(r::T, pars::ParametersVerticalEta)
+    Tm = T_mid(r, pars)
+
+    # the atmosphere temperature is the maximum of 500 or twice the midplane
+    # in order to get the structure close to the star correct
+    Ta = maximum([500, 2 * Tm])
+    return Ta
+end
+
+
 # Atmosphere height computed as multiple of scale height (computed at midplane)
 function z_q{T}(r::T, pars::ParametersVertical)
     return pars.h * Hp(r, pars)
+end
+
+function z_q{T}(r::T, pars::ParametersVerticalEta)
+
+    # Calculate the scale height at this radius
+    H = Hp(r, pars) # [cm]
+    r0 = 10 * AU # [cm]
+
+    if r < r0
+      return pars.h * H
+    else
+      return pars.h * H * (r / r0)^pars.eta
+    end
 end
 
 function temperature(r::Float64, z::Float64, pars::ParametersVertical)
@@ -491,8 +569,32 @@ function temperature(r::Float64, z::Float64, pars::ParametersVertical)
     end
 end
 
+function temperature(r::Float64, z::Float64, pars::ParametersVerticalEta)
+    zq = z_q(r, pars)
+    Tm = T_mid(r, pars)
+    Ta = T_atm(r, pars)
+
+    H = Hp(r, pars) # scale height
+
+    # If we are less than one scale height from the midplane, just return the midplane temperature
+    if z < H
+      return Tm
+    end
+
+    if Tm > Ta
+      return Ta
+    end
+
+    if z >= zq
+        return Ta
+    else
+        return Tm + (Ta - Tm) * sin(pi * (z - H)/ (2 * zq))^(2 * pars.delta)
+    end
+end
+
+
 # Calculate the gas surface density
-function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical})
+function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, ParametersVerticalEta})
     r_c = pars.r_c * AU
 
     gamma = pars.gamma
@@ -567,25 +669,46 @@ function dT(r::Float64, z::Float64, pars::ParametersVertical)
     end
 end
 
+# The temperature change, dT/dz
+function dT(r::Float64, z::Float64, pars::ParametersVerticalEta)
+
+    zq = z_q(r, pars)
+    Ta = T_atm(r, pars)
+
+    H = Hp(r, pars)
+
+    if z >= zq
+        return 0.
+    elseif z < H
+      return 0.
+    else
+        Tm = T_mid(r, pars)
+
+        return pars.delta * pi/zq * (Ta - Tm) * cos(pi * (z - H)/(2 * zq)) * (sin(pi * (z - H)/(2 * zq)))^(2 * pars.delta - 1)
+    end
+end
+
 # The integrand
-function dlnrho(r::Float64, z::Float64, pars::ParametersVertical)
+function dlnrho(r::Float64, z::Float64, pars::Union{ParametersVertical,ParametersVerticalEta})
     T = temperature(r, z, pars)
     dTemp = dT(r, z, pars)
     return -(dTemp/T + (mu_gas * m_H)/(kB * T) * (G * pars.M_star * M_sun * z)/(r^2 + z^2)^1.5)
 end
+
 
 # The integrand for a vertically isothermal testcase
 function dlnrho(r::Float64, z::Float64, pars::ParametersStandard)
     return -(mu_gas * m_H)/(kB * T) * (G * pars.M_star * M_sun * z)/r^3
 end
 
-function z_top(r::Float64, pars::ParametersVertical)
+function z_top(r::Float64, pars::Union{ParametersVertical, ParametersVerticalEta})
     zq = z_q(r, pars) # The height of the disk "atmosphere"
 
     return zq * 5
 end
 
-function rho_gas(r::Float64, z::Float64, pars::ParametersVertical)
+
+function rho_gas(r::Float64, z::Float64, pars::Union{ParametersVertical, ParametersVerticalEta})
 
     # Calculate the "top" of the atmosphere,
     # a height where we are sure we can enforce that density = 0
@@ -755,7 +878,7 @@ function write_model(pars::AbstractParameters, basedir::AbstractString, grid::Gr
 
 end
 
-function write_model(pars::ParametersVertical, basedir::AbstractString, grid::Grid, species::AbstractString)
+function write_model(pars::Union{ParametersVertical, ParametersVerticalEta}, basedir::AbstractString, grid::Grid, species::AbstractString)
 
     function n_CO(r_cyl, z)
         return number_densities[species] * rho_gas(r_cyl, z, pars)

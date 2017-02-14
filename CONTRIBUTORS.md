@@ -1,7 +1,7 @@
 Contributors to the paper and/or codebase
 
-Ian Czekala
-Sean Andrews
-Eric Jensen
-Jane Huang
-Ryan Loomis
+Ian Czekala @iancze
+Sean Andrews @seanandrews
+Eric Jensen @elnjensen
+Jane Huang @j6626
+Ryan Loomis @ral5bfloomis
