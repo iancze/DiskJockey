@@ -284,9 +284,13 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     # e.g., ParametersStandard(M_star, r_c, T_10, q, gamma, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Select the registerd parameters corresponding to this model
+    # These are the names listed in this file (model.jl)
     reg_params = registered_params[model]
 
-    # fit_parameters are the ones in reg_params that are not in (∉) fix_params
+    # fix_params is a list of strings from a config file that list the names of parameters to be fixed to the config
+    # value. These names correspond to the registered names.
+
+    # fit_params are the ones in reg_params that are not in (∉) fix_params
     fit_params = filter(x->∉(x,fix_params), reg_params)
 
     nparams = length(reg_params)
@@ -306,11 +310,29 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     par_indexes = findin(reg_params, fix_params)
     par_vec[par_indexes] = p_fixed
 
-    # Find the location of logSigma_c and make it Sigma_c
-    indSigma_c = findin(reg_params, ["Sigma_c"])
-    @assert length(indSigma_c) == 1 "Could not find Sigma_c in order to convert from logSigma_c."
-    par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
+    # Now that we are sampling for log10M_gas for the verticalEta model, this part gets tricky.
 
+    # Find the location of logSigma_c and make it Sigma_c
+    # Even if we are using verticalEta, this will still be in here because it is in reg_params
+    # Only though it currently corresponds to log10M_gas instead of log10Sigma_c
+    indSigma_c = findin(reg_params, ["Sigma_c"])
+    @assert length(indSigma_c) == 1 "Could not find Sigma_c in order to convert from logSigma_c or logM_gas."
+
+    if model == "verticalEta"
+      # Convert from log10M_gas to Sigma_c
+
+      M_gas = 10.^par_vec[indSigma_c] * M_sun # [g]
+
+      # Find gamma and r_c
+      r_c = par_vec[2] * AU # [cm]
+      gamma = par_vec[8]
+
+      Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
+      par_vec[indSigma_c] = Sigma_c
+
+    else
+      par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
+    end
     # Then assembling these in the same orignial order as registered_params, into the parameter
     # type corresponding to the model.
     return registered_types[model](par_vec...)
@@ -323,8 +345,21 @@ function convert_dict(p::Dict, model::AbstractString)
     reg_params = registered_params[model]
     nparams = length(reg_params)
 
-    # add a new field, which is the conversion of logSigma_c to Sigma_c
-    p["Sigma_c"] = 10^p["logSigma_c"]
+    if model == "verticalEta"
+
+      M_gas = 10.^p["logM_gas"] * M_sun # [g]
+
+      # Find gamma and r_c
+      r_c = p["r_c"] * AU # [cm]
+      gamma = p["gamma"]
+
+      Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
+      p["Sigma_c"] = Sigma_c
+      
+    else
+      # add a new field, which is the conversion of logSigma_c to Sigma_c
+      p["Sigma_c"] = 10^p["logSigma_c"]
+    end
 
     # Using this order of parameters, unpack the dictionary p into a vector
     # reg_params reads Sigma_c, not logSigma_c
