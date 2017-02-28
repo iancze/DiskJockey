@@ -329,6 +329,16 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
 
       Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
       par_vec[indSigma_c] = Sigma_c
+    elseif model == "standard"
+      # Convert from log10M_gas to Sigma_c
+      M_gas = 10.^par_vec[indSigma_c] * M_sun # [g]
+
+      # Find gamma and r_c
+      r_c = par_vec[2] * AU # [cm]
+      gamma = par_vec[5]
+
+      Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
+      par_vec[indSigma_c] = Sigma_c
 
     else
       par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
@@ -355,7 +365,7 @@ function convert_dict(p::Dict, model::AbstractString)
 
       Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
       p["Sigma_c"] = Sigma_c
-      
+
     else
       # add a new field, which is the conversion of logSigma_c to Sigma_c
       p["Sigma_c"] = 10^p["logSigma_c"]
@@ -478,7 +488,7 @@ end
 
 function lnprior(pars::ParametersVerticalEta, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
     # Create a giant short-circuit or loop to test for sensical parameter values.
-    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10m <= 0. || pars.r_c <= 0.0  || pars.q_m < 0. || pars.q_m > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0 || pars.eta < 1.0 || pars.eta > 3.0
+    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10m <= 60. || pars.r_c <= 0.0  || pars.q_m < 0. || pars.q_m > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0 || pars.eta < 0.2 || pars.eta > 6.0  || pars.h < 0.5 || pars.h > 6.0 || pars.delta < 0.5 || pars.delta > 6.0 || pars.gamma < 0.5 || pars.gamma > 3.0
         throw(ModelException("Parameters outside of prior range."))
     end
 
