@@ -25,6 +25,8 @@ And then you will need to reinstall DiskJockey in this new version, which should
 
     julia> Pkg.clone("https://github.com/iancze/DiskJockey.git")
 
+If you no longer plan on using Julia v0.4 or any of the packages, I would recommend deleting it from your system so as not to cause any PATH conflicts. Speaking of which, don't forget to update your PATH to point to the new v0.5 version scripts.
+
 ## Renaming
 
 The script `max_baseline.jl` is now `DJ_max_baseline.jl`. `plot_walkers.py` is now `DJ_plot_walkers.py`.
@@ -33,6 +35,10 @@ The script `max_baseline.jl` is now `DJ_max_baseline.jl`. `plot_walkers.py` is n
 
 Now has proper labeling for models that fix parameters.
 
+## DJ_verify_run.jl
+
+A new script for checking that you've specified everything properly before launching a MCMC run.
+
 # Version 0.1.3
 
 ## Fix parameters
@@ -40,6 +46,7 @@ Now has proper labeling for models that fix parameters.
 Now there is a flexible way to fix or free parameters in a fit.
 
 To do this requires new config files (which you may need to copy over from `assets/`) that include a `params_fixed` field, where you list the parameters to fix. Then, it may also require modifying the `InitializeWalkers.ipynb` notebooks to incorporate more or fewer parameters than are currently available.
+
 
 ## Cavity model
 

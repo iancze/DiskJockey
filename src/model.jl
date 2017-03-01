@@ -1,7 +1,7 @@
 module model
 
 export write_grid, write_model, write_lambda, write_dust, Grid, size_au
-export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, ParametersVerticalEta, convert_vector, convert_dict
+export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, ParametersVerticalEta, convert_vector, convert_dict, registered_params
 export lnprior
 
 # The double dot is because we are now inside the model module, and we want to import the
