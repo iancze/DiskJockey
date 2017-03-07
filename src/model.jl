@@ -355,7 +355,7 @@ function convert_dict(p::Dict, model::AbstractString)
     reg_params = registered_params[model]
     nparams = length(reg_params)
 
-    if model == "verticalEta"
+    if model == "verticalEta" || model == "standard"
 
       M_gas = 10.^p["logM_gas"] * M_sun # [g]
 
