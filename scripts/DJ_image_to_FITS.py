@@ -91,14 +91,20 @@ cdelt1 = -pixsize_x/(pc*dpc)*180/np.pi
 header['CDELT1'] = cdelt1
 # Pixel coordinates of the reference point. For example, if the image is 256 pixels wide, then this
 # would refer to the center of the 127th pixel.
-header['CRPIX1'] = 0.5*im_nx + 0.5
+if im_nx % 2 == 0:
+    header['CRPIX1'] = int(0.5*im_nx + 1)
+else:
+    header['CRPIX1'] = int(0.5*im_nx+0.5)
 header['CRVAL1'] = RA
 
 # Define the DEC coordinate
 header['CTYPE2'] = 'DEC--SIN'
 header['CUNIT2'] = 'DEG'
 header['CDELT2'] = -1*cdelt1 #assumes square image
-header['CRPIX2'] = 0.5*im_ny + 0.5
+if im_ny % 2 == 0:
+    header['CRPIX2'] = int(0.5*im_ny + 1)
+else:
+    header['CRPIX2'] = int(0.5*im_ny+0.5)
 header['CRVAL2'] = DEC
 
 # Define the frequency coordiante
