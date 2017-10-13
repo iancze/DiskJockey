@@ -118,7 +118,9 @@ dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
 
 # The data are stored in increasing frequency, so
-# exclude 0 means exclude the most redshifted channel
+# exclude: [1] means exclude the most redshifted channel
+# whereas
+# exclude : [nchan] excludes the most blueshifted channel
 if haskey(config, "exclude")
     exclude = config["exclude"]
     # which channels of the dset to fit

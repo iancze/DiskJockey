@@ -66,10 +66,12 @@ pixsize = pixsize_x*pixsize_y/(dpc*pc)**2 #pixel size in steradians
 #RADMC gives intensities in erg cm^(-2) s^(-1) Hz^(-1) ster^(-1); need to convert to Jy/pixel
 intensities = np.reshape(imvals[nlam:],[nlam, im_ny, im_nx])* pixsize*10**23
 
+# Estimate the total flux in the image. Sum all the pixels
+total_flux = np.sum(intensities)
+print("Total flux in image:", total_flux, "Jy")
+
 # Convert to float32 to store in FITS?
 intensities = intensities.astype('float32')
-
-
 
 
 # Now, export the image to a FITS file

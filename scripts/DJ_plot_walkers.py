@@ -50,6 +50,28 @@ nsamples = nwalkers * niter
 # Flatchain is made after the walkers have been burned
 flatchain = np.reshape(chain, (nsamples, ndim))
 
+# Calculate the AIC and BIC using the maximum value of the likelihood
+AIC = 2 * ndim - 2 * np.max(flat_lnprobs)
+print("AIC : ", AIC)
+print("a lower AIC means the model is closer to the 'truth'... as far as you trust diagnostics like these.")
+# BIC = np.log(n_data) * ndim - 2 * np.max(flat_lnprobs)
+
+def gelman_rubin(chain):
+    ssq = np.var(chain, axis=1, ddof=1)
+    W = np.mean(ssq, axis=0)
+    θb = np.mean(chain, axis=1)
+    θbb = np.mean(θb, axis=0)
+    m = chain.shape[0]
+    n = chain.shape[1]
+    B = n / (m - 1) * np.sum((θbb - θb)**2, axis=0)
+    var_θ = (n - 1) / n * W + 1 / n * B
+    R = np.sqrt(var_θ / W)
+    return R
+
+R = gelman_rubin(chain)
+print("Gelman Rubin statistics")
+print(R)
+
 # Keep only the samples which haven't evaluated to -np.inf (the prior disallows them). This usually originates from using a starting position which is already outside the prior.
 if args.drop:
     ind = flat_lnprobs > -np.inf

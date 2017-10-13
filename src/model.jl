@@ -267,14 +267,35 @@ type ParametersVerticalEta <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+type ParametersInner <: AbstractParameters
+    M_star::Float64 # [M_sun] stellar mass
+    r_c::Float64 # [AU] characteristic radius
+    r_1::Float64 # the outer edge of the inner disk
+    r_2::Float64 # the inner edge of the outer disk
+    incl_inner::Float64 # The inclination of the inner disk relative to the outer disk
+    Omega::Float64 # The longitude of the ascending node for the inner disk
+    T_10::Float64 # [K] temperature at 10 AU
+    q::Float64 # temperature gradient exponent
+    gamma::Float64 # surface temperature gradient exponent
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    ksi::Float64 # [cm s^{-1}] microturbulence
+    dpc::Float64 # [pc] distance to system
+    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
+    PA::Float64 # [degrees] position angle (East of North)
+    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
+    mu_RA::Float64 # [arcsec] central offset in RA
+    mu_DEC::Float64 # [arcsec] central offset in DEC
+end
+
 """A dictionary of parameter lists for conversion."""
 registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("truncated", ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("cavity", ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
+("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
+("inner", ["M_star", "r_c", "r_1", "r_2", "incl_inner", "Omega", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
 
-registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta)])
+registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("inner", ParametersInner)])
 
 """Unroll a vector of parameter values into a parameter type."""
 function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::Vector; args...)
@@ -329,7 +350,7 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
 
       Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
       par_vec[indSigma_c] = Sigma_c
-    elseif model == "standard"
+    elseif model == "standard" || model == "inner"
       # Convert from log10M_gas to Sigma_c
       M_gas = 10.^par_vec[indSigma_c] * M_sun # [g]
 
@@ -355,7 +376,7 @@ function convert_dict(p::Dict, model::AbstractString)
     reg_params = registered_params[model]
     nparams = length(reg_params)
 
-    if model == "verticalEta" || model == "standard"
+    if model == "verticalEta" || model == "standard" || model == "inner"
 
       M_gas = 10.^p["logM_gas"] * M_sun # [g]
 
@@ -548,6 +569,7 @@ velocity{T}(r::T, pars::AbstractParameters) = velocity(r, pars.M_star * M_sun)
 function velocity(r::Float64, z::Float64, M_star::Float64)
     sqrt(G * M_star / (r^2 + z^2)^(3./2)) * r
 end
+velocity(r::Float64, z::Float64, pars::ParametersInner) = velocity(r, z, pars.M_star * M_sun)
 velocity(r::Float64, z::Float64, pars::ParametersVertical) = velocity(r, z, pars.M_star * M_sun)
 velocity(r::Float64, z::Float64, pars::ParametersVerticalEta) = velocity(r, z, pars.M_star * M_sun)
 
@@ -639,7 +661,7 @@ end
 
 
 # Calculate the gas surface density
-function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, ParametersVerticalEta})
+function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, ParametersVerticalEta, ParametersInner})
     r_c = pars.r_c * AU
 
     gamma = pars.gamma
@@ -922,6 +944,184 @@ function write_model(pars::AbstractParameters, basedir::AbstractString, grid::Gr
     close(fmicro)
 
 end
+
+function P_x(var)
+    mat =  Float64[[1, 0, 0]  [0, cos(var), -sin(var)] [0, sin(var), cos(var)]]
+    return mat
+end
+
+function P_z(var)
+    mat =   Float64[[cos(var), -sin(var), 0] [sin(var), cos(var),   0] [0,        0,          1]]
+    return mat
+end
+
+# function to transform spherical to cartesian
+function P_project(theta, phi)
+    mat = Float64[ [sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta)] [cos(theta) * cos(phi), cos(theta) * sin(phi), -sin(theta)] [-sin(phi), cos(phi), 0]]
+    return mat
+end
+
+function convert_position(pars, r, theta, phi)
+    x = r * sin(theta) * cos(phi)
+    y = r * sin(theta) * sin(phi)
+    z = r * cos(theta)
+
+    sphere = Float64[r, theta, phi]
+    cart = Float64[x, y, z]
+
+    Px = P_x(pars.incl_inner * pi/180)
+    Pz = P_z(pars.Omega * pi/180)
+
+    cart_prime = Px.' * Pz.' * cart
+
+    x_prime, y_prime, z_prime = cart_prime
+
+    # now convert to spherical coordinates in the primed frame
+    r_prime = r
+    theta_prime = acos(z_prime / r)
+    phi_prime = atan2(y_prime, x_prime)
+
+    if phi_prime < 0
+        phi_prime += 2pi
+    end
+
+    sphere_prime = Float64[r_prime, theta_prime, phi_prime]
+
+    # Assert that the magnitudes of all of these vectors are the same
+    @assert isapprox(norm(cart), r) "Cartesian norm doesn't match "
+    @assert isapprox(norm(cart_prime), r) "Rotated cartesion norm doesn't match"
+
+    return (cart, cart_prime, sphere_prime)
+end
+
+
+# Get the components of the vector in RADMC coordinates
+function velocity_inner(pars, r, theta, phi)
+
+    Pproj = P_project(theta, phi)
+    # define rotation matrices
+    Px = P_x(pars.incl_inner * pi/180)
+    Pz = P_z(pars.Omega * pi/180)
+
+
+    # get primed coordinates
+    cart, cart_prime, sphere_prime = convert_position(pars, r, theta, phi)
+
+    # query the velocity field of the inner disk, in the primed frame,
+    # which will be projected along the hat{\phi^\prime} direction.
+    # for now, just call this v_phi_prime
+    r_prime, theta_prime, phi_prime = sphere_prime
+    r_cyl_prime = r_prime * sin(theta_prime)
+    z_cyl_prime = r_prime * cos(theta_prime)
+    vel_sphere_prime = Float64[0.0, 0.0, velocity(r_cyl_prime, z_cyl_prime, pars)]
+
+    # project it to the primed cartesian unit vectors
+    vel_cart_prime = Pproj * vel_sphere_prime
+
+    # now rotate this from the primed cartesian frame to the RADMC-3D cartesian frame
+    vel_cart = Pz * Px * vel_cart_prime
+
+    # now project it on to the spherical unit vectors in the RADMC-3D frame
+    vel_sphere = Pproj.' * vel_cart
+
+    # assert that the norm of all of these vectors is always zero
+    @assert isapprox(norm(vel_cart_prime), norm(vel_sphere_prime)) "Cartesian norm doesn't match "
+    @assert isapprox(norm(vel_cart), norm(vel_sphere_prime)) "Rotated cartesion norm doesn't match"
+    @assert isapprox(norm(vel_sphere), norm(vel_sphere_prime)) "Spherical vel doesn't match"
+
+    return vel_sphere
+
+end
+
+
+
+
+# Split the disk into an inner and outer disk.
+function write_model(pars::ParametersInner, basedir::AbstractString, grid::Grid, species::AbstractString)
+
+    funcs = Dict([("12CO", n_12CO), ("13CO", n_13CO), ("C18O", n_C18O)])
+    n_CO = funcs[species]
+
+    # numberdens_co.inp
+    fdens = open(basedir * "numberdens_" * molnames[species] * ".inp", "w")
+    @printf(fdens, "%d\n", 1) #iformat
+    @printf(fdens, "%d\n", grid.ncells)
+
+    # gas_velocity.inp
+    fvel = open(basedir * "gas_velocity.inp", "w")
+    @printf(fvel, "%d\n", 1) #iformat
+    @printf(fvel, "%d\n", grid.ncells)
+
+    # gas_temperature.inp
+    ftemp = open(basedir * "gas_temperature.inp", "w")
+    @printf(ftemp, "%d\n", 1) #iformat
+    @printf(ftemp, "%d\n", grid.ncells)
+
+    # microturbulence.inp
+    fmicro = open(basedir * "microturbulence.inp", "w")
+    @printf(fmicro, "%d\n", 1) #iformat
+    @printf(fmicro, "%d\n", grid.ncells)
+
+    # Now, we will need to write the three other files as a function of grid position.
+    # Therefore we will do *one* loop over these indices, calculate the required value,
+    # and write it to the appropriate file.
+
+    #Looping over the cell centers
+    for phi in grid.phis
+        for theta in grid.thetas
+            for r in grid.rs
+
+                # If r < r_1, treat as the inner disk
+                if r < pars.r_1 * AU
+                  # figure out what the coordinates are in the primed frame
+                  cart, cart_prime, sphere_prime = convert_position(pars, r, theta, phi)
+
+                  # query the density as if we were in the primed frame
+                  r_prime, theta_prime, phi_prime = sphere_prime
+                  r_cyl_prime = r_prime * sin(theta_prime)
+                  z_cyl_prime = r_prime * cos(theta_prime)
+
+                  # println("Inner disk ", r_cyl_prime / AU, " ", z_cyl_prime/AU)
+                  @printf(fdens, "%.9e\n", n_CO(r_cyl_prime, z_cyl_prime, pars))
+                  @printf(ftemp, "%.9e\n", temperature(r_cyl_prime, pars))
+
+                  v = velocity_inner(pars, r, theta, phi)
+                  @printf(fvel, "%.9e %.9e %.9e\n", v[1], v[2], v[3])
+                  @printf(fmicro, "%.9e\n", microturbulence(pars))
+
+                # If r_1 < r < r_2, no gas
+                elseif r < pars.r_2 * AU
+                  z = r * cos(theta)
+                  r_cyl = r * sin(theta)
+                  # println("Gap ", r_cyl/ AU, " ", z/AU)
+                  @printf(fdens, "%.9e\n", 0.0)
+                  @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars))
+                  @printf(ftemp, "%.9e\n", temperature(r_cyl, pars))
+                  @printf(fmicro, "%.9e\n", microturbulence(pars))
+
+                # If r > r_2, treat as the outer disk
+                else
+                  #Convert from spherical to cylindrical coordinates
+                  z = r * cos(theta)
+                  r_cyl = r * sin(theta)
+                  # println("Outer ", r_cyl/ AU, " ", z/AU)
+                  @printf(fdens, "%.9e\n", n_CO(r_cyl, z, pars))
+                  @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars))
+                  @printf(ftemp, "%.9e\n", temperature(r_cyl, pars))
+                  @printf(fmicro, "%.9e\n", microturbulence(pars))
+                end
+
+            end
+        end
+    end
+
+    close(fdens)
+    close(fvel)
+    close(ftemp)
+    close(fmicro)
+
+end
+
 
 function write_model(pars::Union{ParametersVertical, ParametersVerticalEta}, basedir::AbstractString, grid::Grid, species::AbstractString)
 
