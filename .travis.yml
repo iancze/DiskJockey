@@ -2,7 +2,7 @@ language: julia
 julia:
   - release
   # - nightly
-  - 0.4
+  - 0.6
 
 # Need to install a Fortran compiler for Dierckx and RADMC-3D depedency
 before_install:
@@ -30,7 +30,7 @@ script:
   - julia --color=yes -e 'Pkg.build("DiskJockey")'
   - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
   # Necessary to install Matplotlib via it's own Conda install
-  # - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
+  - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
   - julia --check-bounds=yes -e 'Pkg.test("DiskJockey", coverage=true)'
 
 # This the default script that is run
