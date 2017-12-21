@@ -34,7 +34,7 @@ script:
   # - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
   # Necessary to install Matplotlib via it's own Conda install
   # - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
-  - julia --check-bounds=yes -e 'Pkg.test("DiskJockey", coverage=true)'
+  - LD_PRELOAD=${HOME}/.julia/v0.6/Conda/deps/usr/lib/libz.so julia --check-bounds=yes -e 'Pkg.test("DiskJockey", coverage=true)'
 
 # This the default script that is run
 # julia -e 'Pkg.clone(pwd())'

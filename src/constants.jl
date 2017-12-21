@@ -103,11 +103,11 @@ rho_gas_zero = 1e-50
 # image comes out being the proper size.
 RADMC_SIZEAU_SHIFT = 1.4233758746704833e-5
 
-# Oftentimes it is necessary to get a symmetric coordinate array that spans N
-# elements from -width to +width, but makes sure that the middle point lands
-# on 0. The indices go from 0 to N -1.
-# `linspace` returns  the end points inclusive, wheras we want to leave out the
-# right endpoint, because we are sampling the function in a cyclic manner.
+"Oftentimes it is necessary to get a symmetric coordinate array that spans N
+ elements from -width to +width, but makes sure that the middle point lands
+ on 0. The indices go from 0 to N -1.
+ `linspace` returns  the end points inclusive, wheras we want to leave out the
+ right endpoint, because we are sampling the function in a cyclic manner."
 function fftspace(width::Real, N::Int)
     @assert(N % 2 == 0, "N must be even.")
 
