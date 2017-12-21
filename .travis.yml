@@ -28,9 +28,9 @@ script:
   - echo "We are in $(pwd) directory."
   - julia --color=yes -e 'Pkg.clone(pwd())'
   - julia --color=yes -e 'Pkg.build("DiskJockey")'
-  - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
+  # - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
   # Necessary to install Matplotlib via it's own Conda install
-  - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
+  # - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
   - julia --check-bounds=yes -e 'Pkg.test("DiskJockey", coverage=true)'
 
 # This the default script that is run
