@@ -59,15 +59,15 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     # Do the flagging channel by channel
 
     # Return an array of DataVis
-    out = Array(DataVis, nlam)
+    out = Array{DataVis}(nlam)
     if !flagged
         for i=1:nlam
-            ch_flag = ~flag[:,i]
-            out[i] = DataVis(lams[i], uu[ch_flag,i], vv[ch_flag,i], VV[ch_flag, i], sqrt(weight[ch_flag, i]))
+            ch_flag = .~flag[:,i]
+            out[i] = DataVis(lams[i], uu[ch_flag,i], vv[ch_flag,i], VV[ch_flag, i], sqrt.(weight[ch_flag, i]))
         end
     else
         for i=1:nlam
-            out[i] = DataVis(lams[i], uu[:,i], vv[:,i], VV[:, i], sqrt(weight[:, i]))
+            out[i] = DataVis(lams[i], uu[:,i], vv[:,i], VV[:, i], sqrt.(weight[:, i]))
         end
     end
     return out
@@ -87,7 +87,7 @@ function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
 
     if !flagged
         flag = convert(Array{Bool}, read(fid["flag"]))
-        ch_flag = ~flag[:,index]
+        ch_flag = .~flag[:,index]
     else
         ch_flag = ones(Bool, len) # Keep all visibilities, regardless of what flag says
     end
@@ -110,7 +110,7 @@ end
 # Read just a subset of channels from the HDF5 file and return an array of DataVis
 function DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=false)
     nchan = length(indices)
-    out = Array(DataVis, nchan)
+    out = Array{DataVis}(nchan)
     for i=1:nchan
         out[i] = DataVis(fname, indices[i], flagged)
     end
@@ -274,7 +274,7 @@ end
 # u,v locations of the DataVis
 function ModelVis(dvis::DataVis, fmvis::FullModelVis)
     nvis = length(dvis.VV)
-    VV = Array(Complex128, nvis)
+    VV = Array{Complex128}(nvis)
     for i=1:nvis
         VV[i] = interpolate_uv(dvis.uu[i], dvis.vv[i], fmvis)
     end
@@ -296,7 +296,7 @@ end
 function ResidVis(dvarr::Array{DataVis, 1}, mvarr)
     nchan = length(dvarr)
     @assert length(mvarr) == nchan # make sure data and model are the same length.
-    rvarr = Array(DataVis, nchan)
+    rvarr = Array{DataVis}(nchan)
     for i=1:nchan
         dvis = dvarr[i]
         mvis = mvarr[i]
@@ -308,17 +308,17 @@ end
 
 # For just computing the difference between two datasets
 function lnprob(dvis::DataVis, mvis::DataVis)
-    return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
+    return -0.5 * sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
 function lnprob(dvis::DataVis, mvis::ModelVis)
     @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
-    return -0.5 * sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
+    return -0.5 * sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
 function chi2(dvis::DataVis, mvis::ModelVis)
     @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
-    return sumabs2(dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
+    return sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
 # Given a new model centroid in the image plane (in arcseconds), shift the model
@@ -469,16 +469,16 @@ end
 function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64})
 
     nvis = length(dvis.VV)
-    uinds = Array(UnitRange{Int64}, nvis)
-    vinds = Array(UnitRange{Int64}, nvis)
-    uws = Array(Float64, (6, nvis)) #stored along columns
-    vws = Array(Float64, (6, nvis))
+    uinds = Array{UnitRange{Int64}}(nvis)
+    vinds = Array{UnitRange{Int64}}(nvis)
+    uws = Array{Float64}(6, nvis) #stored along columns
+    vws = Array{Float64}(6, nvis)
 
     for i=1:nvis
         u = dvis.uu[i]
         v = dvis.vv[i]
-        iu0 = indmin(abs(u - uu))
-        iv0 = indmin(abs(v - vv))
+        iu0 = indmin(abs.(u - uu))
+        iv0 = indmin(abs.(v - vv))
 
         # now find the relative distance to this nearest grid point (not absolute)
         u0 = u - uu[iu0]
@@ -548,7 +548,7 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         @assert all(abs((vv .- fmvis.vv) ./ (vv .+ 1e-5)) .< tol)
 
         # output array
-        Vmodel = Array(Complex128, nvis)
+        Vmodel = Array{Complex128}(nvis)
 
         for i=1:nvis
 
@@ -584,16 +584,16 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     # and vis.vv goes from negative to positive (North-South)
 
     # 1. Find the nearest gridpoint in the FFT'd image.
-    iu0 = indmin(abs(u - vis.uu))
-    iv0 = indmin(abs(v - vis.vv))
+    iu0 = indmin(abs.(u - vis.uu))
+    iv0 = indmin(abs.(v - vis.vv))
 
     # now find the relative distance from (u,v) to this nearest grid point (not absolute)
     u0 = u - vis.uu[iu0]
     v0 = v - vis.vv[iv0]
 
     # determine the uu and vv distance for 3 grid points (could be later taken out)
-    du = abs(vis.uu[4] - vis.uu[1])
-    dv = abs(vis.vv[4] - vis.vv[1])
+    du = abs.(vis.uu[4] - vis.uu[1])
+    dv = abs.(vis.vv[4] - vis.vv[1])
 
     # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels
     # (3 on either side)
@@ -676,7 +676,7 @@ end
 # f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd
 function fftfreq(n::Int, d::Float64)
     val = 1./(n * d)
-    results = Array(Float64, (n,))
+    results = Array{Float64}(n)
     N = floor(Int, (n  - 1)/2) + 1
 
     p1 = Float64[i for i=0:(N-1)]

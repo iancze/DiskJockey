@@ -38,7 +38,7 @@ parameters:
   gamma: 1.0 # surface temperature gradient exponent
   h: 4.0 # Number of scale heights that z_q is at, typically fixed to 4
   delta: 2.0 # Shape exponent, currently fixed to 2
-  logSigma_c: -1.0 # [M_Sun] disk mass of gas
+  logM_gas: -1.0 # [M_Sun] disk mass of gas
   ksi: 0.2 # [cm s^{-1}] micsroturbulence
   dpc: 145.0 # [pc] distance to system
   incl: 45.0 # [degrees] inclination 0 deg = face on, 90 = edge on.

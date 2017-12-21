@@ -25,7 +25,7 @@ using Dierckx
 # velocity structure
 function plot_vel(pars::Parameters, grid)
 
-    vel = Array(Float64, (nz,nr))
+    vel = Array{Float64}(nz,nr)
     for j=1:nz
         for i=1:nr
             # convert from cm/s to km/s
@@ -154,7 +154,7 @@ function plot_density_gradient(pars::Parameters)
     nz = 500
     zs = linspace(0, 5 * AU, nz)
     R = 0.5 * AU
-    y = Array(Float64, nz)
+    y = Array{Float64}(nz)
     for i=1:nz
         y[i] = DiskJockey.hmodel.dlnrho(R, zs[i], pars)
     end
@@ -198,7 +198,7 @@ function plot_dlnrho(pars::Parameters)
     nz = 50
     zs = linspace(0, 200 * AU, nz)
     R = 10 * AU
-    dlnrhos = Array(Float64, nz)
+    dlnrhos = Array{Float64}(nz)
     for i=1:nz
         dlnrhos[i] = DiskJockey.hmodel.dlnrho(R, zs[i], pars)
     end
@@ -219,7 +219,7 @@ function plot_density_1D(pars::Parameters)
     nz = 50
     zs = linspace(0, 30 * AU, nz)
     R = 0.5 * AU
-    y = Array(Float64, nz)
+    y = Array{Float64}(nz)
     for i=1:nz
         y[i] = DiskJockey.hmodel.un_lnrho(R, zs[i], pars)
     end
@@ -260,7 +260,7 @@ function plot_interpolator(pars::Parameters)
     # Now, come up with a finer spaceing of grid points
     n_fine = 100
     rs_fine = logspace(log10(rs[1]), log10(rs[end]), n_fine)
-    lncors_fine = Array(Float64, n_fine)
+    lncors_fine = Array{Float64}(n_fine)
     for i=1:n_fine
         lncors_fine[i] = evaluate(spl, rs_fine[i])
     end
@@ -293,8 +293,8 @@ function plot_dens(pars::Parameters, grid)
 
     zs = cat(1, [0], logspace(log10(0.1 * AU), log10(1.5 * zq), nz-1))
 
-    xx = Array(Float64, (nz, nr));
-    yy = Array(Float64, (nz, nr));
+    xx = Array{Float64}(nz, nr);
+    yy = Array{Float64}(nz, nr);
     for i=1:nz
         xx[i, :] = rs
     end
@@ -375,7 +375,7 @@ end
 pp = config["parameters"]
 params = ["M_star", "r_c", "r_in", "r_out", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "logM_gas", "delta_gas", "r_cav", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
-starting_param = Array(Float64, nparam)
+starting_param = Array{Float64}(nparam)
 
 for i=1:nparam
     starting_param[i] = pp[params[i]][1]
@@ -398,8 +398,8 @@ global zq = DiskJockey.hmodel.z_q(rs[end], pars)
 
 global zs = cat(1, [0], logspace(log10(0.1 * AU), log10(zq), nz-1))
 
-global xx = Array(Float64, (nz, nr));
-global yy = Array(Float64, (nz, nr));
+global xx = Array{Float64}(nz, nr);
+global yy = Array{Float64}(nz, nr);
 
 for i=1:nz
     xx[i, :] = rs

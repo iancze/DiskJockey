@@ -126,7 +126,7 @@ close(fid)
 pp = config["parameters"]
 params = ["M_star", "r_c", "T_10", "q", "gamma", "logM_CO", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
-starting_param = Array(Float64, nparam)
+starting_param = Array{Float64}(nparam)
 
 for i=1:nparam
     starting_param[i] = pp[params[i]][1]

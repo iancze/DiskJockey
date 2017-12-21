@@ -84,7 +84,7 @@ function f(data, keys::Vector{Int}, p::Parameters)
 
     # Doppler shift the dataset wavelengths to rest-frame wavelength
     beta = vel/c_kms # relativistic Doppler formula
-    lams = Array(Float64, length(keys))
+    lams = Array{Float64}(length(keys))
     for i=1:nkeys
         lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
     end
@@ -107,7 +107,7 @@ function f(data, keys::Vector{Int}, p::Parameters)
     # shifts necessary as if the image were already offset
     corrfun!(skim, p.mu_RA, p.mu_DEC) # alpha = 1.0
 
-    lnprobs = Array(Float64, nkeys)
+    lnprobs = Array{Float64}(nkeys)
     # Do the Fourier domain stuff per channel
     for i=1:nkeys
         dv = dvarr[i]
@@ -184,7 +184,7 @@ keys = [11, 12, 13, 14, 15, 16]
     uu = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
     vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
-    int_arr = Array(Function, length(keys))
+    int_arr = Array{Function}(length(keys))
     for (i, dset) in enumerate(dvarr)
         int_arr[i] = plan_interpolate(dset, uu, vv)
     end
@@ -204,8 +204,8 @@ pp = cfg["parameters"]
 # The parameters we'll be using
 params = ["M_star", "r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
-p = Array(Float64, nparam)
-jumps = Array(Float64, nparam)
+p = Array{Float64}(nparam)
+jumps = Array{Float64}(nparam)
 
 for i=1:nparam
     p[i], jumps[i] = pp[params[i]]

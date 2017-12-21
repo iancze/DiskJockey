@@ -8,7 +8,7 @@ full_proc = nchild - partial_proc # number of full processors
 
 # Feed max_keys_per_process keys to each of the full_proc, then feed
 # (max_keys_per_process - 1) to each of the partial_proc
-chunk_keylist = Array(Any, nchild)
+chunk_keylist = Array{Any}(nchild)
 start_key = 1
 end_key = start_key + (max_keys_per_process - 1)
 for i=1:full_proc

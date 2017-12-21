@@ -158,7 +158,7 @@ if cfg["fix_d"]
     @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
     # For each channel, also calculate the interpolation closures
-    @everywhere int_arr = Array(Function, nchan)
+    @everywhere int_arr = Array{Function}(nchan)
     @everywhere for (i, dset) in enumerate(dvarr)
         int_arr[i] = plan_interpolate(dset, uu, vv)
     end
@@ -248,7 +248,7 @@ function fprob(p::Vector{Float64})
 
     # Doppler shift the dataset wavelengths to rest-frame wavelength
     beta = vel/c_kms # relativistic Doppler formula
-    lams = Array(Float64, nchan)
+    lams = Array{Float64}(nchan)
     for i=1:nchan
         lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
     end
@@ -283,7 +283,7 @@ function fprob(p::Vector{Float64})
     corrfun!(skim)
 
     tic()
-    lnprobs = Array(Float64, nchan)
+    lnprobs = Array{Float64}(nchan)
     # Do the Fourier domain stuff per channel
     for i=1:nchan
         dv = dvarr[i]
@@ -333,8 +333,8 @@ end
 
 
 nparam = length(params)
-starting_param = Array(Float64, nparam)
-jumps = Array(Float64, nparam)
+starting_param = Array{Float64}(nparam)
+jumps = Array{Float64}(nparam)
 
 for i=1:nparam
     starting_param[i], jumps[i] = pp[params[i]]

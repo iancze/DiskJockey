@@ -238,7 +238,7 @@ function density_slice(r::Float64, pars::Parameters)
     nz = 64
     zs = cat(1, [0], logspace(log10(0.01 * AU), log10(ztop), nz-1))
 
-    un_lnrhos = Array(Float64, nz)
+    un_lnrhos = Array{Float64}(nz)
     # For each height, integrate dlnrho/dz to yeild a yet-to-be normalized un_lnrho
     for i=1:nz
         un_lnrhos[i] = un_lnrho(r, zs[i], ztop, pars)
@@ -291,9 +291,9 @@ function make_density_interpolator(pars::Parameters, grd::Grid)
     # Using the cell centers (in radius), go through and get a density slice.
     # Append the slice to the current list.
     # npoints = 64 * grd.nr
-    rs = Array(Float64, (64, grid.nr))
-    zs = Array(Float64, (64, grid.nr))
-    rhos = Array(Float64, (64, grid.nr))
+    rs = Array{Float64}(64, grid.nr)
+    zs = Array{Float64}(64, grid.nr)
+    rhos = Array{Float64}(64, grid.nr)
     for i=1:grid.nr
         r = grid.rs[i]
         rs[:,i] = r
@@ -326,7 +326,7 @@ function lncorrection_factor(r::Float64, pars::Parameters)
 
     zints = cat(1, [0], logspace(log10(0.01 * AU), log10(outer_reaches), nz-1))
 
-    un_lnrhos = Array(Float64, nz)
+    un_lnrhos = Array{Float64}(nz)
     for i=1:nz
         un_lnrhos[i] = un_lnrho(r, zints[i], pars)
     end
@@ -366,7 +366,7 @@ function make_correction_interpolator(pars::Parameters, grid::Grid)
     nr = 64
     rs = logspace(log10(0.5 * AU), log10(grid.Rs[end]), nr)
 
-    cors = Array(Float64, nr)
+    cors = Array{Float64}(nr)
 
     for i=1:nr
         cors[i] = lncorrection_factor(rs[i], pars)

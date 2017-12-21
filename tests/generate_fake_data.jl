@@ -26,14 +26,14 @@ const p0 = [mu_RA, mu_DEC, s_x, s_y] # [arcsec]
 
 # Using the analytic formula for the FT of the Gaussian, compute the true
 # visibilities sampled at the u,v points in the SMA dataset
-dvarr_fake = Array(DataVis, nlam)
+dvarr_fake = Array{DataVis}(nlam)
 
 const scale = 0.5
 for k=1:nlam
     dv = dvarr[k]
     # Make a new array for each DataVis, otherwise references will be kept and duplicated
-    VV_fake = Array(Complex128, nvis)
-    invsig = Array(Float64, nvis)
+    VV_fake = Array{Complex128}(nvis)
+    invsig = Array{Float64}(nvis)
     for i=1:nvis
         model = FTGauss(dv.uu[i], dv.vv[i], p0, k)
         noise = scale * (randn() + randn()*im) # Just adding in some noise here

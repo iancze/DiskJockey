@@ -31,7 +31,7 @@ parameters:
   T_10: 91.85 # [K] temperature at 10 AU
   q: 0.5 # temperature gradient exponent
   gamma: 1.0 # surface density gradient
-  logSigma_c: -3.8 # [M_Sun] disk mass of gas
+  logM_gas: -2.0 # [M_Sun] disk mass of gas
   ksi: 0.2 # [km/s] microturbulence
   dpc: 145. # [pc] distance
   incl: 45.0 # [degrees] inclination

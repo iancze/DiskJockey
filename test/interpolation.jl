@@ -22,7 +22,7 @@ function imageGauss(ll::AbstractVector{Float64}, mm::AbstractVector{Float64}, p:
     nx = length(ll)
     ny = length(mm)
 
-    img = Array(Float64, ny, nx)
+    img = Array{Float64}(ny, nx)
     mu = p[1:2] * arcsec #ll and mm shifts
     Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
     pre = 1. / (2pi * sqrt(det(Sigma))) * k
@@ -57,7 +57,7 @@ function FTGauss(uu::AbstractVector{Float64}, vv::AbstractVector{Float64}, p::Ve
     nu = length(uu)
     nv = length(vv)
     # Both uu and vv increase with array index
-    img = Array(Complex128, nv, nu)
+    img = Array{Complex128}(nv, nu)
     for j=1:nv
         for i=1:nu
             img[j, i] = FTGauss(uu[i], vv[j], p, k)
@@ -89,8 +89,8 @@ ra = fftspace(10., nx) # [arcsec]
 dec = fftspace(10., ny) # [arcsec]
 
 # convert ra and dec in [arcsec] to radians, and then take the sin to convert to ll, mm
-ll = sin(ra * arcsec) # direction cosines
-mm = sin(dec * arcsec)
+ll = sin.(ra * arcsec) # direction cosines
+mm = sin.(dec * arcsec)
 
 # The natural, shifted Gaussian image
 img = imageGauss(ll, mm, p0, 1)
@@ -141,7 +141,7 @@ vis_fft_offset = transform(skim_plain3)
 
 # Return a normalized instance that is symmetric about 0
 function scale(data)
-    s = maximum(abs(data))
+    s = maximum(abs.(data))
     return norm = plt[:Normalize](vmin=-s, vmax=s, clip=false)
 end
 
@@ -222,8 +222,8 @@ end
 
 n = 100
 uu = linspace(-100, 100, n) # [kλ]
-approx = Array(Complex128, n)
-analytic = Array(Complex128, n)
+approx = Array{Complex128}(n)
+analytic = Array{Complex128}(n)
 
 # First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
 # with no shift.
@@ -339,10 +339,10 @@ function plot_2d(analytic::Matrix{Complex128}, approx::Matrix{Complex128}, fname
     diff = real(analytic - approx)
 
     # Measure the max value in the analytic array, just as an opportunity to set scale.
-    println("Maximum analytic value ", maxabs(analytic))
+    println("Maximum analytic value ", maximum(abs, analytic))
 
     # Then, measure the total Mod squared difference across the whole image
-    println("Total sqrt(modsquared) difference across image ", sqrt(sumabs2(diff)))
+    println("Total sqrt(modsquared) difference across image ", sqrt(sum(abs2, diff)))
 
 
     axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt[:get_cmap]("bwr"), extent=ext, norm=scale(diff))
@@ -396,7 +396,7 @@ end
 
 # First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
 # with no shift.
-approx = Array(Complex128, n, n)
+approx = Array{Complex128}(n, n)
 analytic = FTGauss(uu, vv, p_center, 1) # can take in full arrays
 
 for i=1:n
@@ -451,7 +451,7 @@ plot_2d(analytic, approx, "2D_interpolation_shift_image.png")
 
 fig, ax = plt[:subplots](nrows=2, figsize=(5, 8))
 
-axan = ax[1][:imshow](abs(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
+axan = ax[1][:imshow](abs.(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
 ax[1][:set_title]("Amplitude [Analytic]")
 ax[1][:set_xlabel](L"uu [k$\lambda$]")
 ax[1][:set_ylabel](L"vv [k$\lambda$]")
@@ -459,7 +459,7 @@ ax[1][:set_ylabel](L"vv [k$\lambda$]")
 cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
 cb = fig[:colorbar](axan, cax=cax)
 
-axfft = ax[2][:imshow](angle(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
+axfft = ax[2][:imshow](angle.(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
 ax[2][:set_title]("Phase [Analytic]")
 ax[2][:set_xlabel](L"uu [k$\lambda$]")
 ax[2][:set_ylabel](L"vv [k$\lambda$]")

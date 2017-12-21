@@ -23,7 +23,7 @@ import Base.- # extend this for Image
 
 # Define an image type, which can store the data as well as pixel spacing
 
-abstract Image
+abstract type Image end
 
 # RawImage reflects the RADMC convention that both x and y are increasing
 # with array index. This means that to display the image as RADMC intends it,
@@ -88,13 +88,13 @@ function imread(file="image.out")
     pixsize_y = parse(Float64, pixsize_y)
 
     # Read the wavelength array
-    lams = Array(Float64, nlam)
+    lams = Array{Float64}(nlam)
     for i=1:nlam
         lams[i] = parse(Float64, readline(fim))
     end
 
     # Create an array with the proper size, and then read the file into it
-    data = Array(Float64, (im_ny, im_nx, nlam))
+    data = Array{Float64}(im_ny, im_nx, nlam)
 
     # According to the RADMC manual, section A.15, the pixels are ordered
     # left to right (increasing x) in the inner loop, and from bottom to top
@@ -134,13 +134,13 @@ function tauread(file="image.out")
     pixsize_y = parse(Float64, pixsize_y)
 
     # Read the wavelength array
-    lams = Array(Float64, nlam)
+    lams = Array{Float64}(nlam)
     for i=1:nlam
         lams[i] = parse(Float64, readline(fim))
     end
 
     # Create an array with the proper size, and then read the file into it
-    data = Array(Float64, (im_ny, im_nx, nlam))
+    data = Array{Float64}(im_ny, im_nx, nlam)
 
     for k=1:nlam
         readline(fim) # Junk space

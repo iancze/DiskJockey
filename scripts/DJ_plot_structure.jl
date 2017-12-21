@@ -87,9 +87,9 @@ function plot_vel(pars::ParametersVertical, grid::Grid)
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array(Float64, (nz, nr))
-    yy = Array(Float64, (nz, nr))
-    vels = Array(Float64, (nz, nr))
+    xx = Array{Float64}(nz, nr)
+    yy = Array{Float64}(nz, nr)
+    vels = Array{Float64}(nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -191,9 +191,9 @@ function plot_temp(pars::Union{ParametersVertical, ParametersVerticalEta}, grid:
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array(Float64, (nz, nr))
-    yy = Array(Float64, (nz, nr))
-    temps = Array(Float64, (nz, nr))
+    xx = Array{Float64}(nz, nr)
+    yy = Array{Float64}(nz, nr)
+    temps = Array{Float64}(nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -283,7 +283,7 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
-    Sigmas = Array(Float64, grid.nr)
+    Sigmas = Array{Float64}(grid.nr)
 
     for i=1:grid.nr
         Sigmas[i] = DiskJockey.model.Sigma(grid.rs[i], pars)
@@ -317,9 +317,9 @@ function plot_dens(pars::AbstractParameters, grid)
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array(Float64, (nz, nr))
-    yy = Array(Float64, (nz, nr))
-    rhos = Array(Float64, (nz, nr))
+    xx = Array{Float64}(nz, nr)
+    yy = Array{Float64}(nz, nr)
+    rhos = Array{Float64}(nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -335,7 +335,7 @@ function plot_dens(pars::AbstractParameters, grid)
         end
     end
 
-    nlog = log10(rhos/(mu_gas * m_H))
+    nlog = log10.(rhos/(mu_gas * m_H))
 
     levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9]
 
@@ -405,7 +405,7 @@ function plot_density_column(pars::ParametersVertical, grid::Grid)
     nz = 64
     zs = linspace(0, 4 * AU, nz)
 
-    un_lnrhos = Array(Float64, nz)
+    un_lnrhos = Array{Float64}(nz)
     for i=1:nz
         un_lnrhos[i] = DiskJockey.model.un_lnrho(r, zs[i], pars)
     end
@@ -487,7 +487,7 @@ function plot_norm(pars::ParametersVertical, grid::Grid)
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
-    norms = Array(Float64, grid.nr)
+    norms = Array{Float64}(grid.nr)
 
     for i=1:grid.nr
         norms[i] = DiskJockey.model.rho_norm(grid.rs[i], pars)
@@ -511,7 +511,7 @@ function plot_ztop(pars::ParametersVertical, grid::Grid)
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
-    ztops = Array(Float64, grid.nr)
+    ztops = Array{Float64}(grid.nr)
 
     for i=1:grid.nr
         ztops[i] = DiskJockey.model.z_top(grid.rs[i], pars)
@@ -548,9 +548,9 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array(Float64, (nz, nr))
-    yy = Array(Float64, (nz, nr))
-    rhos = Array(Float64, (nz, nr))
+    xx = Array{Float64}(nz, nr)
+    yy = Array{Float64}(nz, nr)
+    rhos = Array{Float64}(nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -567,7 +567,7 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
         end
     end
 
-    ztops = Array(Float64, grid.nr)
+    ztops = Array{Float64}(grid.nr)
     for i=1:grid.nr
         ztops[i] = DiskJockey.model.z_top(grid.rs[i], pars)
     end

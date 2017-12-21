@@ -27,14 +27,14 @@ else:
 if args.model == "standard":
     config["model"] = "standard"
     # Also set parameters to a reasonable dictionary
-    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logSigma_c": -3.8, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "vel": -1.6}
+    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "vel": -1.6}
 
     if args.fix_distance:
         p0 = np.array([np.random.uniform(1.03, 1.05, nwalkers), # mass [M_sun]
               np.random.uniform(300., 420.0, nwalkers), #r_c [AU]
               np.random.uniform(80., 90, nwalkers), #T_10 [K]
               np.random.uniform(0.55, 0.65, nwalkers), # q
-              np.random.uniform(-4.0, -3.8, nwalkers), #log10 Sigma_c [log10 g/cm^2]
+              np.random.uniform(-3.0, -2.8, nwalkers), #log10 M_sun [log10 g/cm^2]
               np.random.uniform(0.4, 0.5, nwalkers), #xi [km/s]
               np.random.uniform(43.0, 47.0, nwalkers), #inc [degrees]
               np.random.uniform(152.0, 156.0, nwalkers), #PA [degrees]
@@ -46,7 +46,7 @@ if args.model == "standard":
               np.random.uniform(300., 420.0, nwalkers), #r_c [AU]
               np.random.uniform(80., 90, nwalkers), #T_10 [K]
               np.random.uniform(0.55, 0.65, nwalkers), # q
-              np.random.uniform(-4.0, -3.8, nwalkers), #log10 Sigma_c [log10 g/cm^2]
+              np.random.uniform(-3.0, -2.8, nwalkers), #log10 M_sun [log10 g/cm^2]
               np.random.uniform(0.4, 0.5, nwalkers), #xi [km/s]
               np.random.uniform(135.0, 145.0, nwalkers), #dpc [pc]
               np.random.uniform(43.0, 47.0, nwalkers), #inc [degrees]
@@ -61,7 +61,7 @@ elif args.model == "truncated":
 
 elif args.model == "cavity":
     config["model"] = "cavity"
-    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "gamma_cav":2.0, "incl": 45.0, "ksi": 0.2, "logSigma_c": -3.8, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "r_cav":30, "vel": 0.0}
+    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "gamma_cav":2.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "r_cav":30, "vel": 0.0}
 
     if args.fix_distance:
         p0 = np.array([np.random.uniform(1.03, 1.05, nwalkers), # mass [M_sun]
@@ -70,7 +70,7 @@ elif args.model == "cavity":
               np.random.uniform(80., 90, nwalkers), #T_10 [K]
               np.random.uniform(0.55, 0.65, nwalkers), # q
               np.random.uniform(1.5, 2.5, nwalkers), # gamma_cav
-              np.random.uniform(-4.0, -3.8, nwalkers), #log10 Sigma_c [log10 g/cm^2]
+              np.random.uniform(-3.0, -2.8, nwalkers), #log10 M_sun [log10 g/cm^2]
               np.random.uniform(0.4, 0.5, nwalkers), #xi [km/s]
               np.random.uniform(43.0, 47.0, nwalkers), #inc [degrees]
               np.random.uniform(152.0, 156.0, nwalkers), #PA [degrees]
@@ -84,7 +84,7 @@ elif args.model == "cavity":
               np.random.uniform(80., 90, nwalkers), #T_10 [K]
               np.random.uniform(0.55, 0.65, nwalkers), # q
               np.random.uniform(1.5, 2.5, nwalkers), # gamma_cav
-              np.random.uniform(-4.0, -3.8, nwalkers), #log10 Sigma_c [log10 g/cm^2]
+              np.random.uniform(-3.0, -2.8, nwalkers), #log10 M_sun [log10 g/cm^2]
               np.random.uniform(0.4, 0.5, nwalkers), #xi [km/s]
               np.random.uniform(135.0, 145.0, nwalkers), #dpc [pc]
               np.random.uniform(43.0, 47.0, nwalkers), #inc [degrees]
@@ -96,7 +96,7 @@ elif args.model == "cavity":
 if args.model == "vertical":
     config["model"] = "vertical"
     # Also set parameters to a reasonable dictionary
-    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10a": 91.85, "T_10m": 20.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logSigma_c": -1.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q_m": 0.5, "q_a": 0.5, "r_c": 500.0, "vel": -1.6, "T_freeze": 19., "X_freeze": 0.01, "sigma_s": 0.706, "h": 4.0, "delta":2.0 }
+    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10a": 91.85, "T_10m": 20.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q_m": 0.5, "q_a": 0.5, "r_c": 500.0, "vel": -1.6, "T_freeze": 19., "X_freeze": 0.01, "sigma_s": 0.706, "h": 4.0, "delta":2.0 }
 
     if args.fix_distance:
         p0 = np.array([np.random.uniform(1.03, 1.05, nwalkers), # mass [M_sun]
@@ -105,7 +105,7 @@ if args.model == "vertical":
               np.random.uniform(0.50, 0.55, nwalkers), # q_m
               np.random.uniform(80., 90., nwalkers), #T_10a [K]
               np.random.uniform(0.50, 0.55, nwalkers), # q_a
-              np.random.uniform(-4.0, -3.8, nwalkers), #log10 Sigma_c [log10 g/cm^2]
+              np.random.uniform(-3.0, -2.8, nwalkers), #log10 M_gas [log10 M_sun]
               np.random.uniform(0.4, 0.5, nwalkers), #xi [km/s]
               np.random.uniform(43.0, 47.0, nwalkers), #inc [degrees]
               np.random.uniform(152.0, 156.0, nwalkers), #PA [degrees]
@@ -119,7 +119,7 @@ if args.model == "vertical":
               np.random.uniform(0.50, 0.55, nwalkers), # q_m
               np.random.uniform(80., 90., nwalkers), #T_10a [K]
               np.random.uniform(0.50, 0.55, nwalkers), # q_a
-              np.random.uniform(-4.0, -3.8, nwalkers), #log10 Sigma_c [log10 g/cm^2]
+              np.random.uniform(-3.0, -2.8, nwalkers), #log10 M_gas [log10 M_sun]
               np.random.uniform(0.4, 0.5, nwalkers), #xi [km/s]
               np.random.uniform(135.0, 145.0, nwalkers), #dpc [pc]
               np.random.uniform(43.0, 47.0, nwalkers), #inc [degrees]

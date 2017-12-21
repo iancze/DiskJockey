@@ -32,7 +32,7 @@ function synthesize_image(dlams::Array{Float64, 1}, pars::Parameters, grid::Grid
     # Doppler shift the dataset wavelengths to rest-frame wavelength
     nchan = length(dlams)
     beta = pars.vel/c_kms # relativistic Doppler formula
-    lams = Array(Float64, nchan)
+    lams = Array{Float64}(nchan)
     for i=1:nchan
         lams[i] =  dlams[i] * sqrt((1. - beta) / (1. + beta)) # [microns]
     end
@@ -67,7 +67,7 @@ function plot_chmaps(img::image.SkyImage, lam0, fname="channel_maps_sky.png")
 
     # max = maximum(log10(img.data))
 
-    vvmax = maxabs(img.data)
+    vvmax = maximum(abs,img.data)
     norm = PyPlot.matplotlib[:colors][:Normalize](0, vvmax)
 
     for row=1:nrows

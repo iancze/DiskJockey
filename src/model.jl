@@ -169,7 +169,7 @@ end
 
 # Define an abstract Parameters type, then subset of parameters that can be used to dispatch specifics
 
-abstract AbstractParameters
+abstract type AbstractParameters end
 
 type ParametersStandard <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
@@ -317,7 +317,7 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     nparams = length(reg_params)
 
     # Make an empty vector of this same length
-    par_vec = Array(Float64, nparams)
+    par_vec = Array{Float64}(nparams)
 
     # This requires assigning p to fit_params
     # Find the indexes that correspond to fit_params
@@ -561,13 +561,13 @@ end
 # Parametric type T allows passing individual Float64 or Vectors.
 # # Alternate functions accept pars passed around, where pars is in M_star, AU, etc...
 function velocity{T}(r::T, M_star::Float64)
-    sqrt(G * M_star ./ r)
+    sqrt.(G * M_star ./ r)
 end
 velocity{T}(r::T, pars::AbstractParameters) = velocity(r, pars.M_star * M_sun)
 
 # For the vertical temperature gradient
 function velocity(r::Float64, z::Float64, M_star::Float64)
-    sqrt(G * M_star / (r^2 + z^2)^(3./2)) * r
+    sqrt.(G * M_star / (r^2 + z^2)^(3./2)) * r
 end
 velocity(r::Float64, z::Float64, pars::ParametersInner) = velocity(r, z, pars.M_star * M_sun)
 velocity(r::Float64, z::Float64, pars::ParametersVertical) = velocity(r, z, pars.M_star * M_sun)
@@ -580,7 +580,7 @@ temperature{T}(r::T, pars::AbstractParameters) = temperature(r, pars.T_10, pars.
 
 function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
     temp = temperature(r, T_10, q)
-    sqrt(kB * temp .* r.^3./(mu_gas * m_H * G * M_star))
+    sqrt.(kB * temp .* r.^3./(mu_gas * m_H * G * M_star))
 end
 Hp{T}(r::T,  pars::AbstractParameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 # Scale height computed from midplane temperature for vertical temperature gradient model

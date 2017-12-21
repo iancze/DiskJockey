@@ -24,8 +24,8 @@ function f(p::Vector{Float64})
     # p is naturally in arcsec
 
     # Compute the array of images
-    data = Array(Float64, (ny, nx, nlam))
-    lams = Array(Float64, nlam)
+    data = Array{Float64}(ny, nx, nlam)
+    lams = Array{Float64}(nlam)
     sigma_x, sigma_y = p[3:4]
     for k=1:nlam
         data[:, :, k] = imageGauss(ll, mm, Float64[0., 0., sigma_x, sigma_y], k)
@@ -40,7 +40,7 @@ function f(p::Vector{Float64})
     corrfun!(skim, 1.0, mu_RA, mu_DEC) #alpha = 1.0
 
     # Now calculate the sum of lnprobs in a loop
-    lnp = Array(Float64, nlam)
+    lnp = Array{Float64}(nlam)
     for i=1:nlam
         # FFT the appropriate image chanel
         vis_fft = transform(skim, i)

@@ -19,7 +19,7 @@ function imageGauss(ll::Vector{Float64}, mm::Vector{Float64}, p::Vector{Float64}
     nx = length(ll)
     ny = length(mm)
 
-    img = Array(Float64, ny, nx)
+    img = Array{Float64}(ny, nx)
     mu = p[1:2] * arcsec #ll and mm shifts
     Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
     pre = 1. / (2pi * sqrt(det(Sigma))) * k
@@ -54,7 +54,7 @@ function FTGauss(uu::Vector{Float64}, vv::Vector{Float64}, p::Vector{Float64}, k
     nu = length(uu)
     nv = length(vv)
     # Both uu and vv increase with array index
-    img = Array(Complex128, nv, nu)
+    img = Array{Complex128}(nv, nu)
     for j=1:nv
         for i=1:nu
             img[j, i] = FTGauss(uu[i], vv[j], p, k)

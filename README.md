@@ -5,18 +5,22 @@ DiskJockey
 
 ![Logo](logo.png)
 
-Copyright Ian Czekala and collaborators 2014-16
+Copyright Ian Czekala and collaborators 2014-17
 
 email: iancze@gmail.com
 
-This package derives dynamical masses for T Tauri stars using the Keplerian motion of their circumstellar disks, applied to radio interferometric data from the Atacama Large Millimeter Array (ALMA) and the Submillimeter Array (SMA). **If you use this code or a derivative of it in your research, you must cite [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C).**
+This package derives dynamical masses for T Tauri stars using the Keplerian motion of their circumstellar disks, applied to radio interferometric data from the Atacama Large Millimeter Array (ALMA) and the Submillimeter Array (SMA). **If you use this code or a derivative of it in your research, we would really appreciate it if you cited the first paper in our series, [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C).**
 
 See an explanation of [how dynamical mass measurements](http://iancze.github.io/dynamical/) work.
 
 Papers published using DiskJockey:
 
-* *A Disk-based Dynamical Constraint on the Mass of the Young Binary AK Sco*: [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C)
+* *A Disk-based Dynamical Constraint on the Mass of the Young Binary AK Sco* : [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C)
 * *A Disk-based Dynamical Constraint on the Mass of the Young Binary DQ Tau* : [Czekala et al. 2016 ApJ, 818 156C](http://adsabs.harvard.edu/abs/2016ApJ...818..156C)
+* *ALMA Measurements of Circumstellar Material in the GQ Lup System* : [Macgregor et al. 2017, ApJ, 835, 17M](http://adsabs.harvard.edu/abs/2017ApJ...835...17M)
+* *ALMA Observations of the Young Substellar Binary System 2M1207* : [Ricci et al. 2017 AJ, 154, 24R](http://adsabs.harvard.edu/abs/2017AJ....154...24R)
+* *The Architecture of the GW Ori Young Triple Star System and Its Disk: Dynamical Masses, Mutual Inclinations, and Recurrent Eclipses* : [Czekala et al. 2017, ApJ, 851, 132](http://adsabs.harvard.edu/abs/2017arXiv171003153C)
+
 
 We can also be found in the [astrophysics source code library](http://ascl.net/1603.011) as well.
 
@@ -84,44 +88,44 @@ This process may take a few minutes as the relevant packages (including RADMC-3D
 As mentioned previously, there are several "driver" command line scripts that are used to perform the actual mass fitting. To complete the installation, you should add these files to your system PATH. To figure out where the package is installed
 
     julia> Pkg.dir("DiskJockey")
-    "/home/ian/.julia/DiskJockey"
+    "/home/ian/.julia/v0.6/DiskJockey"
 
-Your PATH will vary. The scripts are located inside of the `scripts` directory, so if you are using bash or Z-shell, you will want to add the PATH that looks something like
+Your PATH will vary. The scripts are located inside of the `scripts` directory, so if you are using bash, you will want to add the PATH that looks something like
 
-    export PATH="/home/ian/.julia/DiskJockey/scripts:$PATH"
+    export PATH="/home/ian/.julia/v0.6/DiskJockey/scripts:$PATH"
 
-inside of your `.bashrc` or `.zshrc` file.
+inside of your `.bashrc` file.
 
 Some of the Python scripts also depend on imports from this directory, so you will also need to add
 
-    export PYTHONPATH="/home/ian/.julia/DiskJockey/scripts:$PYTHONPATH"
+    export PYTHONPATH="/home/ian/.julia/v0.6/DiskJockey/scripts:$PYTHONPATH"
 
-inside of your `.bashrc` or `.zshrc` file. Finally,
+inside of your `.bashrc` file. Finally,
 
-    $ source ~/.zshrc
+    $ source ~/.bashrc
 
 To check that you have properly added the scripts (and check that you installed the correct version), you can try in your system shell
 
     $ DJInitialize.jl --version
     Your DiskJockey scripts are successfully linked.
-    You are running DiskJockey 0.1.1
+    You are running DiskJockey 0.1.4
     Exiting
 
 Due to the ongoing development of this package, it is easiest to keep your version current by updating off of the git master branch. For example,
 
     julia> Pkg.dir("DiskJockey")
-    "/home/ian/.julia/DiskJockey
+    "/home/ian/.julia/v0.6/DiskJockey
 
     # Exit Julia
     # Navigate to this directory
-    $ cd /home/ian/.julia/DiskJockey
+    $ cd /home/ian/.julia/v0.6/DiskJockey
     $ git pull
 
 For archival purposes, tagged release versions of this package are available [here](https://github.com/iancze/DiskJockey/releases).
 
 ### Python scripts
 
-Lastly, some of the analysis scripts and IO routines require Python and several Python packages. I have only tested the scripts on Python 3.x, although they *may* work on Python 2.7. Please install the following packages via your own package manager or a distribution like anaconda:
+Lastly, some of the analysis scripts and IO routines require Python and several Python packages. I have only tested the scripts on Python 3.x, so they are unlikely to work on Python 2.7. Please install the following packages via your own package manager or a distribution like anaconda:
 
 * numpy
 * scipy

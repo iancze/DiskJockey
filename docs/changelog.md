@@ -4,18 +4,18 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.4
 
-Upgraded to Julia version 0.5. To upgrade to this version of DiskJockey, you will first need to upgrade your own Julia distribution to 0.5 as well. I apologize for the frequent upgrades of Julia, but since Julia is itself a fast-developing language, it makes the most sense to just bite the bullet and upgrade every time the programming language upgrades as well. Once Julia reaches v1.0 (sometime in 2017, perhaps), these changes should become less frequent.
+Upgraded to Julia version 0.6. To upgrade to this version of DiskJockey, you will first need to upgrade your own Julia distribution to 0.6 as well. I apologize for the frequent upgrades of Julia, but since Julia is itself a fast-developing language, it makes the most sense to just bite the bullet and upgrade every time the programming language upgrades as well. Once Julia reaches v1.0 (sometime in 2018, perhaps), these changes should become less frequent.
 
-After you install the new version of julia, make sure that it actually loads as
+After you install the new version of Julia, make sure that it actually loads as
 
     $ julia
                    _
        _       _ _(_)_     |  A fresh approach to technical computing
-      (_)     | (_) (_)    |  Documentation: http://docs.julialang.org
+      (_)     | (_) (_)    |  Documentation: https://docs.julialang.org
        _ _   _| |_  __ _   |  Type "?help" for help.
       | | | | | | |/ _` |  |
-      | | |_| | | | (_| |  |  Version 0.5.1-pre+31 (2016-11-17 17:50 UTC)
-     _/ |\__'_|_|_|\__'_|  |  Commit 6a1e339* (7 days old release-0.5)
+      | | |_| | | | (_| |  |  Version 0.6.1-pre.92 (2017-10-07 01:18 UTC)
+     _/ |\__'_|_|_|\__'_|  |  Commit 389b23cf6e* (6 days old release-0.6)
     |__/                   |  x86_64-pc-linux-gnu
 
     julia>
@@ -25,7 +25,11 @@ And then you will need to reinstall DiskJockey in this new version, which should
 
     julia> Pkg.clone("https://github.com/iancze/DiskJockey.git")
 
-If you no longer plan on using Julia v0.4 or any of the packages, I would recommend deleting it from your system so as not to cause any PATH conflicts. Speaking of which, don't forget to update your PATH to point to the new v0.5 version scripts.
+If you no longer plan on using Julia v0.4 or v0.5 or any of the packages, I would recommend deleting it from your system so as not to cause any PATH conflicts. Speaking of which, don't forget to update your PATH to point to the new v0.6 version scripts.
+
+## Updated RADMC-3D
+
+We're now running the latest version of RADMC-3D (0.41), which is automatically downloaded and installed with `DiskJockey`. Although not strictly required for running DiskJockey, it might help to familiarize yourself with the [RADMC-3D manual](http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/radmc-3d_v0.41.pdf), in particular the sections on input files and LTE line transfer.
 
 ## Renaming
 
@@ -37,7 +41,7 @@ Now has proper labeling for models that fix parameters.
 
 ## DJ_verify_run.jl
 
-A new script for checking that you've specified everything properly before launching a MCMC run.
+A new script for checking that you've specified everything properly before launching a MCMC run. This way you can avoid syntax errors in the `config` scripts after queuing for a cluster job.
 
 # Version 0.1.3
 

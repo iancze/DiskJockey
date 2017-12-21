@@ -94,7 +94,7 @@ end
 # function takes three arguments: the dataset, keylist, and vector of parameters
 function initialize{T}(nchild::Int, keylist::Vector{T}, initfunc::Function, f::Function)
 
-    pipes = Array(Pipe, nchild)
+    pipes = Array{Pipe}(nchild)
 
     # The master process is always labelled 1, so nprocessors = nchild + 1
     # yet the pipes array is indexed from 1 to nchild, hence the offset

@@ -32,8 +32,8 @@ function MC(f::Function, nsamples::Int, p0::Vector{Float64}, propcov::Matrix{Flo
     @assert(size(propcov)[1] == size(propcov)[2], "propcov must be square matrix")
     @assert(nparams == size(propcov)[1] , "propcov mismatched with nparams")
 
-    samples = Array(Float64, nparams, nsamples)
-    lnprobs = Array(Float64, nsamples)
+    samples = Array{Float64(nparams, nsamples)
+    lnprobs = Array{Float64}(nsamples)
 
     # Turn propcov matrix into a distribution
     proposal = MvNormal(propcov)

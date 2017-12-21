@@ -240,7 +240,7 @@ end
 pp = config["parameters"]
 params = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "gamma", "h", "delta", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
-starting_param = Array(Float64, nparam)
+starting_param = Array{Float64}(nparam)
 
 for i=1:nparam
     starting_param[i] = pp[params[i]][1]
@@ -291,7 +291,7 @@ global vels = c_kms * (skim.lams .- lam0)/lam0
 
 # get the colorscale corresponding to the velocities
 vmin, vmax = extrema(skim.data)
-vvmax = maxabs(skim.data)
+vvmax = maximum(abs, skim.data)
 
 ldata = log10(skim.data + 1e-99)
 vlmax = maximum(ldata)

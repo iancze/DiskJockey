@@ -86,11 +86,11 @@ a log scale."""
 function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="channel_maps_sky.png")
 
     if log
-        ldata = log10(img.data + 1e-99)
+        ldata = log10.(img.data + 1e-99)
         vvmax = maximum(ldata)
         norm = PyPlot.matplotlib[:colors][:Normalize](vvmax - 6, vvmax)
     else
-        vvmax = maxabs(img.data)
+        vvmax = maximum(abs, img.data)
         # println(vmin, " ", vmax, " ", vvmax)
         norm = PyPlot.matplotlib[:colors][:Normalize](0, vvmax)
 
@@ -137,7 +137,7 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
 
                 if log
                     frame += 1e-15 #Add a tiny bit so that we don't have log10(0)
-                    lframe = log10(frame)
+                    lframe = log10.(frame)
                     im = ax[row, col][:imshow](lframe, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
 
                 else

@@ -147,7 +147,7 @@ end
 # array of indices of which bins (N-1) the radii fall into.
 # Assumes both bins and xx are sorted in increasing order.
 function get_bins(bin_edges, xx)
-    inds = Array(Int64, length(xx))
+    inds = Array{Int64}(length(xx))
     b::Int64 = 1
     nb = length(bin_edges)
     for (i,x) in enumerate(xx)

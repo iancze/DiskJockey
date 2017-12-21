@@ -58,11 +58,11 @@ skimg2 = imToSky(img2, pars2.dpc)
 skresid = skimg1 - skimg2
 
 # Store maximums for plotting
-max_img = maxabs(skimg1.data)
-if maxabs(skimg2.data) > max_img
-    max_img = maxabs(skimg2.data)
+max_img = maximum(abs, skimg1.data)
+if maximum(abs, skimg2.data) > max_img
+    max_img = maximum(abs, skimg2.data)
 end
-max_resid = maxabs(skresid.data)
+max_resid = maximum(abs, skresid.data)
 
 # Apply the gridding correction function before doing the FFT
 # No shift needed, since we will shift the resampled visibilities
@@ -71,14 +71,14 @@ skimg01 = corrfun(skimg1)
 skimg02 = corrfun(skimg2)
 
 # To store the FFT for each channel
-vis_fft1 = Array(FullModelVis, nchan)
-vis_fft2 = Array(FullModelVis, nchan)
-vis_resid = Array(FullModelVis, nchan)
+vis_fft1 = Array{FullModelVis}(nchan)
+vis_fft2 = Array{FullModelVis}(nchan)
+vis_resid = Array{FullModelVis}(nchan)
 
 # To store the computed lnprob for each channel
-lnprobs1 = Array(Float64, nchan)
-lnprobs2 = Array(Float64, nchan)
-lnprobs_diff = Array(Float64, nchan)
+lnprobs1 = Array{Float64}(nchan)
+lnprobs2 = Array{Float64}(nchan)
+lnprobs_diff = Array{Float64}(nchan)
 
 # Load the data file so we can use it to compute lnprob
 dvarr = DataVis(config["data_file"])
@@ -111,39 +111,39 @@ for i=1:nchan
 end
 
 # Store the max and min values for each type of plot
-max_real = maxabs(real(vis_fft1[1].VV))
-max_real_resid = maxabs(real(vis_resid[1].VV))
-max_imag = maxabs(imag(vis_fft1[1].VV))
-max_imag_resid = maxabs(imag(vis_resid[1].VV))
+max_real = maximum(abs, real(vis_fft1[1].VV))
+max_real_resid = maximum(abs, real(vis_resid[1].VV))
+max_imag = maximum(abs, imag(vis_fft1[1].VV))
+max_imag_resid = maximum(abs, imag(vis_resid[1].VV))
 
 for i=1:nchan
 
-    max_real_temp = maxabs(real(vis_fft1[i].VV))
+    max_real_temp = maximum(abs, real(vis_fft1[i].VV))
     if max_real_temp > max_real
         max_real = max_real_temp
     end
 
-    max_real_temp = maxabs(real(vis_fft2[i].VV))
+    max_real_temp = maximum(abs, real(vis_fft2[i].VV))
     if max_real_temp > max_real
         max_real = max_real_temp
     end
 
-    max_real_temp = maxabs(real(vis_resid[i].VV))
+    max_real_temp = maximum(abs, real(vis_resid[i].VV))
     if max_real_temp > max_real_resid
         max_real_resid = max_real_temp
     end
 
-    max_imag_temp = maxabs(imag(vis_fft1[i].VV))
+    max_imag_temp = maximum(abs, imag(vis_fft1[i].VV))
     if max_imag_temp > max_imag
         max_imag = max_imag_temp
     end
 
-    max_imag_temp = maxabs(imag(vis_fft2[i].VV))
+    max_imag_temp = maximum(abs, imag(vis_fft2[i].VV))
     if max_imag_temp > max_imag
         max_imag = max_imag_temp
     end
 
-    max_imag_temp = maxabs(imag(vis_resid[i].VV))
+    max_imag_temp = maximum(abs, imag(vis_resid[i].VV))
     if max_imag_temp > max_imag_resid
         max_imag_resid = max_imag_temp
     end

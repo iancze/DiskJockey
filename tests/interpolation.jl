@@ -166,8 +166,8 @@ end
 
 n = 100
 uu = linspace(-100, 100, n) # [kλ]
-approx = Array(Complex128, n)
-analytic = Array(Complex128, n)
+approx = Array{Complex128}(n)
+analytic = Array{Complex128}(n)
 
 # First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
 # with no shift.
@@ -329,7 +329,7 @@ end
 
 # First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
 # with no shift.
-approx = Array(Complex128, n, n)
+approx = Array{Complex128}(n, n)
 analytic = FTGauss(uu, vv, p_center, 1) # can take in full arrays
 
 for i=1:n

@@ -112,7 +112,7 @@ if config["gas"]
     params = ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "gamma", "h", "delta", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
     nparam = length(params)
-    starting_param = Array(Float64, nparam)
+    starting_param = Array{Float64}(nparam)
 
     for i=1:nparam
         starting_param[i] = pp[params[i]][1]

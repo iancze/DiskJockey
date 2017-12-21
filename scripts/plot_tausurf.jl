@@ -39,7 +39,7 @@ function plot_tausurf(img::image.TausurfImage; fname="tausurf.png")
 
     data = img.data ./ AU # Convert from cm to AU
 
-    vvmax = maxabs(data) # [AU]
+    vvmax = maximum(abs, data) # [AU]
 
     norm = PyPlot.matplotlib[:colors][:Normalize](-vvmax, vvmax)
 

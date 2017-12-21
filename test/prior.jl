@@ -12,7 +12,7 @@ function lnprior(pars::ParametersStandard, dpc_mu::Float64, dpc_sig::Float64, gr
     lnp = lnprior_base(pars, dpc_mu, dpc_sig)
 
     if pars.mu_RA > -20
-        println("Stupid RA")
+        println("RA outside of bounds")
         throw(ModelException("User prior violated."))
     end
 

@@ -314,8 +314,8 @@ pp = config["parameters"]
 # The parameters we'll be using
 params = ["r_c", "T_10", "q", "logM_CO", "ksi", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 nparam = length(params)
-starting_param = Array(Float64, nparam)
-jumps = Array(Float64, nparam)
+starting_param = Array{Float64}(nparam)
+jumps = Array{Float64}(nparam)
 
 for i=1:nparam
     starting_param[i], jumps[i] = pp[params[i]]

@@ -29,8 +29,8 @@ function Sampler(nwalkers::Int, ndim::Int, lnprobfn::Function, test::Bool=false)
         @assert ndim < nwalkers "I don't believe you have more parameters than walkers! Try flipping them."
     end
 
-    chain = Array(Float64, (ndim, 0, nwalkers))
-    lnprob = Array(Float64, (nwalkers, 0))
+    chain = Array{Float64}((ndim, 0, nwalkers))
+    lnprob = Array{Float64}((nwalkers, 0))
     iterations = 0
 
     sampler = Sampler(nwalkers, ndim, lnprobfn, a, chain, lnprob, iterations)
@@ -56,8 +56,8 @@ end
 # Clear the samples after burn in
 function reset_mcmc(sampler::Sampler)
     # self.naccepted = np.zeros(self.k)
-    sampler.chain = Array(Float64, (sampler.ndim, 0, sampler.nwalkers))
-    sampler.lnprob = Array(Float64, (sampler.nwalkers, 0))
+    sampler.chain = Array{Float64}(sampler.ndim, 0, sampler.nwalkers)
+    sampler.lnprob = Array{Float64}(sampler.nwalkers, 0)
     sampler.iterations = 0
 end
 
@@ -78,7 +78,7 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
 
     # Check to make sure that the probability function didn't return
     # ``np.nan``.
-    if any(isnan(lnprob))
+    if any(isnan.(lnprob))
         println("The initial lnprob was NaN.")
         throw(DomainError())
     end
@@ -88,10 +88,10 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
     # resize the chain by adding new rows to the array.
 
     # (ndim, iterations, nwalkers)
-    sampler.chain = cat(2, sampler.chain, Array(Float64, (sampler.ndim, iterations, sampler.nwalkers)))
+    sampler.chain = cat(2, sampler.chain, Array{Float64}(sampler.ndim, iterations, sampler.nwalkers))
 
     #(niterations, nwalkers)
-    sampler.lnprob = cat(2, sampler.lnprob, Array(Float64, sampler.nwalkers, iterations))
+    sampler.lnprob = cat(2, sampler.lnprob, Array{Float64}(sampler.nwalkers, iterations))
 
     for i=1:iterations
         sampler.iterations += 1
@@ -171,8 +171,8 @@ function propose_stretch(sampler::Sampler, p0, p1, lnprob0)
     newlnprob = get_lnprob(sampler, q)
 
     # Decide whether or not the proposals should be accepted.
-    lnpdiff = (sampler.ndim - 1.) .* log(zz) .+ newlnprob .- lnprob0
-    accept = (lnpdiff .> log(rand(Ns)))
+    lnpdiff = (sampler.ndim - 1.) .* log.(zz) .+ newlnprob .- lnprob0
+    accept = (lnpdiff .> log.(rand(Ns)))
 
     return q, newlnprob, accept
 
@@ -193,11 +193,11 @@ function get_lnprob(sampler::Sampler, pos)
     p = pos
 
     # Check that the parameters are in physical ranges.
-    if any(isinf(p))
+    if any(isinf.(p))
         println("At least one parameter value was infinite.")
         throw(DomainError())
     end
-    if any(isnan(p))
+    if any(isnan.(p))
         println("At least one parameter value was NaN.")
         throw(DomainError())
     end
@@ -223,10 +223,10 @@ function get_lnprob(sampler::Sampler, pos)
     lnprob = convert(Array{Float64, 1}, result)
 
     # Check for lnprob returning NaN.
-    if any(isnan(lnprob))
+    if any(isnan.(lnprob))
         # Print some debugging stuff.
         println("NaN value of lnprob for parameters: ")
-            for pars in p[isnan(lnprob)]
+            for pars in p[isnan.(lnprob)]
                 println(pars)
             end
         # Finally raise exception.
