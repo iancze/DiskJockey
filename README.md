@@ -65,7 +65,7 @@ First, you should install the [Julia programming language](http://julialang.org/
       (_)     | (_) (_)    |  Documentation: http://docs.julialang.org
        _ _   _| |_  __ _   |  Type "?help" for help.
       | | | | | | |/ _` |  |
-      | | |_| | | | (_| |  |  Version 0.4.2-pre+12 (2015-11-19 02:34 UTC)
+      | | |_| | | | (_| |  |  Version 0.6.2-pre+12 
      _/ |\__'_|_|_|\__'_|  |  Commit 9e598b6* (83 days old release-0.4)
     |__/                   |  x86_64-unknown-linux-gnu
 
