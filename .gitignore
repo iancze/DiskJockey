@@ -167,3 +167,7 @@ com_crashlytics_export_strings.xml
 Session.vim
 .netrwhist
 *~
+
+# Documentation
+docs/build/
+docs/site/
