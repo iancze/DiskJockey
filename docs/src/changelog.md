@@ -211,7 +211,7 @@ Created `InitializeWalkers.ipynb` that is copied to new directory to help specif
 
 ## Cookbook
 
-We now have a [cookbook example](docs/cookbook.md) for AK Sco, check it out to get started!
+We now have a [`cookbook`](@ref) for AK Sco, check it out to get started!
 
 `plot_walkers.py` now includes ability to determine highest density interval for quoting credible intervals and should automatically label the parameters after reading from `config.yaml`.
 

@@ -99,7 +99,7 @@ function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
 
     VV = real + imag .* im # Complex visibility
 
-    invsig = vec(sqrt(fid["weight"][:,index]))[ch_flag] # [1/Jy^2]
+    invsig = vec(sqrt.(fid["weight"][:,index]))[ch_flag] # [1/Jy^2]
 
     close(fid)
 
