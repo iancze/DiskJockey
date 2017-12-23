@@ -57,6 +57,7 @@ CRVAL3 = freqs[0]
 
 if len(lams) > 1:
     dnu = freqs[1] - freqs[0]
+    assert np.all((np.diff(freqs) - dnu)/dnu < 0.01), "This conversion script does not support unequal channel widths."
 else:
     dnu = 2e9 #[GHz]
 CDELT3 = dnu
@@ -117,4 +118,4 @@ header['BZERO'] = 0.
 header['BUNIT'] = 'JY/PIXEL'
 header['BTYPE']='Intensity'
 
-hdu.writeto(args.FITS, clobber = True)
+hdu.writeto(args.FITS, overwrite = True)
