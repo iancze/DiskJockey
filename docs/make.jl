@@ -20,8 +20,11 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/iancze/DiskJockey.jl.git",
+    repo = "github.com/iancze/DiskJockey.git",
     julia = "0.6",
+    branch = "gh-pages",
+    latest = "master",
+    osname = "linux",
     target = "build",
     deps = nothing,
     make = nothing,
