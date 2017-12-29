@@ -38,7 +38,8 @@ cpus = parsed_args["cpus"]
 
 if cpus != nothing
     using ClusterManagers
-    addprocs(LocalAffinityManager(;affinities=cpus))
+    np = length(cpus)
+    addprocs(LocalAffinityManager(;np=np, affinities=cpus))
 end
 
 # Since we've made this a #!/usr/bin/env julia script, we can no longer specify the extra

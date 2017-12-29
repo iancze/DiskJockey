@@ -209,9 +209,9 @@ The specification of parameter types allowed me to greatly simplify the MCMC sam
 
 Created `InitializeWalkers.ipynb` that is copied to new directory to help specify walker starting positions. The user edits this with a Jupyter/IPython notebook.
 
-## Cookbook
+## New Cookbook available
 
-We now have a [`cookbook`](@ref) for AK Sco, check it out to get started!
+We now have a [Cookbook](@ref) for AK Sco, check it out to get started!
 
 `plot_walkers.py` now includes ability to determine highest density interval for quoting credible intervals and should automatically label the parameters after reading from `config.yaml`.
 

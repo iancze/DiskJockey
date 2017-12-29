@@ -163,7 +163,7 @@ function corrfun!(img::SkyImage)
     end
 end
 
-"""Do the same thing as corrfun!, but return a copy of the image, leaving the original unchanged."""
+"Do the same thing as corrfun!, but return a copy of the image, leaving the original unchanged."
 function corrfun(img::SkyImage)
     im = deepcopy(img)
     corrfun!(im)

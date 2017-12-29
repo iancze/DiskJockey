@@ -41,7 +41,8 @@ function plot_tausurf(img::image.TausurfImage; fname="tausurf.png")
 
     vvmax = maximum(abs, data) # [AU]
 
-    norm = PyPlot.matplotlib[:colors][:Normalize](-vvmax, vvmax)
+    norm = PyPlot.matplotlib[:colors][:Normalize](-10, 10)
+    # norm = PyPlot.matplotlib[:colors][:SymLogNorm](linthresh=1,vmin=-10, vmax=10)
 
     (im_ny, im_nx) = size(img.data)[1:2] # y and x dimensions of the image
 

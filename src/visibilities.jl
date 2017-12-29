@@ -173,9 +173,9 @@ function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
 
 end
 
-"""
+"
 Copy the flags from one dataset to another.
-"""
+"
 function copy_flags(source::AbstractString, dest::AbstractString)
     println("Copying flags from $source to $dest")
 
@@ -192,11 +192,13 @@ function copy_flags(source::AbstractString, dest::AbstractString)
     close(fid_dest)
 end
 
-"""
+"
+    max_baseline(dvarr)
+
 Determine the maximum uu or vv baseline contained in the dataset, so we know at what resolution we will need to synthesize the images.
 
 returned in kilolambda.
-"""
+"
 function max_baseline(dvarr::Array{DataVis, 1})
     max = 0.0
 
@@ -215,12 +217,12 @@ function max_baseline(dvarr::Array{DataVis, 1})
     return max
 end
 
-"""
+"
 Determine how many pixels we need at this distance to satisfy the Nyquist sampling theorem.
 
 max_base in kilolambda.
 angular_width is in radians.
-"""
+"
 function get_nyquist_pixel(max_base::Float64, angular_width::Float64)
 
     nyquist_factor = 4 # normally 2, but we want to be extra sure.
@@ -575,9 +577,10 @@ end
 # called ModGrid in gridding.c (KR code) and in Model.for (MIRIAD)
 # Uses spheroidal wave functions to interpolate a model to a (u,v) coordinate.
 # u,v are in [kλ]
-"""
+
+"
 Interpolates a dense grid of visibilities (e.g., from FFT of an image) to a specfic (u,v) point using spheroidal functions in a band-limited manner designed to reduce aliasing.
-"""
+"
 function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
 
     # Note that vis.uu goes from positive to negative (East-West)

@@ -10,10 +10,11 @@
 # lambda[1] ... lambda[nlam + 1] # wavelengths (um) correspending to images
 # pixels, ordered from left to right (increasing x) in the inner loop, and from bottom to top (increasing y) in the outer loop. And wavelength is the outermost loop.
 
+"The image module contains various data types for reading and holding images produced by the radiative transfer programs (via `RADMC-3D`), as well as routines for processing these images."
 module image
 
 export imread, imToSky, imToSpec, SkyImage, blur, -
-export tauread
+export taureadImg, taureadPos
 
 using ..constants
 import Images # The Images.jl package, not affiliated w/ DiskJockey
@@ -25,9 +26,13 @@ import Base.- # extend this for Image
 
 abstract type Image end
 
-# RawImage reflects the RADMC convention that both x and y are increasing
-# with array index. This means that to display the image as RADMC intends it,
-# you must set the first array element to the lower left corner.
+"
+    RawImage(data, pixsize_x, pixsize_y, lams)
+
+Hold the raw output from `RADMC-3D` in a 3D array (npix_y, npix_x, nlam).
+RawImage reflects the RADMC convention that both x and y are increasing
+with array index. This means that to display the image as RADMC intends it,
+you must set the first array element to the lower left corner."
 type RawImage <: Image
     data::Array{Float64, 3} # [ergs/s/cm^2/Hz/ster]
     pixsize_x::Float64 # [cm]
@@ -35,11 +40,11 @@ type RawImage <: Image
     lams::Vector{Float64} # [μm]
 end
 
-# SkyImage is a holder that has both RA and DEC increasing with array index
-# This convention is necessary for the FFT step
-# However, to display this image in the traditional sky convention (North up,
-# East to the left), you must set the first array element to the lower left
-# corner *and* flip the array along the RA axis: `fliplr(data)` or flipdim(data, 2)
+"SkyImage is a holder that has both RA and DEC increasing with array index
+This convention is necessary for the FFT step
+However, to display this image in the traditional sky convention (North up,
+East to the left), you must set the first array element to the lower left
+corner *and* flip the array along the RA axis: `fliplr(data)` or flipdim(data, 2)"
 type SkyImage <: Image
     data::Array{Float64, 3} # [Jy/pixel]
     ra::Vector{Float64} # [arcsec]
@@ -47,7 +52,12 @@ type SkyImage <: Image
     lams::Vector{Float64} # [μm]
 end
 
-# TausurfImage is designed to hold the projected output
+"TausurfImage is designed to hold the results of the RADMC-3D `tausurf` operation. This is
+The distance in cm above or below the plane tangent to the observer, which intersects the origin of the model.
+
+From the RADMC3D manual:
+The image output file image.out will now contain, for each pixel, the position along the ray in centimeters where τ = τs. The zero point is the surface perpendicular to the direction of observation, going through the pointing position (which is, by default the origin (0, 0, 0)). Positive values mean that the surface is closer to the observer than the plane, while negative values mean that the surface is behind the plane.
+So for this datastructure, it's the same thing as RawImage, just instead of intensity, we have distance above/below plane."
 type TausurfImage <: Image
     data::Array{Float64, 3} # cm above/behind central projected plane of disk
     pixsize_x::Float64 # [cm]
@@ -55,12 +65,16 @@ type TausurfImage <: Image
     lams::Vector{Float64} # [μm]
 end
 
-# Encapsulates the 3D positions of the tau=1 surface, for all pixels
+"Encapsulates the 3D position of the pixels representing the tau=1 surface, in the same datashape as the image.
+For each pixel, this is the x, y, or z position."
 type Tausurf3D
-    data::Array{Float64, 4} # [cm], x, y, z positions for multiple wavelengths
+    data_x::Array{Float64, 3} # [cm]
+    data_y::Array{Float64, 3} # [cm]
+    data_z::Array{Float64, 3} # [cm]
+    lams::Vector{Float64} # [μm]
 end
 
-
+"Subtraction for `SkyImage`s"
 function -(img1::SkyImage, img2::SkyImage)
     # @assert img1.lams == img2.lams "Images must have the same wavelengths."
     @assert isapprox(img1.ra, img2.ra) "Images must have same RA coordinates."
@@ -69,12 +83,12 @@ function -(img1::SkyImage, img2::SkyImage)
     return SkyImage(data, img1.ra, img1.dec, img1.lams)
 end
 
-# SkyImage constructor for just a single frame
+"SkyImage constructor for just a single frame"
 SkyImage(data::Matrix{Float64}, ra::Vector{Float64}, dec::Vector{Float64}, lam::Float64) =
 SkyImage(reshape(data, tuple(size(data)..., 1)), ra, dec, [lam])
 
-# Read the image file (default=image.out) and return it as an Image object, which contains the fluxes in Jy/pixel,
-# the sizes and locations of the pixels in arcseconds, and the wavelengths corresponding to the images
+"Read the image file (default=image.out) and return it as an Image object, which contains the fluxes in Jy/pixel,
+the sizes and locations of the pixels in arcseconds, and the wavelengths corresponding to the images"
 function imread(file="image.out")
 
     fim = open(file, "r")
@@ -121,8 +135,8 @@ function imread(file="image.out")
     return RawImage(data, pixsize_x, pixsize_y, lams)
 end
 
-"""Like imread, but for tausurf. Values where there is no surface set to NaN."""
-function tauread(file="image.out")
+"Like imread, but for tausurf. Values where there is no surface set to NaN."
+function taureadImg(file="image.out")
     fim = open(file, "r")
     iformat = parse(Int, readline(fim))
     im_nx, im_ny = split(readline(fim))
@@ -148,12 +162,14 @@ function tauread(file="image.out")
             for i=1:im_nx
                 val = parse(Float64, readline(fim))
 
+                data[j,i,k] = val
+
                 # If RADMC3D signaled that there is no tau=1 surface here, set height to NaN
-                if isapprox(val, -1e91)
-                    data[j,i,k] = NaN #
-                else
-                    data[j,i,k] = val
-                end
+                # if isapprox(val, -1e91)
+                    # data[j,i,k] = NaN #
+                # else
+                    # data[j,i,k] = val
+                # end
             end
         end
     end
@@ -166,7 +182,11 @@ function tauread(file="image.out")
 
 end
 
-# Assumes dpc is parsecs
+"Read the (x,y,z) positions of the ``\tau=1`` pixels."
+function taureadPos()
+end
+
+"Assumes dpc is parsecs"
 function imToSky(img::RawImage, dpc::Float64)
 
     # The RawImage is oriented with North up and East increasing to the left.
@@ -204,8 +224,8 @@ function imToSky(img::RawImage, dpc::Float64)
 
 end
 
-# Following Images.jl, give the number of arcseconds in each dimension on how to Gaussian
-# blur the channel maps. Unfortunately only aligned Gaussians are allowed so far, no rotation.
+"Following Images.jl, give the number of arcseconds in each dimension on how to Gaussian
+blur the channel maps. Unfortunately only aligned Gaussians are allowed so far, no rotation."
 function blur(img::SkyImage, sigma)
     # convert sigma in arcseconds into pixels
     # sigma is a length 2 array with the [sigma_y, sigma_x] blurring scales
@@ -237,7 +257,7 @@ function blur(img::SkyImage, sigma)
 
 end
 
-# Take an image and integrate all the frames to create a spatially-integrated spectrum
+"Take an image and integrate all the frames to create a spatially-integrated spectrum"
 function imToSpec(img::SkyImage)
 
     # pixels in SkyImage are Jy/ster
@@ -253,7 +273,7 @@ function imToSpec(img::SkyImage)
     return spec
 end
 
-# Calculate the integrated line flux
+"Calculate the integrated line flux"
 function integrateSpec(spec::Matrix{Float64}, lam0::Float64)
     #First column is wl, second is flux
 
@@ -277,13 +297,14 @@ function integrateSpec(spec::Matrix{Float64}, lam0::Float64)
     return tot
 end
 
-# Storage for zeroth moment map
+"Storage for zeroth moment map"
 type ZerothMoment <: Image
    data::Array{Float64, 2} # [Jy · Hz / pixel]
    ra::Vector{Float64} # [arcsec]
    dec::Vector{Float64} # [arcsec]
 end
 
+"Convert a `SkyImage` to a `ZerothMoment` map."
 function convert(::Type{ZerothMoment}, img::SkyImage)
     # Sum along the frequency axis
     data = squeeze(sum(img.data, (3)), 3)

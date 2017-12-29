@@ -11,7 +11,7 @@ using Dierckx
 using Optim
 using ODE
 
-# Write the wavelength sampling file. Only run on setup
+"Write the wavelength sampling file. Only run on setup"
 function write_lambda(lams::AbstractArray, basedir::AbstractString)
     fcam = open(basedir * "camera_wavelength_micron.inp", "w")
     nlam = length(lams)
@@ -26,8 +26,8 @@ end
 const eqmirror = true # mirror the grid about the z=0 midplane ?
 # if we decide to mirror, then ncells = 1/2 of the true value
 
-# Define a grid object which stores all of these variables
-# This will not change for the duration of the run
+"Define a grid object which stores all of these variables
+This will not change for the duration of the run."
 immutable Grid
     nr::Int
     ntheta::Int
@@ -43,6 +43,7 @@ immutable Grid
     phis::Vector{Float64}
 end
 
+"Hold the ray-tracing grid."
 function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool=true)
     # Specify a 2D axisymmetric *separable* grid in spherical coordinates:
     # {r, theta, phi}, where theta is angle from zenith, phi is azimuth
@@ -78,7 +79,7 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool=true
 
 end
 
-# Create a grid object using a logarithmic then linear then logarithmic radial spacing
+"Create a grid object using a logarithmic then linear then logarithmic radial spacing"
 function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::Int, n_mid::Int, n_out::Int, ntheta::Int, eqmirror::Bool=true)
     # Number of cells in each dimension
     nphi = 1 # axisymmetric disk
@@ -122,7 +123,7 @@ function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::I
     return Grid(nr, ntheta, nphi, ncells, Rs, Thetas, Phis, rs, thetas, phis)
 end
 
-# Read from a dictionary, then choose how to make the grid based upon the arguments
+"Read from a dictionary, then choose how to make the grid based upon the arguments."
 function Grid(d::Dict)
     if "r_linstart" in keys(d)
         # We're going for a log-linear-log grid
@@ -136,7 +137,7 @@ function Grid(d::Dict)
     return Grid(vec...)
 end
 
-#This function only needs to be run once, upon setup.
+"This function only needs to be run once, upon setup."
 function write_grid(basedir::AbstractString, grid::Grid)
     #amr_grid.inp
     f = open(basedir * "amr_grid.inp", "w")
@@ -171,6 +172,7 @@ end
 
 abstract type AbstractParameters end
 
+"Parameters for the standard model."
 type ParametersStandard <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
@@ -187,6 +189,7 @@ type ParametersStandard <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+"Parameters for the truncated model."
 type ParametersTruncated <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] Characteristic radius
@@ -204,6 +207,7 @@ type ParametersTruncated <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+"Parameters for the cavity model."
 type ParametersCavity <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
@@ -222,6 +226,7 @@ type ParametersCavity <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+"Parameters for the vertical model."
 type ParametersVertical <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
@@ -245,6 +250,7 @@ type ParametersVertical <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+"Parameters for the vertical model with variable slope."
 type ParametersVerticalEta <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
@@ -267,6 +273,7 @@ type ParametersVerticalEta <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+"Parameters for the model with an inner hole."
 type ParametersInner <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
@@ -287,7 +294,7 @@ type ParametersInner <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
-"""A dictionary of parameter lists for conversion."""
+"A dictionary of parameter lists for conversion."
 registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("truncated", ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("cavity", ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
@@ -297,7 +304,7 @@ registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "
 
 registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("inner", ParametersInner)])
 
-"""Unroll a vector of parameter values into a parameter type."""
+"Unroll a vector of parameter values into a parameter type."
 function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::Vector; args...)
     args = Dict{Symbol}{Float64}(args)
 
@@ -370,7 +377,7 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
 
 end
 
-"""Used to turn a dictionary of parameter values (from config.yaml) directly into a parameter type. Generally used for synthesis and plotting command line scripts."""
+"Used to turn a dictionary of parameter values (from config.yaml) directly into a parameter type. Generally used for synthesis and plotting command line scripts."
 function convert_dict(p::Dict, model::AbstractString)
     # Select the registerd parameters corresponding to this model
     reg_params = registered_params[model]
@@ -401,7 +408,7 @@ function convert_dict(p::Dict, model::AbstractString)
 end
 
 
-"""The common sense priors that apply to all parameter values"""
+"The common sense priors that apply to all parameter values"
 function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float64)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10 <= 0. || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
