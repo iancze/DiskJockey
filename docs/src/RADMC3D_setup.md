@@ -1,6 +1,6 @@
 # RADMC3D setup
 
-This is a brief overview of some of the options that are set for RADMC-3D.
+This is a brief overview of some of the options that are set for RADMC-3D. For most `DiskJockey` use, the user need only be concerned about the gridding setup. However, some of the files written out to interface with RADMC-3D are documented here for reference.
 
 ## Gridding
 

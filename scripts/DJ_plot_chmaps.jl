@@ -57,7 +57,8 @@ height = width * cosd(incl) # [arcsec]
 
 # cmap = plt[:get_cmap]("viridis")
 # cmap = plt[:get_cmap]("inferno")
-cmap = plt[:get_cmap]("plasma")
+# cmap = plt[:get_cmap]("plasma")
+cmap = plt[:get_cmap]("Blues")
 
 # First contour is at 3 sigma, and then contours go up (or down) in multiples of spacing
 function get_levels(rms::Float64, vmax::Float64, spacing=3)

@@ -58,7 +58,7 @@ The distance in cm above or below the plane tangent to the observer, which inter
 From the RADMC3D manual:
 The image output file image.out will now contain, for each pixel, the position along the ray in centimeters where τ = τs. The zero point is the surface perpendicular to the direction of observation, going through the pointing position (which is, by default the origin (0, 0, 0)). Positive values mean that the surface is closer to the observer than the plane, while negative values mean that the surface is behind the plane.
 So for this datastructure, it's the same thing as RawImage, just instead of intensity, we have distance above/below plane."
-type TausurfImage <: Image
+type TausurfImg <: Image
     data::Array{Float64, 3} # cm above/behind central projected plane of disk
     pixsize_x::Float64 # [cm]
     pixsize_y::Float64 # [cm]
@@ -67,7 +67,7 @@ end
 
 "Encapsulates the 3D position of the pixels representing the tau=1 surface, in the same datashape as the image.
 For each pixel, this is the x, y, or z position."
-type Tausurf3D
+type TausurfPos
     data_x::Array{Float64, 3} # [cm]
     data_y::Array{Float64, 3} # [cm]
     data_z::Array{Float64, 3} # [cm]
@@ -135,8 +135,11 @@ function imread(file="image.out")
     return RawImage(data, pixsize_x, pixsize_y, lams)
 end
 
-"Like imread, but for tausurf. Values where there is no surface set to NaN."
-function taureadImg(file="image.out")
+"
+    taureadImg(file=\"image_tausurf.out\")
+
+Like imread, but for tausurf. Pixels that have no ``\\tau`` surface are set to `NaN`."
+function taureadImg(file="image_tausurf.out")
     fim = open(file, "r")
     iformat = parse(Int, readline(fim))
     im_nx, im_ny = split(readline(fim))
@@ -165,11 +168,11 @@ function taureadImg(file="image.out")
                 data[j,i,k] = val
 
                 # If RADMC3D signaled that there is no tau=1 surface here, set height to NaN
-                # if isapprox(val, -1e91)
-                    # data[j,i,k] = NaN #
-                # else
-                    # data[j,i,k] = val
-                # end
+                if isapprox(val, -1e91)
+                    data[j,i,k] = NaN #
+                else
+                    data[j,i,k] = val
+                end
             end
         end
     end
@@ -178,12 +181,63 @@ function taureadImg(file="image.out")
 
     # According to the RADMC3D manual, the units are *intensity* [erg cm−2 s−1 Hz−1 ster−1]
 
-    return TausurfImage(data, pixsize_x, pixsize_y, lams)
+    return TausurfImg(data, pixsize_x, pixsize_y, lams)
 
 end
 
-"Read the (x,y,z) positions of the ``\tau=1`` pixels."
-function taureadPos()
+"Read the (x,y,z) positions of the ``\\tau=1`` pixels."
+function taureadPos(file="tausurface_3d.out")
+    fim = open(file, "r")
+    iformat = parse(Int, readline(fim))
+    im_nx, im_ny = split(readline(fim))
+    im_nx = parse(Int, im_nx)
+    im_ny = parse(Int, im_ny)
+    nlam = parse(Int, readline(fim))
+    #pixsize_x, pixsize_y = split(readline(fim))
+    #pixsize_x = parse(Float64, pixsize_x)
+    #pixsize_y = parse(Float64, pixsize_y)
+
+    # Read the wavelength array
+    lams = Array{Float64}(nlam)
+    for i=1:nlam
+        lams[i] = parse(Float64, readline(fim))
+    end
+
+    # Create an array with the proper size, and then read the file into it
+    data_x = Array{Float64}(im_ny, im_nx, nlam)
+    data_y = Array{Float64}(im_ny, im_nx, nlam)
+    data_z = Array{Float64}(im_ny, im_nx, nlam)
+
+    # In contrast to the other image formats, apparently there is only a space before the lams, not inbetween lams.
+    readline(fim) # Junk space
+
+    for k=1:nlam
+        for j=1:im_ny
+            for i=1:im_nx
+                val_x, val_y, val_z = split(readline(fim))
+                val_x = parse(Float64, val_x)
+                val_y = parse(Float64, val_y)
+                val_z = parse(Float64, val_z)
+
+                # If RADMC3D signaled that there is no tau=1 surface here (any of the xyz values are -1e91)
+                # then set the height to NaN
+                if isapprox(val_x, -1e91)
+                    data_x[j,i,k] = NaN
+                    data_y[j,i,k] = NaN
+                    data_z[j,i,k] = NaN
+                else
+                    data_x[j,i,k] = val_x
+                    data_y[j,i,k] = val_y
+                    data_z[j,i,k] = val_z
+                end
+            end
+        end
+    end
+
+    close(fim)
+
+    return TausurfPos(data_x, data_y, data_z, lams)
+
 end
 
 "Assumes dpc is parsecs"
