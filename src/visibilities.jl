@@ -323,8 +323,11 @@ function chi2(dvis::DataVis, mvis::ModelVis)
     return sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
-# Given a new model centroid in the image plane (in arcseconds), shift the model
-# visibilities by corresponding amount
+"
+    phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
+
+Given a new model centroid in the image plane (in arcseconds), shift the model
+visibilities by corresponding amount."
 function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
 
     mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
@@ -359,8 +362,11 @@ end
 #     end
 # end
 
-# Given a new model centroid in the image plane (in arcseconds), shift the model
-# visibilities by corresponding amount
+"
+    phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
+
+Given a new model centroid in the image plane (in arcseconds), shift the model
+visibilities by corresponding amount."
 function phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
 
     mu = Float64[mu_RA, mu_DEC] * arcsec # [radians]
@@ -379,7 +385,10 @@ function phase_shift!(fvis::FullModelVis, mu_RA, mu_DEC)
     end
 end
 
-# Transform the SkyImage produced by RADMC using FFT
+"
+    transform(img::SkyImage, index::Int=1)
+
+Transform the SkyImage produced by RADMC using FFT."
 function transform(img::SkyImage, index::Int=1)
 
     # By default, select the first channel of any spectral hypercube. This
@@ -425,9 +434,12 @@ function transform(img::SkyImage, index::Int=1)
 end
 
 
-# This function is designed to copy the partial arrays in RawModelVis into a
-# full image for easy plotting. This means that the u axis can remain the same
-# but we'll need to make the complex conjugate of the v axis.
+"
+    fillModelVis(vis::RawModelVis)
+
+This function is designed to copy the partial arrays in RawModelVis into a
+full image for easy plotting. This means that the u axis can remain the same
+but we'll need to make the complex conjugate of the v axis."
 function fillModelVis(vis::RawModelVis)
 
     # The full image will stretch from -(n/2 - 1) to (n/2 -1) and
@@ -458,16 +470,19 @@ function fillModelVis(vis::RawModelVis)
     return FullModelVis(vis.lam, uu, vv, vcat(top, bottom))
 end
 
-# Return a function that is used to interpolate the visibilities, in the
-# spirit of interpolate_uv but *much* faster.
-# Closures save time and money!
+"
+    plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64})
 
-# The point is that if the distance to the source and the size of the sythesized image
-# are not changing, then we will always be interpolating from a dense Visibility grid that
-# has the exact same U and V spacings, meaning that the weighting terms used to evaluate the
-# interpolation for a specific visibility can be cached.
+Return a function that is used to interpolate the visibilities, in the
+spirit of interpolate_uv but *much* faster.
+Closures save time and money!
 
-# So, using a closure, those weighting terms are calculated once and then cached for further use.
+The point is that if the distance to the source and the size of the sythesized image
+are not changing, then we will always be interpolating from a dense Visibility grid that
+has the exact same U and V spacings, meaning that the weighting terms used to evaluate the
+interpolation for a specific visibility can be cached.
+
+So, using a closure, those weighting terms are calculated once and then cached for further use."
 function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64})
 
     nvis = length(dvis.VV)
@@ -579,6 +594,8 @@ end
 # u,v are in [kλ]
 
 "
+    interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
+
 Interpolates a dense grid of visibilities (e.g., from FFT of an image) to a specfic (u,v) point using spheroidal functions in a band-limited manner designed to reduce aliasing.
 "
 function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)

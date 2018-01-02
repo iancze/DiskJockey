@@ -240,7 +240,10 @@ function taureadPos(file="tausurface_3d.out")
 
 end
 
-"Assumes dpc is parsecs"
+"
+    imToSky(img::RawImage, dpc::Float64)
+
+Convert a `RawImage` to a `SkyImage`. Assumes dpc is parsecs."
 function imToSky(img::RawImage, dpc::Float64)
 
     # The RawImage is oriented with North up and East increasing to the left.
@@ -278,7 +281,10 @@ function imToSky(img::RawImage, dpc::Float64)
 
 end
 
-"Following Images.jl, give the number of arcseconds in each dimension on how to Gaussian
+"
+    blur(img::SkyImage, sigma)
+
+Following Images.jl, give the number of arcseconds in each dimension on how to Gaussian
 blur the channel maps. Unfortunately only aligned Gaussians are allowed so far, no rotation."
 function blur(img::SkyImage, sigma)
     # convert sigma in arcseconds into pixels
@@ -358,7 +364,10 @@ type ZerothMoment <: Image
    dec::Vector{Float64} # [arcsec]
 end
 
-"Convert a `SkyImage` to a `ZerothMoment` map."
+"
+    convert(::Type{ZerothMoment}, img::SkyImage)
+
+Convert a `SkyImage` to a `ZerothMoment` map."
 function convert(::Type{ZerothMoment}, img::SkyImage)
     # Sum along the frequency axis
     data = squeeze(sum(img.data, (3)), 3)
