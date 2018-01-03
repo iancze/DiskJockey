@@ -11,7 +11,7 @@ export spheroid, corrfun, corrfun!, gcffun
 "
     spheroid(eta)
 
-`spheroid` function which assumes alpha = 1.0, m=6
+`spheroid` function which assumes ``\\alpha`` = 1.0, ``m=6``,
 built for speed."
 function spheroid(eta::Float64)
 

@@ -82,7 +82,7 @@ Lastly, some of the analysis scripts and IO routines require Python and several 
 * Jupyter/IPython
 * [corner.py](https://github.com/dfm/corner.py)
 
-With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source, in particular the [cookbook](docs/cookbook.md).
+With the package successfully installed, see the documentation in the `docs/` folder on how to get started fitting a specific source, in particular the [Cookbook](@ref).
 
 If you'd like to run the test suite to make sure everything checks out, start Julia and run
 

@@ -43,6 +43,12 @@ Modules = [visibilities]
 Modules = [gridding]
 ```
 
+# gauss.jl
+
+```@autodocs
+Modules = [gauss]
+```
+
 # EnsembleSampler.jl
 
 This is a Julia port of the Python package `emcee`, written by Dan Foreman-Mackey and collaborators.

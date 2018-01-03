@@ -4,6 +4,7 @@ export constants,
     model,
     image,
     gridding,
+    gauss,
     visibilities,
     EnsembleSampler,
     RADMC3D_PATH
@@ -12,6 +13,7 @@ export constants,
 # act as one giant file.
 include("constants.jl")
 include("model.jl")
+include("gauss.jl")
 include("image.jl")
 include("gridding.jl")
 include("visibilities.jl")

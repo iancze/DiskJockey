@@ -29,8 +29,11 @@ type DataVis
     # NOTE that there is no flags field
 end
 
-# Read all the visibilities from an HDF5 string and return them as an array of DataVis objects
-# `flagged` means whether we should be loading the flagged points or not.
+"
+    DataVis(fname::AbstractString, flagged::Bool=false)
+
+Read all the visibilities from an HDF5 string and return them as an array of DataVis objects
+`flagged` means whether we should be loading the flagged points or not."
 function DataVis(fname::AbstractString, flagged::Bool=false)
     fid = h5open(fname, "r")
 
@@ -73,7 +76,10 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     return out
 end
 
-# Read just one channel of visibilities from the HDF5 file
+"
+    DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
+
+Read just one channel of visibilities from the HDF5 file."
 function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
     fid = h5open(fname, "r")
     # the indexing and `vec` are necessary here because HDF5 doesn't naturally
@@ -107,7 +113,10 @@ function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
     return DataVis(lam, uu, vv, VV, invsig)
 end
 
-# Read just a subset of channels from the HDF5 file and return an array of DataVis
+"
+    DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=false)
+
+Read just a subset of channels from the HDF5 file and return an array of DataVis."
 function DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=false)
     nchan = length(indices)
     out = Array{DataVis}(nchan)
@@ -117,29 +126,42 @@ function DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=fals
     return out
 end
 
-# Import the complex conjugate function from Base, and extend it to work
-# on a DataVis.
-# I think this is necessary because the SMA and ALMA baseline conventions are swapped from
-# what I'm using in the NRAO Synthesis Summer School textbook.
+"
+    conj!(dv::DataVis)
+
+Import the complex conjugate function from Base, and extend it to work
+on a DataVis.
+I think this is necessary because the SMA and ALMA baseline conventions are swapped from
+what I'm using in the NRAO Synthesis Summer School textbook."
 function conj!(dv::DataVis)
     conj!(dv.VV)
 end
 
-# Apply this to a DataVis array
+"
+    conj!(dvarr::Array{DataVis, 1})
+
+Apply ``conj!`` to an entire DataVis array."
 function conj!(dvarr::Array{DataVis, 1})
     for dset in dvarr
         conj!(dset) # Swap UV convention
     end
 end
 
+"
+    get_qq(dv::DataVis)
+
+Given a DataVis, convert the Cartesian spatial frequency coordinates ``(u,v)`` into a radial spatial coordinate ``q``."
 function get_qq(dv::DataVis)
   sqrt(dv.uu.^2 .+ dv.vv.^2)
 end
 
-# Take in a visibility data set and then write it to the HDF5 file
-# The HDF5 file actually expects multi-channel data, so instead we will need to
-# store all of this information with arrays of shape (..., 1) [an extra trailing]
-# dimension of 1
+"
+    write(dv::DataVis, fname::AbstractString)
+
+Take in a visibility data set and then write it to the HDF5 file
+The HDF5 file actually expects multi-channel data, so instead we will need to
+store all of this information with arrays of shape (..., 1) [an extra trailing]
+dimension of 1."
 function write(dv::DataVis, fname::AbstractString)
     nvis = length(dv.uu)
     VV = reshape(dv.VV, (nvis, 1))
@@ -155,7 +177,10 @@ function write(dv::DataVis, fname::AbstractString)
     close(fid)
 end
 
-# Write an array of DataVis to a single HDF5 file
+"
+    write(dvarr::Array{DataVis, 1}, fname::AbstractString)
+
+Write an array of DataVis to a single HDF5 file."
 function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
     nvis = length(dvarr[1].VV)
     nlam = length(dvarr)
@@ -174,8 +199,9 @@ function write(dvarr::Array{DataVis, 1}, fname::AbstractString)
 end
 
 "
-Copy the flags from one dataset to another.
-"
+    copy_flags(source::AbstractString, dest::AbstractString)
+
+Copy the flags from one dataset to another."
 function copy_flags(source::AbstractString, dest::AbstractString)
     println("Copying flags from $source to $dest")
 
@@ -218,11 +244,12 @@ function max_baseline(dvarr::Array{DataVis, 1})
 end
 
 "
-Determine how many pixels we need at this distance to satisfy the Nyquist sampling theorem.
+    get_nyquist_pixel(max_base::Float64, angular_width::Float64)
 
-max_base in kilolambda.
-angular_width is in radians.
-"
+Determine how many pixels the image needs at a given distance in order to satisfy the Nyquist sampling theorem.
+
+`max_base` is in kilolambda.
+`angular_width` is in radians."
 function get_nyquist_pixel(max_base::Float64, angular_width::Float64)
 
     nyquist_factor = 4 # normally 2, but we want to be extra sure.
@@ -240,8 +267,10 @@ function get_nyquist_pixel(max_base::Float64, angular_width::Float64)
     return npix
 end
 
-#TODO: These visibilites need to be renamed, since the are confusing with ModelVis
-# Produced by FFT'ing a single channel of a SkyImage
+"
+    RawModelVis
+
+Type to store the product of FFT'ing a single channel of a SkyImage."
 type RawModelVis
     lam::Float64 # [μm] Wavelength (in microns) corresponding to channel
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
@@ -257,6 +286,11 @@ type FullModelVis
     VV::Matrix{Complex128} # Output from rfft
 end
 
+"
+    -(vis1::FullModelVis, vis2::FullModelVis)
+
+Subtract two `FullModelVis`'s.
+"
 function -(vis1::FullModelVis, vis2::FullModelVis)
     # @assert vis1.lam == vis2.lam "Visibilities must have the same wavelengths."
     @assert vis1.uu == vis2.uu "Visibilities must have same uu sampling."
@@ -272,8 +306,11 @@ type ModelVis
     # corresponding to the u, v locations in DataVis
 end
 
-# Given a DataSet and a FullModelVis, go through and interpolate at the
-# u,v locations of the DataVis
+"
+    ModelVis(dvis::DataVis, fmvis::FullModelVis)
+
+Given a DataSet and a FullModelVis, go through and interpolate at the
+u,v locations of the DataVis."
 function ModelVis(dvis::DataVis, fmvis::FullModelVis)
     nvis = length(dvis.VV)
     VV = Array{Complex128}(nvis)
@@ -284,7 +321,38 @@ function ModelVis(dvis::DataVis, fmvis::FullModelVis)
     return ModelVis(dvis, VV)
 end
 
-# Collapse a ModelVis into a DataVis for writing purposes
+"
+    ModelVisRotate(dvis::DataVis, fmvis::FullModelVis, PA::Real)
+
+Given a DataSet, FullModelVis, and a desired position angle rotation, use the Fourier rotation theorem to sample the image at the rotated baselines and produce a rotated (sampled) model. A positve `PA` value (in degrees) means that the new model is rotated ``PA`` number of degrees counter-clockwise (towards East, from North)."
+function ModelVisRotate(dvis::DataVis, fmvis::FullModelVis, PA::Real)
+
+    # Convert from degrees to radians
+    PA = PA * deg
+
+    # Rotation matrix
+    # S = Float64[[cos(PA), -sin(PA)]
+    #             [sin(PA), cos(PA)]]
+
+    nvis = length(mvis.VV)
+
+    VV = Array{Complex128}(nvis)
+    for i=1:nvis
+        # Rotate points according to PA
+        uuprime = cos(PA) * dvis.uu[i] - sin(PA) * dvis.vv[i]
+        vvprime = sin(PA) * dvis.uu[i] + cos(PA) * dvis.vv[i]
+
+        # Interpolate at rotated points
+        VV[i] = interpolate_uv(uuprime, vvprime, fmvis)
+    end
+
+    return ModelVis(dvis, VV)
+end
+
+"
+    ModelVis2DataVis(mvis::ModelVis)
+
+Collapse a ModelVis into a DataVis in order to write to disk."
 function ModelVis2DataVis(mvis::ModelVis)
     DV = mvis.dvis
     return DataVis(DV.lam, DV.uu, DV.vv, mvis.VV, DV.invsig)
@@ -294,7 +362,10 @@ function conj!(mv::ModelVis)
     conj!(mv.VV)
 end
 
-# Return a model visibility file that actually contains the residuals
+"
+    ResidVis(dvarr::Array{DataVis, 1}, mvarr)
+
+Return a model visibility file that contains the residuals."
 function ResidVis(dvarr::Array{DataVis, 1}, mvarr)
     nchan = length(dvarr)
     @assert length(mvarr) == nchan # make sure data and model are the same length.
@@ -308,16 +379,27 @@ function ResidVis(dvarr::Array{DataVis, 1}, mvarr)
     return rvarr
 end
 
-# For just computing the difference between two datasets
+"
+    lnprob(dvis::DataVis, mvis::DataVis)
+
+Lnprob for computing the difference between two datasets. Does not check whether the baselines of the two datasets are the same. Use this function at your own discretion."
 function lnprob(dvis::DataVis, mvis::DataVis)
     return -0.5 * sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
+"
+    lnprob(dvis::DataVis, mvis::ModelVis)
+
+Likelihood function used to calculate the likelihood of the data visibilities given a current model of them. Asserts that the model visibilities were sampled at the same baselines as the data."
 function lnprob(dvis::DataVis, mvis::ModelVis)
     @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
     return -0.5 * sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
 
+"
+    chi2(dvis::DataVis, mvis::ModelVis)
+
+Calculate the ``\\chi^2`` value of the current model. This function is not used in inference (see `lnprob`), but it is sometimes a useful number to report."
 function chi2(dvis::DataVis, mvis::ModelVis)
     @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
     return sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
@@ -655,7 +737,6 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     VV = vis.VV[vind, uind] # Array is packed like the image
 
     # 3. Calculate the weights corresponding to these 6 nearest pixels (gcffun)
-    # TODO: Explore using something other than alpha=1.0
     uw = gcffun(etau)
     vw = gcffun(etav)
 
@@ -675,9 +756,12 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     return cumulative
 end
 
-# Return the frequencies corresponding to the output of the real FFT. After numpy.fft.rfftfreq
-# f = [0, 1, ...,     n/2-1,     n/2] / (d*n)   if n is even
-# f = [0, 1, ..., (n-1)/2-1, (n-1)/2] / (d*n)   if n is odd
+"
+    rfftfreq(n::Int, d::Float64)
+
+Return the frequencies corresponding to the output of the real FFT. After numpy.fft.rfftfreq
+    f = [0, 1, ...,     n/2-1,     n/2] / (d*n)   if n is even
+    f = [0, 1, ..., (n-1)/2-1, (n-1)/2] / (d*n)   if n is odd."
 function rfftfreq(n::Int, d::Float64)
     # n even
     if n % 2 == 0
@@ -691,9 +775,13 @@ function rfftfreq(n::Int, d::Float64)
     end
 end
 
-# After numpy.fft.fftfreq
-# f = [0, 1, ...,   n/2-1,     -n/2, ..., -1] / (d*n)   if n is even
-# f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd
+"
+    fftfreq(n::Int, d::Float64)
+
+After numpy.fft.fftfreq
+
+    f = [0, 1, ...,   n/2-1,     -n/2, ..., -1] / (d*n)   if n is even
+    f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd."
 function fftfreq(n::Int, d::Float64)
     val = 1./(n * d)
     results = Array{Float64}(n)

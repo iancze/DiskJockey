@@ -62,10 +62,11 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool=true
         #Thetas = linspace(0, pi/2., ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
         Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
-        #Spaced closer near the z=0
+        #Logarithmically spaced closer near the z=0
     else
         Thetas = linspace(0, pi, ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
+        # Equally spaced in theta.
     end
 
     Phis = Float64[0.0, 0.0] # [rad] cell walls for inactive coordinate

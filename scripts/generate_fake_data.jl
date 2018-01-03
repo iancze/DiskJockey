@@ -1,15 +1,12 @@
-push!(LOAD_PATH, "/home/ian/Grad/Research/Disks/DiskJockey/")
-push!(LOAD_PATH, "/n/home07/iczekala/DiskJockey/")
+"Using the analytic form of the FT of the Gaussian, and the u,v sampling and noise
+from a real dataset, make a fake dataset."
 
-# Using the analytic form of the FT of the Gaussian, and the u,v sampling and noise
-# from a real SMA dataset, make a fake dataset.
-
-using gridding
-using visibilities
-using constants
-using image
+using DiskJockey.gridding
+using DiskJockey.visibilities
+using DiskJockey.constants
+using DiskJockey.image
+using DiskJockey.constants
 using gauss_model
-using constants
 
 # Read in the dataset
 #dv = DataVis("../data/V4046Sgr.hdf5", 12)

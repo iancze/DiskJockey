@@ -87,8 +87,11 @@ end
 SkyImage(data::Matrix{Float64}, ra::Vector{Float64}, dec::Vector{Float64}, lam::Float64) =
 SkyImage(reshape(data, tuple(size(data)..., 1)), ra, dec, [lam])
 
-"Read the image file (default=image.out) and return it as an Image object, which contains the fluxes in Jy/pixel,
-the sizes and locations of the pixels in arcseconds, and the wavelengths corresponding to the images"
+"
+    imread(file=\"image.out\")
+
+Read the image file (default=image.out) and return it as an Image object, which contains the fluxes in Jy/pixel,
+the sizes and locations of the pixels in arcseconds, and the wavelengths (in microns) corresponding to the images"
 function imread(file="image.out")
 
     fim = open(file, "r")
