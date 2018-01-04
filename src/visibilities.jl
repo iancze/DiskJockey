@@ -10,7 +10,7 @@ using ..constants
 import Base.conj! # extend this for DataVis
 import Base.- # extend this for FullModelVis
 
-export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis
+export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis, ModelVisRotate
 export get_qq
 export plan_interpolate, interpolate_uv
 export transform, rfftfreq, fftfreq, phase_shift!, max_baseline, get_nyquist_pixel
@@ -324,23 +324,19 @@ end
 "
     ModelVisRotate(dvis::DataVis, fmvis::FullModelVis, PA::Real)
 
-Given a DataSet, FullModelVis, and a desired position angle rotation, use the Fourier rotation theorem to sample the image at the rotated baselines and produce a rotated (sampled) model. A positve `PA` value (in degrees) means that the new model is rotated ``PA`` number of degrees counter-clockwise (towards East, from North)."
+Given a DataSet, FullModelVis, and a desired position angle rotation, use the Fourier rotation theorem to sample the image at the rotated baselines and produce a rotated (sampled) model. A positive `PA` value (in degrees) means that the new model is rotated ``PA`` number of degrees counter-clockwise in the image plane (towards East, from North)."
 function ModelVisRotate(dvis::DataVis, fmvis::FullModelVis, PA::Real)
 
     # Convert from degrees to radians
     PA = PA * deg
 
-    # Rotation matrix
-    # S = Float64[[cos(PA), -sin(PA)]
-    #             [sin(PA), cos(PA)]]
-
-    nvis = length(mvis.VV)
+    nvis = length(dvis.VV)
 
     VV = Array{Complex128}(nvis)
     for i=1:nvis
         # Rotate points according to PA
-        uuprime = cos(PA) * dvis.uu[i] - sin(PA) * dvis.vv[i]
-        vvprime = sin(PA) * dvis.uu[i] + cos(PA) * dvis.vv[i]
+        uuprime = cos(PA) * dvis.uu[i] + sin(PA) * dvis.vv[i]
+        vvprime = -sin(PA) * dvis.uu[i] + cos(PA) * dvis.vv[i]
 
         # Interpolate at rotated points
         VV[i] = interpolate_uv(uuprime, vvprime, fmvis)

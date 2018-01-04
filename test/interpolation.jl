@@ -21,7 +21,7 @@ const mu_RA = 2.0 # [arcsec]
 const mu_DEC = -0.5 # [arcsec]
 const s_x = 1.2 # [arcsec]
 const s_y = 1.0 # [arcsec]
-const rho = 0.0
+const rho = 0.5
 const p0 = [mu_RA, mu_DEC, s_x, s_y, rho] # [arcsec]
 const p_center = [0.0, 0.0, s_x, s_y, rho] # [arcsec]
 
@@ -63,6 +63,7 @@ shift_fft = transform(skim)
 
 # Apply a centered correction function on the centered image (to phase shift downsampled
 # visibilities later)
+# This is the recommended approach.
 corrfun!(skim_plain1, 0, 0)
 vis_fft_center = transform(skim_plain1)
 
@@ -72,6 +73,7 @@ vis_fft_shift = transform(skim_plain2)
 phase_shift!(vis_fft_shift, mu_RA, mu_DEC)
 
 # Apply an offset correction function on the centered image, but later we will phase shift the visibilities *after* they have been downsampled.
+# NOTE, this DOES NOT WORK, and is simply included here for full testing.
 corrfun!(skim_plain3, mu_RA, mu_DEC)
 vis_fft_offset = transform(skim_plain3)
 
@@ -390,7 +392,7 @@ for i=1:n
     end
 end
 
-plot_2d(analytic, approx, "2D_interpolation_shift_image.png")
+plot_2d(analytic, approx, "2D_interpolation_shift_image")
 
 
 
