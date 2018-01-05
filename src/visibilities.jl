@@ -10,11 +10,11 @@ using ..constants
 import Base.conj! # extend this for DataVis
 import Base.- # extend this for FullModelVis
 
-export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis, ModelVisRotate
+export DataVis, ModelVis, RawModelVis, FullModelVis, fillModelVis, ResidVis, ModelVisRotate, DataVisReal, ModelVisReal
 export get_qq
 export plan_interpolate, interpolate_uv
-export transform, rfftfreq, fftfreq, phase_shift!, max_baseline, get_nyquist_pixel
-export lnprob
+export transform, rfftfreq, fftfreq, phase_shift, phase_shift!, max_baseline, get_nyquist_pixel
+export lnprob, lnprob_iter, lnprob_real
 export -
 
 using Base.Test
@@ -124,6 +124,24 @@ function DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=fals
         out[i] = DataVis(fname, indices[i], flagged)
     end
     return out
+end
+
+struct DataVisReal
+    lam::Float64 # [μm] Wavelength (in microns) corresponding to channel
+    uu::Vector{Float64} # [kλ] Vectors of the u, v locations in kilolambda, shape (nchan, nvis)
+    vv::Vector{Float64} # [kλ]
+    VVr::Vector{Float64} # [Jy] Complex visibilities
+    VVi::Vector{Float64} # [Jy] Complex visibilities
+    invsig::Vector{Float64} # 1/sigma [1/Jy]
+    # NOTE that there is no flags field
+end
+
+"
+    DataVisReal(dvis::DataVis)
+
+Convert a `DataVis` object, with visibilities stored as `Comlpex128`, into an object with visibilities stored with real and complex values stored separately as `Float64`."
+function DataVisReal(dvis::DataVis)
+    return DataVisReal(dvis.lam, dvis.uu, dvis.vv, real(dvis.VV), imag(dvis.VV), dvis.invsig)
 end
 
 "
@@ -375,6 +393,22 @@ function ResidVis(dvarr::Array{DataVis, 1}, mvarr)
     return rvarr
 end
 
+
+mutable struct ModelVisReal
+    dvis::DataVis # A reference to the matching dataset
+    VVr::Vector{Float64} # vector of complex visibilities directly
+    VVi::Vector{Float64} # vector of complex visibilities directly
+    # corresponding to the u, v locations in DataVis
+end
+
+"
+    ModelVisReal(mvis::ModelVis)
+
+Convert a `ModelVis` object, with visibilities stored as `Complex128`, into a `ModelVisReal`, with real and imaginary visibility values stored separately as `Float64`."
+function ModelVisReal(mvis::ModelVis)
+    return ModelVisReal(mvis.dvis, real(mvis.VV), imag(mvis.VV))
+end
+
 "
     lnprob(dvis::DataVis, mvis::DataVis)
 
@@ -391,6 +425,54 @@ function lnprob(dvis::DataVis, mvis::ModelVis)
     @assert dvis === mvis.dvis # Using the wrong ModelVis, otherwise!
     return -0.5 * sum(abs2, dvis.invsig .* (dvis.VV - mvis.VV)) # Basic chi2
 end
+
+"
+    lnprob(dvis::DataVis, mvis::ModelVis, mu_RA::Real, mu_DEC::Real)
+
+Calculate the lnlikelihood using a single loop to do the phase shifting and summation. No extra memory needed for re-copying the model.
+"
+function lnprob(dvis::DataVis, mvis::ModelVis, mu_RA::Float64, mu_DEC::Float64)
+    lnp::Float64 = 0.0
+    prefac::Complex128 = -2pi * 1.0im * 1e3 * arcsec
+    for i=1:length(dvis.VV)
+        lnp += abs2(dvis.invsig[i] * (dvis.VV[i] - mvis.VV[i] * exp(prefac * (dvis.uu[i] * mu_RA + dvis.vv[i] * mu_DEC))))
+    end
+    return -0.5 * lnp
+end
+
+"
+    lnprob_real(dvis::DataVis, mvis::ModelVis, mu_RA::Float64, mu_DEC::Float64)
+
+Calculate the lnlikelihood using a single loop to do the phase shifting and summation. No extra memory needed for re-copying the model. Uses Euler formula to do the calculation, rather than exponentiating a complex number.
+"
+function lnprob_real(dreal::DataVisReal, mreal::ModelVisReal, mu)
+    lnp::Float64 = 0.0
+    val::Float64 = 0.0
+    sval::Float64 = 0.0 # sin of val
+    cval::Float64 = 0.0 # cos of val
+
+    # dreal and mreal both have the real and imaginary terms stored separately as Float64 vectors.
+    prefac::Float64 = -2pi * 1e3 * arcsec
+
+    for i=1:length(dreal.VVr)
+        val = prefac * (mu[1] * dreal.uu[i] + mu[2] * dreal.vv[i])
+        sval = sin(val)
+        cval = cos(val)
+
+        lnp += ((dreal.VVr[i] - cval * mreal.VVr[i] + sval * mreal.VVi[i]) * dreal.invsig[i])^2 + ((dreal.VVi[i] - sval * mreal.VVr[i] - cval * mreal.VVi[i]) * dreal.invsig[i])^2
+    end
+    return -0.5 * lnp
+end
+
+
+function lnprob_iter(dvis::DataVis, mvis::ModelVis)
+    lnp = 0.0
+    for i=1:length(dvis.VV)
+        lnp += abs2(dvis.invsig[i] * (dvis.VV[i] - mvis.VV[i]))
+    end
+    return -0.5 * lnp
+end
+
 
 "
     chi2(dvis::DataVis, mvis::ModelVis)
@@ -419,6 +501,13 @@ function phase_shift!(mvis::ModelVis, mu_RA, mu_DEC)
         shift = exp(-2pi * 1.0im * (R' * mu)[1])
         mvis.VV[i] = mvis.VV[i] * shift
     end
+end
+
+function phase_shift(mvis::ModelVis, mu_RA, mu_DEC)
+    mv = deepcopy(mvis)
+    mv.dvis = mvis.dvis
+    phase_shift!(mv, mu_RA, mu_DEC)
+    return mv
 end
 
 # Shift the (0,0) data phase center to these new RA, DEC centroids. The mu_RA, mu_DEC should be

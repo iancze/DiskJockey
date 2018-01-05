@@ -92,7 +92,7 @@ plt[:savefig]("gaussian_img_array.png")
 dvarr_fake = Array{DataVis}(nlam)
 
 # Noise scaling
-scale = 0.01
+scale = 1.0
 
 # The V4046 Sgr dataset
 dv = dvarr[1]
