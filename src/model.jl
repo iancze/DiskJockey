@@ -390,6 +390,10 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
       Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
       par_vec[indSigma_c] = Sigma_c
 
+    elseif model == "nuker"
+      indalpha = findin(reg_params, ["alpha"])
+      par_vec[indalpha] = 10.^par_vec[indalpha]
+      par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
     else
       par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
     end
@@ -416,6 +420,10 @@ function convert_dict(p::Dict, model::AbstractString)
       Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
       p["Sigma_c"] = Sigma_c
 
+    elseif model == "nuker"
+      # add a new field, which is the conversion of logSigma_c to Sigma_c
+      p["alpha"] = 10^p["logalpha"]
+      p["Sigma_c"] = 10^p["logSigma_c"]
     else
       # add a new field, which is the conversion of logSigma_c to Sigma_c
       p["Sigma_c"] = 10^p["logSigma_c"]
@@ -564,6 +572,32 @@ function lnprior(pars::ParametersVerticalEta, dpc_mu::Float64, dpc_sig::Float64,
     end
 
 end
+
+
+function lnprior(pars::ParametersNuker, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+
+    lnp = lnprior_base(pars, dpc_mu, dpc_sig)
+
+    # hard +/- 3 sigma cutoff
+    if (pars.beta < 2) || (pars.beta > 10) || (pars.alpha < 1.0 ) || (pars.alpha > 100.)
+        throw(ModelException("Distance outside of 3 sigma prior range."))
+    end
+
+    # Add on the prior on gamma
+    lnp_gamma = log(1/(1 + exp(-5 * (pars.gamma + 3))) - 1/(1 + exp(-15 * (gamma - 2))))
+    lnp += lnp_gamma
+
+    r_out = grid.Rs[end]/AU # [AU]
+    # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
+    # to fit on the model grid.
+    if (3 * pars.r_c) > r_out
+        throw(ModelException("Model radius too large for grid size."))
+    else
+        return lnp
+    end
+
+end
+
 
 # Determine the physical size of the image. Size_arcsec is the full width of the image,
 # and so sizeau is the full size of the image as well (RADMC3D conventions).
