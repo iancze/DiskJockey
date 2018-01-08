@@ -1,7 +1,7 @@
 module model
 
 export write_grid, write_model, write_lambda, write_dust, Grid, size_au
-export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, ParametersVerticalEta, convert_vector, convert_dict, registered_params
+export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, ParametersVerticalEta, ParametersNuker, convert_vector, convert_dict, registered_params
 export lnprior
 
 # The double dot is because we are now inside the model module, and we want to import the
@@ -174,12 +174,12 @@ end
 abstract type AbstractParameters end
 
 "Parameters for the standard model."
-type ParametersStandard <: AbstractParameters
+mutable struct ParametersStandard <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface temperature gradient exponent
+    gamma::Float64 # surface density gradient exponent
     Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
@@ -191,12 +191,12 @@ type ParametersStandard <: AbstractParameters
 end
 
 "Parameters for the truncated model."
-type ParametersTruncated <: AbstractParameters
+mutable struct ParametersTruncated <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] Characteristic radius
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface temperature gradient exponent
+    gamma::Float64 # surface density gradient exponent
     gamma_e::Float64 # exponent for outer exponential surface density taper
     Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] microturbulence
@@ -209,7 +209,7 @@ type ParametersTruncated <: AbstractParameters
 end
 
 "Parameters for the cavity model."
-type ParametersCavity <: AbstractParameters
+mutable struct ParametersCavity <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
     r_cav::Float64 # [AU] inner radius of the disk, where an exponentially depleted cavity starts
@@ -228,7 +228,7 @@ type ParametersCavity <: AbstractParameters
 end
 
 "Parameters for the vertical model."
-type ParametersVertical <: AbstractParameters
+mutable struct ParametersVertical <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
     T_10m::Float64 # [K] temperature at 10 AU, midplane
@@ -252,7 +252,7 @@ type ParametersVertical <: AbstractParameters
 end
 
 "Parameters for the vertical model with variable slope."
-type ParametersVerticalEta <: AbstractParameters
+mutable struct ParametersVerticalEta <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
     T_10m::Float64 # [K] temperature at 10 AU, midplane
@@ -260,7 +260,7 @@ type ParametersVerticalEta <: AbstractParameters
     T_freeze::Float64 # [K] temperature below which to reduce CO abundance
     X_freeze::Float64 # [ratio] amount to reduce CO abundance
     sigma_s::Float64 # Photodissociation boundary in units of A_V.
-    gamma::Float64 # surface temperature gradient exponent
+    gamma::Float64 # surface density gradient exponent
     h::Float64 # Number of scale heights that z_q is at, typically fixed to 4
     eta::Float64 # Exponent for zq profile
     delta::Float64 # Shape exponent, currently fixed to 2
@@ -275,7 +275,7 @@ type ParametersVerticalEta <: AbstractParameters
 end
 
 "Parameters for the model with an inner hole."
-type ParametersInner <: AbstractParameters
+mutable struct ParametersInner <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
     r_c::Float64 # [AU] characteristic radius
     r_1::Float64 # the outer edge of the inner disk
@@ -284,7 +284,7 @@ type ParametersInner <: AbstractParameters
     Omega::Float64 # The longitude of the ascending node for the inner disk
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface temperature gradient exponent
+    gamma::Float64 # surface density gradient exponent
     Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
@@ -295,15 +295,36 @@ type ParametersInner <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+"Parameters for the NUKER model."
+mutable struct ParametersNuker <: AbstractParameters
+    M_star::Float64 # [M_sun] stellar mass
+    r_c::Float64 # [AU] characteristic radius
+    T_10::Float64 # [K] temperature at 10 AU
+    q::Float64 # temperature gradient exponent
+    gamma::Float64 # surface density gradient within r_c (negative values yield holes)
+    alpha::Float64 # sharpness of transition (2 = smooth, 16 = sharp)
+    beta::Float64 # gradient power law outside r_c (~7)
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    ksi::Float64 # [cm s^{-1}] microturbulence
+    dpc::Float64 # [pc] distance to system
+    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
+    PA::Float64 # [degrees] position angle (East of North)
+    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
+    mu_RA::Float64 # [arcsec] central offset in RA
+    mu_DEC::Float64 # [arcsec] central offset in DEC
+end
+
+
 "A dictionary of parameter lists for conversion."
 registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("truncated", ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("cavity", ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("inner", ["M_star", "r_c", "r_1", "r_2", "incl_inner", "Omega", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
+("inner", ["M_star", "r_c", "r_1", "r_2", "incl_inner", "Omega", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
+("nuker", ["M_star", "r_c", "T_10", "q", "gamma", "alpha", "beta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
 
-registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("inner", ParametersInner)])
+registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("inner", ParametersInner), ("nuker", ParametersNuker)])
 
 "Unroll a vector of parameter values into a parameter type."
 function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::Vector; args...)
@@ -668,7 +689,7 @@ function temperature(r::Float64, z::Float64, pars::ParametersVerticalEta)
 end
 
 
-# Calculate the gas surface density
+"Calculate the gas surface density"
 function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, ParametersVerticalEta, ParametersInner})
     r_c = pars.r_c * AU
 
@@ -678,6 +699,23 @@ function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, P
     S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
 
     return S
+end
+
+"
+    Sigma(r::Float64, pars::ParametersNuker)
+
+Calculate the gas surface density using the Nuker profile."
+function Sigma(r::Float64, pars::ParametersNuker)
+    r_c = pars.r_c * AU
+
+    gamma = pars.gamma
+    Sigma_c = pars.Sigma_c
+
+    alpha = pars.alpha
+    beta = pars.beta
+
+    S = Sigma_c * (r/r_c)^(-gamma) * (1 + (r/r_c)^alpha)^((gamma - beta)/alpha)
+
 end
 
 function Sigma(r::Float64, pars::ParametersTruncated)

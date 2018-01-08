@@ -43,6 +43,10 @@ Now has proper labeling for models that fix parameters.
 
 A new script for checking that you've specified everything properly before launching a MCMC run. This way you can avoid syntax errors in the `config` scripts after queuing for a cluster job.
 
+## NUKER profile
+
+We've implemented the NUKER profile as a model for the surface density distribution. See Tripathi et al. 2017 for more details.
+
 # Version 0.1.3
 
 ## Fix parameters

@@ -15,7 +15,7 @@ s = ArgParseSettings(description="Initialize a new project directory with the ap
     help = "Print out the list of files this program generates."
     action = :store_true
     "--new-project"
-    help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity'"
+    help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity', 'nuker'"
     default = "no"
     "--fit-every"
     help = "Print out an exclude array that should be manually copied to config.yaml so that only every n-th channel is fit in venus.jl"
