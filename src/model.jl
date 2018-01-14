@@ -439,7 +439,7 @@ end
 
 
 "The common sense priors that apply to all parameter values"
-function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float64)
+function lnprior_base(pars::AbstractParameters)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10 <= 0. || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
         # println("M_star ", pars.M_star)
@@ -451,23 +451,14 @@ function lnprior_base(pars::AbstractParameters, dpc_mu::Float64, dpc_sig::Float6
         throw(ModelException("Parameters outside of prior range."))
     end
 
-    # Impose distance prior
-    dlow = dpc_mu - 3. * dpc_sig
-    dhigh = dpc_mu + 3. * dpc_sig
-
-    # hard +/- 3 sigma cutoff
-    if (pars.dpc < dlow) || (pars.dpc > dhigh)
-        throw(ModelException("Distance outside of 3 sigma prior range."))
-    end
-
-    # If we've passed all the hard-cut offs by this point, return the sum of the distance prior and the geometrical inclination prior.
-    return -0.5 * (pars.dpc - dpc_mu)^2 / dpc_sig^2 + log(0.5 * sind(pars.incl))
+    # If we've passed all the hard-cut offs by this point, return the geometrical inclination prior.
+    return log(0.5 * sind(pars.incl))
 
 end
 
-function lnprior(pars::ParametersStandard, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+function lnprior(pars::ParametersStandard, grid::Grid)
 
-    lnp = lnprior_base(pars, dpc_mu, dpc_sig)
+    lnp = lnprior_base(pars)
 
     r_out = grid.Rs[end]/AU # [AU]
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
@@ -480,8 +471,8 @@ function lnprior(pars::ParametersStandard, dpc_mu::Float64, dpc_sig::Float64, gr
 
 end
 
-function lnprior(pars::ParametersTruncated, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
-    lnp = lnprior_base(pars, dpc_mu, dpc_sig)
+function lnprior(pars::ParametersTruncated, grid::Grid)
+    lnp = lnprior_base(pars,)
 
     r_out = grid.Rs[end]/AU # [AU]
 
@@ -493,8 +484,8 @@ function lnprior(pars::ParametersTruncated, dpc_mu::Float64, dpc_sig::Float64, g
 
 end
 
-function lnprior(pars::ParametersCavity, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
-    lnp = lnprior_base(pars, dpc_mu, dpc_sig)
+function lnprior(pars::ParametersCavity, grid::Grid)
+    lnp = lnprior_base(pars)
 
     r_in = grid.Rs[1]/AU # [AU]
     r_out = grid.Rs[end]/AU # [AU]
@@ -510,7 +501,7 @@ function lnprior(pars::ParametersCavity, dpc_mu::Float64, dpc_sig::Float64, grid
 
 end
 
-function lnprior(pars::ParametersVertical, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+function lnprior(pars::ParametersVertical, grid::Grid)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10a <= 0. || pars.T_10m <= 0. || pars.r_c <= 0.0  || pars.T_10a > 1500. || pars.q_m < 0. || pars.q_a < 0. || pars.q_m > 1.0 || pars.q_a > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0
         throw(ModelException("Parameters outside of prior range."))
@@ -521,17 +512,9 @@ function lnprior(pars::ParametersVertical, dpc_mu::Float64, dpc_sig::Float64, gr
         throw(ModelException("Atmosphere is cooler than midplane."))
     end
 
-    # Impose distance prior
-    dlow = dpc_mu - 3. * dpc_sig
-    dhigh = dpc_mu + 3. * dpc_sig
 
-    # hard +/- 3 sigma cutoff
-    if (pars.dpc < dlow) || (pars.dpc > dhigh)
-        throw(ModelException("Distance outside of 3 sigma prior range."))
-    end
-
-    # If we've passed all the hard-cut offs by this point, return the sum of the distance prior and the geometrical inclination prior.
-    lnp = -0.5 * (pars.dpc - dpc_mu)^2 / dpc_sig^2 + log(0.5 * sind(pars.incl))
+    # If we've passed all the hard-cut offs by this point, return the geometrical inclination prior.
+    lnp = log(0.5 * sind(pars.incl))
 
     r_out = grid.Rs[end]/AU # [AU]
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
@@ -544,23 +527,15 @@ function lnprior(pars::ParametersVertical, dpc_mu::Float64, dpc_sig::Float64, gr
 
 end
 
-function lnprior(pars::ParametersVerticalEta, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+function lnprior(pars::ParametersVerticalEta, grid::Grid)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10m <= 60. || pars.r_c <= 0.0  || pars.q_m < 0. || pars.q_m > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0 || pars.eta < 0.2 || pars.eta > 6.0  || pars.h < 0.5 || pars.h > 6.0 || pars.delta < 0.5 || pars.delta > 6.0 || pars.gamma < 0.5 || pars.gamma > 3.0
         throw(ModelException("Parameters outside of prior range."))
     end
 
-    # Impose distance prior
-    dlow = dpc_mu - 3. * dpc_sig
-    dhigh = dpc_mu + 3. * dpc_sig
 
-    # hard +/- 3 sigma cutoff
-    if (pars.dpc < dlow) || (pars.dpc > dhigh)
-        throw(ModelException("Distance outside of 3 sigma prior range."))
-    end
-
-    # If we've passed all the hard-cut offs by this point, return the sum of the distance prior and the geometrical inclination prior.
-    lnp = -0.5 * (pars.dpc - dpc_mu)^2 / dpc_sig^2 + log(0.5 * sind(pars.incl))
+    # If we've passed all the hard-cut offs by this point, return the geometrical inclination prior.
+    lnp = log(0.5 * sind(pars.incl))
 
     r_out = grid.Rs[end]/AU # [AU]
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
@@ -574,9 +549,9 @@ function lnprior(pars::ParametersVerticalEta, dpc_mu::Float64, dpc_sig::Float64,
 end
 
 
-function lnprior(pars::ParametersNuker, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
+function lnprior(pars::ParametersNuker, grid::Grid)
 
-    lnp = lnprior_base(pars, dpc_mu, dpc_sig)
+    lnp = lnprior_base(pars)
 
     # hard +/- 3 sigma cutoff
     if (pars.beta < 2) || (pars.beta > 10) || (pars.alpha < 1.0 ) || (pars.alpha > 100.)

@@ -171,9 +171,6 @@ end
 @everywhere grd = cfg["grid"]
 @everywhere grid = Grid(grd)
 
-@everywhere dpc_mu = cfg["dpc_prior"]["mu"]
-@everywhere dpc_sig = cfg["dpc_prior"]["sig"]
-
 # calculate the interpolation closures, since we are keeping the angular size of the image
 # fixed thoughout the entire simulation.
 # calculate dl and dm (assuming they are equal).
@@ -209,7 +206,7 @@ end
 
     lnp = try
 
-        lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
+        lnpr = lnprior(pars, grid)
 
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
 

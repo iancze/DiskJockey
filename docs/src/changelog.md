@@ -47,6 +47,18 @@ A new script for checking that you've specified everything properly before launc
 
 We've implemented the NUKER profile as a model for the surface density distribution. See Tripathi et al. 2017 for more details.
 
+## Distance
+
+We've removed the following fields from ``config.yaml`` for all models
+
+    # Distance prior setup
+    dpc_prior:
+      mu : 145.
+      sig : 20.
+
+The main reason is that because the dynamical mass results are completely degenerate with distance in a linear manner, it doesn't make sense to sample in distance, especially if the prior is a simple analytical form like a Gaussian. This means that the normal mode of operation will be to include ``"dpc"`` in the ``fix_params`` field, as is commonly done. If the users require sampling in ``dpc``, then they can remove it from ``fix_params`` and write a prior in a custom ``prior.jl`` file.
+
+
 # Version 0.1.3
 
 ## Fix parameters

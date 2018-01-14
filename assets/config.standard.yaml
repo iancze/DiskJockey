@@ -16,11 +16,6 @@ grid:
 # Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
 # exclude: [35, 36, 37, 38]
 
-# Distance prior setup
-dpc_prior:
-  mu : 145.
-  sig : 20.
-
 # What type of model will we be fitting? This also affects which parameters to include.
 model : standard # choices of {standard, truncated, vertical, cavity, etc..}
 
