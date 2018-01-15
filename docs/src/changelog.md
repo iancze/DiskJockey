@@ -58,6 +58,9 @@ We've removed the following fields from ``config.yaml`` for all models
 
 The main reason is that because the dynamical mass results are completely degenerate with distance in a linear manner, it doesn't make sense to sample in distance, especially if the prior is a simple analytical form like a Gaussian. This means that the normal mode of operation will be to include ``"dpc"`` in the ``fix_params`` field, as is commonly done. If the users require sampling in ``dpc``, then they can remove it from ``fix_params`` and write a prior in a custom ``prior.jl`` file.
 
+## InitializeWalkers.ipynb to initialize_walkers.py
+
+Rather than editing the walker initialization script with an IPython notebook, instead it is now done with a simple python script. Functionally, these are the same, but the script removes the extra startup time of a Jupyter notebook.
 
 # Version 0.1.3
 

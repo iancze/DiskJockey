@@ -553,6 +553,9 @@ function lnprior(pars::ParametersNuker, grid::Grid)
 
     lnp = lnprior_base(pars)
 
+    println("alpha: ", pars.alpha)
+    println("beta: ", pars.beta)
+
     if (pars.beta < 2) || (pars.beta > 10) || (pars.alpha < 1.0 ) || (pars.alpha > 100.)
         println("Alpha or Beta outside of prior range.")
         throw(ModelException("Alpha or Beta outside of prior range."))

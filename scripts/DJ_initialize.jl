@@ -47,10 +47,10 @@ if parsed_args["new-project"] != "no"
     model = parsed_args["new-project"]
 
     cp(assets_dir * "config.$(model).yaml", pwd() * "/config.yaml")
-    cp(assets_dir * "InitializeWalkers.$(model).ipynb", pwd() * "/InitializeWalkers.ipynb")
+    cp(assets_dir * "initialize_walkers.$(model).py", pwd() * "/initialize_walkers.py")
     cp(assets_dir * "Makefile", pwd() * "/Makefile")
 
-    println("Copied default config.yaml, InitializeWalkers.ipynb, and Makefile for the $model model to current working directory.")
+    println("Copied default config.yaml, initialize_walkers.py, and Makefile for the $model model to current working directory.")
     println("Exiting")
     quit()
 end
