@@ -205,9 +205,9 @@ end
     keydir = mktempdir() * "/"
 
     lnp = try
-
+        # println("Before lnprior")
         lnpr = lnprior(pars, grid)
-
+        # println("Made it past lnprior")
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
 
         # Copy all relevant configuration scripts to the keydir so that RADMC-3D can run.
@@ -283,6 +283,7 @@ end
         # If an error occured through some of the known routines in this package ,
         # -Inf is returned as the value of lnp
         # Otherwise the error causese the program to exit
+        # println("Catching DiskJockeyException, returning -Inf")
         -Inf
 
     finally

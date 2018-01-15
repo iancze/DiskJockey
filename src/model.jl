@@ -392,6 +392,7 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
 
     elseif model == "nuker"
       indalpha = findin(reg_params, ["alpha"])
+      # println("Converting logalpha at index: ", indalpha)
       par_vec[indalpha] = 10.^par_vec[indalpha]
       par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
     else
@@ -430,7 +431,7 @@ function convert_dict(p::Dict, model::AbstractString)
     end
 
     # Using this order of parameters, unpack the dictionary p into a vector
-    # reg_params reads Sigma_c, not logSigma_c
+    # reg_params reads Sigma_c, not logSigma_c; alpha, not logalpha
     par_vec = Float64[p[par_name] for par_name in reg_params]
 
     return registered_types[model](par_vec...)
@@ -448,10 +449,12 @@ function lnprior_base(pars::AbstractParameters)
         # println("q ", pars.q)
         # println("incl ", pars.incl)
         # println("PA ", pars.PA)
+        # println("Exiting in lnprior base")
         throw(ModelException("Parameters outside of prior range."))
     end
 
     # If we've passed all the hard-cut offs by this point, return the geometrical inclination prior.
+    # natural log, not log10
     return log(0.5 * sind(pars.incl))
 
 end
@@ -514,6 +517,7 @@ function lnprior(pars::ParametersVertical, grid::Grid)
 
 
     # If we've passed all the hard-cut offs by this point, return the geometrical inclination prior.
+    # natural log, not log10
     lnp = log(0.5 * sind(pars.incl))
 
     r_out = grid.Rs[end]/AU # [AU]
@@ -535,6 +539,7 @@ function lnprior(pars::ParametersVerticalEta, grid::Grid)
 
 
     # If we've passed all the hard-cut offs by this point, return the geometrical inclination prior.
+    # natural log, not log10
     lnp = log(0.5 * sind(pars.incl))
 
     r_out = grid.Rs[end]/AU # [AU]
@@ -551,26 +556,28 @@ end
 
 function lnprior(pars::ParametersNuker, grid::Grid)
 
+    # println("In lnprior(Nuker)")
     lnp = lnprior_base(pars)
 
-    println("alpha: ", pars.alpha)
-    println("beta: ", pars.beta)
-
-    if (pars.beta < 2) || (pars.beta > 10) || (pars.alpha < 1.0 ) || (pars.alpha > 100.)
-        println("Alpha or Beta outside of prior range.")
+    if (pars.alpha < 1.0 ) || (pars.alpha > 100.) || (pars.beta < 2) || (pars.beta > 10)
+        # println("alpha: ", pars.alpha)
+        # println("beta: ", pars.beta)
+        # println("Alpha or Beta outside of prior range.")
         throw(ModelException("Alpha or Beta outside of prior range."))
     end
 
-    # Add on the prior on gamma
-    lnp_gamma = log(1/(1 + exp(-5 * (pars.gamma + 3))) - 1/(1 + exp(-15 * (gamma - 2))))
+    # Add on the prior on gamma (log, not log10)
+    lnp_gamma = log(1/(1 + exp(-5 * (pars.gamma + 3))) - 1/(1 + exp(-15 * (pars.gamma - 2))))
     lnp += lnp_gamma
 
     r_out = grid.Rs[end]/AU # [AU]
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
     # to fit on the model grid.
     if (3 * pars.r_c) > r_out
+        # println("Model radius too large for grid size.")
         throw(ModelException("Model radius too large for grid size."))
     else
+        # println("Returning lnprior as ", lnp)
         return lnp
     end
 
