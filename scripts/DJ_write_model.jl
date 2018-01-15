@@ -44,7 +44,7 @@ pars = convert_dict(config["parameters"], config["model"])
 grid = Grid(config["grid"])
 
 # Mention the contribution of the prior to the lnprob
-ln_prior = lnprior(pars, config["dpc_prior"]["mu"], config["dpc_prior"]["sig"], grid)
+ln_prior = lnprior(pars, grid)
 
 im = imread()
 skim = imToSky(im, pars.dpc)
