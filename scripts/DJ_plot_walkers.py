@@ -8,6 +8,7 @@ parser.add_argument("--draw", type=int, help="If specified, print out a random s
 parser.add_argument("--filter", type=float, default=0.0, help="Used in conjunction with --draw. Only take samples with lnprob this percentile[0 - 100) and above. Default is to take all.")
 parser.add_argument("--new_pos", help="If specified, create a new pos0 array with this filename using the number of walkers contained in draw.")
 parser.add_argument("--config", help="name of the config file used for the run.", default="config.yaml")
+parser.add_argument("--hdis", action="store_true", help="Plot the highest density intervals.")
 parser.add_argument("--tri", help="Plot the triangle too.", action="store_true")
 parser.add_argument("--drop", action="store_true", help="Drop the samples which have lnp==-np.inf")
 parser.add_argument("--interactive", action="store_true", help="Pop up the walker window so that you can zoom around.")
@@ -55,22 +56,6 @@ AIC = 2 * ndim - 2 * np.max(flat_lnprobs)
 print("AIC : ", AIC)
 print("a lower AIC means the model is closer to the 'truth'... as far as you trust diagnostics like these.")
 # BIC = np.log(n_data) * ndim - 2 * np.max(flat_lnprobs)
-
-def gelman_rubin(chain):
-    ssq = np.var(chain, axis=1, ddof=1)
-    W = np.mean(ssq, axis=0)
-    θb = np.mean(chain, axis=1)
-    θbb = np.mean(θb, axis=0)
-    m = chain.shape[0]
-    n = chain.shape[1]
-    B = n / (m - 1) * np.sum((θbb - θb)**2, axis=0)
-    var_θ = (n - 1) / n * W + 1 / n * B
-    R = np.sqrt(var_θ / W)
-    return R
-
-R = gelman_rubin(chain)
-print("Gelman Rubin statistics")
-print(R)
 
 # Keep only the samples which haven't evaluated to -np.inf (the prior disallows them). This usually originates from using a starting position which is already outside the prior.
 if args.drop:
@@ -149,13 +134,13 @@ if args.draw is not None:
 
 import matplotlib.pyplot as plt
 
-fig, ax = plt.subplots(nrows=(ndim + 1), ncols=1, figsize=(10, 1.5 * ndim))
-
 iterations = np.arange(niter)
-
 step = 100
 
-#Plot the lnprob on top
+# Plot a stream plot of the position of each walker as a function of ensemble iteration.
+fig, ax = plt.subplots(nrows=(ndim + 1), ncols=1, figsize=(10, 1.5 * ndim))
+
+#Plot the lnprob in the first panel
 for j in range(nwalkers):
     ax[0].plot(iterations, lnprobs[j], lw=0.15, color=colors[j])
 
@@ -164,6 +149,7 @@ ax[0].plot(iterations, avg, lw=1.1, color="w")
 ax[0].plot(iterations, avg, lw=0.9, color="b")
 ax[0].set_ylabel("lnprob")
 
+# Plot the walkers for each dimension in the subsequent panels.
 for i in range(ndim):
     for j in range(nwalkers):
         ax[i +1].plot(iterations, chain[j, :, i], lw=0.15, color=colors[j])
@@ -172,7 +158,6 @@ for i in range(ndim):
     avg = np.average(chain[:, :, i], axis=0)
     ax[i+1].plot(iterations, avg, lw=1.1, color="w")
     ax[i+1].plot(iterations, avg, lw=0.9, color="b")
-
     ax[i+1].set_ylabel(labels[i])
 
 ax[-1].set_xlabel("Iteration")
@@ -183,8 +168,11 @@ if args.interactive:
 else:
     fig.savefig("walkers.png", dpi=300)
 
-def hdi(samples, bins=40):
 
+def hdi(samples, bins=40):
+    '''
+    Compute the highest density interval for each 1D marginal distribution.
+    '''
     hist, bin_edges = np.histogram(samples, bins=bins, density=True)
     # convert bin_edges into bin centroids
     bin_centers = bin_edges[:-1] + np.diff(bin_edges)
@@ -210,16 +198,6 @@ def hdi(samples, bins=40):
     indHDI = hist > level
     binHDI = bin_centers[indHDI]
 
-    # print("Ranges: low: {}, max: {}, high: {}".format(binHDI[0], binmax, binHDI[-1]))
-    # print("Diffs: max:{}, low:{}, high:{}, dbin:{}".format(binmax, binmax - binHDI[0], binHDI[-1]-binmax, dbin))
-
-    # Now, return everything necessary to make a plot
-    # "lower": lower confidence interval
-    # "upper": upper confidence interval
-    #
-    # "plus": + errorbar
-    # "minus": - errorbar
-
     plus = binHDI[-1]-binmax
     minus = binmax - binHDI[0]
 
@@ -227,8 +205,9 @@ def hdi(samples, bins=40):
 
 
 def plot_hdis(flatchain, fname="hdi.png"):
-
-    # Plot the bins with highlighted ranges
+    '''
+    Plot the bins with highlighted highest density interval ranges, and print their ranges to the terminal.
+    '''
     fig,ax = plt.subplots(ncols=1, nrows=ndim, figsize=(6, 1.5 * ndim))
 
     for i in range(flatchain.shape[1]):
@@ -247,17 +226,14 @@ def plot_hdis(flatchain, fname="hdi.png"):
     fig.subplots_adjust(hspace=0.5, bottom=0.05, top=0.99)
     fig.savefig(fname)
 
-try:
+if args.hdis:
     plot_hdis(flatchain)
-except IndexError:
-    pass
 
 # Compute the autocorrelation time, following emcee
-
-# and we can import autocorr here
-print("Autocorrelation time")
+# Notes here: http://dfm.io/posts/autocorr/
+print("Integrated autocorrelation time")
 from emcee import autocorr
-print(autocorr.integrated_time(np.mean(chain, axis=0), axis=0, window=50, fast=False))
+print(autocorr.integrated_time(chain))
 
 
 # Make the triangle plot

@@ -69,15 +69,12 @@ println("Nyquist sampling satisfied. dRA: $dRA [arcsec/pix] ; dRA_max: $dRA_max 
 # at the closest source distance, and make sure that this is still larger than outer radius of
 # the model grid.
 
-mu_d = config["dpc_prior"]["mu"]
-sig_d = config["dpc_prior"]["sig"]
-
-dlow = mu_d - 3. * sig_d # [AU]
+dpc = config["parameters"]["dpc"]
 
 # Calculate the physical size of the image at the closer distance, and make sure it's still larger
 # than 110% of the outer grid radius
-sizeau = 0.5 * config["size_arcsec"] * dlow # [AU]
+sizeau = 0.5 * config["size_arcsec"] * dpc # [AU]
 outer_radius = 1.1 * config["grid"]["r_out"]
-@assert sizeau > outer_radius "The angular size of your image is too small to fully encapsulate the model grid at the closest distances to the source. Increase the angular size of your image via `size_arcsec` or decrease the outer radius of your model grid. Size at the closest distances $sizeau [AU]; outer radius of the grid + 10% $outer_radius [AU]"
+@assert sizeau > outer_radius "The angular size of your image is too small to fully encapsulate the model grid at the distance to the source. Increase the angular size of your image via `size_arcsec` or decrease the outer radius of your model grid. Size at the distance $dpc: $sizeau [AU]; outer radius of the grid + 10% $outer_radius [AU]"
 
-println("Image size satisfied. Half-Image size at the closest distances: $sizeau [AU]; outer radius of the grid + 10%: $outer_radius [AU]")
+println("Image size satisfied. Half-Image size at $dpc distance: $sizeau [AU]; outer radius of the grid + 10%: $outer_radius [AU]")

@@ -28,7 +28,7 @@ npix = config["npix"] # number of pixels
 grid = Grid(config["grid"])
 (sizeau_desired, sizeau_command) = size_au(config["size_arcsec"], pars.dpc, grid) # [AU]
 
-# run(`radmc3d mctherm`)
+run(`radmc3d mctherm`)
 
 # lambda should have already been written by DJInitialize.jl
 tic()

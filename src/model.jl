@@ -44,7 +44,7 @@ immutable Grid
 end
 
 "Hold the ray-tracing grid."
-function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool=true)
+function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real) #, eqmirror::Bool=true)
     # Specify a 2D axisymmetric *separable* grid in spherical coordinates:
     # {r, theta, phi}, where theta is angle from zenith, phi is azimuth
 
@@ -56,6 +56,8 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool=true
 
     #Define the cell *walls*
     Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+
+    eqmirror = true
 
     if eqmirror
         ped = 0.1
@@ -79,6 +81,45 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real, eqmirror::Bool=true
     return Grid(nr, ntheta, nphi, ncells, Rs, Thetas, Phis, rs, thetas, phis)
 
 end
+
+"Hold the ray-tracing grid."
+function Grid(nr::Int, ntheta::Int, nphi::Int, r_in::Real, r_out::Real)
+    # Specify a 2D axisymmetric *separable* grid in spherical coordinates:
+    # {r, theta, phi}, where theta is angle from zenith, phi is azimuth
+
+    # Number of cells in each dimension
+    ncells = nr * ntheta * nphi
+    r_in = convert(Float64, r_in) * AU # [cm] Inner extent of disk
+    r_out = convert(Float64, r_out) * AU # [cm] Outer extent of disk
+
+    #Define the cell *walls*
+    Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+
+    eqmirror = true
+
+    if eqmirror
+        ped = 0.1
+        #Thetas = linspace(0, pi/2., ntheta+1)
+        # [rad] Angles are internally defined in radians, not degrees
+        Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        #Logarithmically spaced closer near the z=0
+    else
+        Thetas = linspace(0, pi, ntheta+1)
+        # [rad] Angles are internally defined in radians, not degrees
+        # Equally spaced in theta.
+    end
+
+    Phis = linspace(0, 2pi, nphi+1) # [rad] cell walls for inactive coordinate
+
+    #Define the cell centers as the average between walls
+    rs = 0.5 * (Rs[1:end-1] + Rs[2:end]) # [cm]
+    thetas = 0.5 * (Thetas[1:end-1] + Thetas[2:end])
+    phis = 0.5 * (Phis[1:end-1] + Phis[2:end])
+
+    return Grid(nr, ntheta, nphi, ncells, Rs, Thetas, Phis, rs, thetas, phis)
+
+end
+
 
 "Create a grid object using a logarithmic then linear then logarithmic radial spacing"
 function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::Int, n_mid::Int, n_out::Int, ntheta::Int, eqmirror::Bool=true)
@@ -129,6 +170,8 @@ function Grid(d::Dict)
     if "r_linstart" in keys(d)
         # We're going for a log-linear-log grid
         names = ["r_in", "r_linstart", "r_linend", "r_out", "n_in", "n_mid", "n_out", "ntheta"]
+    elseif d["nphi"] > 1
+        names = ["nr", "ntheta", "nphi", "r_in", "r_out"]
     else
         # We're just going for a log spaced grid
         names = ["nr", "ntheta", "r_in", "r_out"]
@@ -149,7 +192,12 @@ function write_grid(basedir::AbstractString, grid::Grid)
     @printf(f, "%d\n", 100) #spherical coordiantes
     @printf(f, "%d\n", 0) #gridinfo (none needed for now)
     #incl_r incl_phi incl_z #use this axis?
-    @printf(f, "%d %d %d \n", 1, 1, 0) # 2D axisymmetric
+    if length(grid.Phis) > 2
+        @printf(f, "%d %d %d \n", 1, 1, 1) # 2D axisymmetric
+    else
+        @printf(f, "%d %d %d \n", 1, 1, 0) # 2D axisymmetric
+    end
+
     #n_r    n_phi   n_z #number of cells in this dimension
     @printf(f, "%d %d %d \n", grid.nr, grid.ntheta, grid.nphi)
 
@@ -295,6 +343,29 @@ mutable struct ParametersInner <: AbstractParameters
     mu_DEC::Float64 # [arcsec] central offset in DEC
 end
 
+
+"Parameters for the model with an inner hole."
+mutable struct ParametersOverdense <: AbstractParameters
+    M_star::Float64 # [M_sun] stellar mass
+    r_c::Float64 # [AU] characteristic radius
+    r_1::Float64 # the depletion radius
+    delta::Float64 # factor depleted inside of r_1
+    omega::Float64 # The argument of periastron for the overdensity
+    amp::Float64 # the amplitude of the sin-overdensity.
+    T_10::Float64 # [K] temperature at 10 AU
+    q::Float64 # temperature gradient exponent
+    gamma::Float64 # surface density gradient exponent
+    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    ksi::Float64 # [cm s^{-1}] microturbulence
+    dpc::Float64 # [pc] distance to system
+    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
+    PA::Float64 # [degrees] position angle (East of North)
+    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
+    mu_RA::Float64 # [arcsec] central offset in RA
+    mu_DEC::Float64 # [arcsec] central offset in DEC
+end
+
+
 "Parameters for the NUKER model."
 mutable struct ParametersNuker <: AbstractParameters
     M_star::Float64 # [M_sun] stellar mass
@@ -322,9 +393,10 @@ registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "
 ("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
 ("inner", ["M_star", "r_c", "r_1", "r_2", "incl_inner", "Omega", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("nuker", ["M_star", "r_c", "T_10", "q", "gamma", "alpha", "beta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
+("nuker", ["M_star", "r_c", "T_10", "q", "gamma", "alpha", "beta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
+("overdense", ["M_star", "r_c", "r_1", "delta", "omega", "amp", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
 
-registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("inner", ParametersInner), ("nuker", ParametersNuker)])
+registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("inner", ParametersInner), ("nuker", ParametersNuker), ("overdense", ParametersOverdense)])
 
 "Unroll a vector of parameter values into a parameter type."
 function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::Vector; args...)
@@ -410,7 +482,7 @@ function convert_dict(p::Dict, model::AbstractString)
     reg_params = registered_params[model]
     nparams = length(reg_params)
 
-    if model == "verticalEta" || model == "standard" || model == "inner"
+    if model == "verticalEta" || model == "standard" || model == "inner" || model == "overdense"
 
       M_gas = 10.^p["logM_gas"] * M_sun # [g]
 
@@ -720,6 +792,25 @@ function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, P
     return S
 end
 
+"Calculate the gas surface density"
+function Sigma(r::Float64, phi::Float64, pars::ParametersOverdense)
+    r_c = pars.r_c * AU
+
+    gamma = pars.gamma
+    Sigma_c = pars.Sigma_c
+
+    boost = 1 + (pars.amp * cos(phi - pars.omega * pi/180.))
+
+    if r < (pars.r_1 * AU)
+        S = pars.delta * boost * Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
+    else
+        S = boost * Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
+    end
+
+    return S
+end
+
+
 "
     Sigma(r::Float64, pars::ParametersNuker)
 
@@ -768,6 +859,18 @@ end
 function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
     H = Hp(r, pars)
     S = Sigma(r, pars)
+
+    # Calculate the density
+    rho = S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+
+    return rho
+end
+
+
+# Delivers a gas density in g/cm^3
+function rho_gas(r::Float64, phi::Float64, z::Float64, pars::ParametersOverdense)
+    H = Hp(r, pars)
+    S = Sigma(r, phi, pars)
 
     # Calculate the density
     rho = S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
@@ -943,6 +1046,17 @@ function rho_dust(r::Float64, z::Float64, pars::AbstractParameters)
 
     # Use the rho_gas function to get the total density in [g/cm^3]
     mGas = rho_gas(r, z, pars)
+
+    # Convert from mGas to mDust using Gas/Dust ratio of 100
+    mDust = mGas * 0.01 # [g]
+
+    return mDust
+end
+
+function rho_dust(r::Float64, phi::Float64, z::Float64, pars::ParametersOverdense)
+
+    # Use the rho_gas function to get the total density in [g/cm^3]
+    mGas = rho_gas(r, phi, z, pars)
 
     # Convert from mGas to mDust using Gas/Dust ratio of 100
     mDust = mGas * 0.01 # [g]
@@ -1257,6 +1371,28 @@ function write_dust(pars::AbstractParameters, basedir::AbstractString, grid::Gri
                 r_cyl = r * sin(theta)
 
                 @printf(fdens, "%.9e\n", rho_dust(r_cyl, z, pars))
+            end
+        end
+    end
+
+    close(fdens)
+end
+
+
+function write_dust(pars::ParametersOverdense, basedir::AbstractString, grid::Grid)
+    fdens = open(basedir * "dust_density.inp", "w")
+    @printf(fdens, "%d\n", 1) #iformat
+    @printf(fdens, "%d\n", grid.ncells)
+    @printf(fdens, "%d\n", 1) # number of dust species
+
+    for phi in grid.phis
+        for theta in grid.thetas
+            for r in grid.rs
+                #Convert from spherical to cylindrical coordinates
+                z = r * cos(theta)
+                r_cyl = r * sin(theta)
+
+                @printf(fdens, "%.9e\n", rho_dust(r_cyl, phi, z, pars))
             end
         end
     end
