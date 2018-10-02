@@ -1,5 +1,4 @@
 "Provide routines for making fake Gaussian models which have analytic Fourier transforms, for the purposes of testing."
-
 module gauss
 
 export imageGauss, FTGauss

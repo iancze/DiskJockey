@@ -1,17 +1,14 @@
-julia 0.6
+julia 0.7
+Printf
+Test
 YAML
 PyPlot
 LaTeXStrings
 Distributions
-IJulia
 PDMats
 HDF5
 ArgParse
 Logging
-Images
-Dierckx
 NPZ
 ClusterManagers
-Optim
-ODE
 NaNMath

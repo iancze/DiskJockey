@@ -7,9 +7,10 @@ export lnprior
 # The double dot is because we are now inside the model module, and we want to import the
 # constants module, which is part of the enclosing DiskJockey package.
 using ..constants
-using Dierckx
-using Optim
-using ODE
+using Printf
+# using Dierckx
+# using Optim
+# using ODE
 
 "Write the wavelength sampling file. Only run on setup"
 function write_lambda(lams::AbstractArray, basedir::AbstractString)
@@ -28,7 +29,7 @@ const eqmirror = true # mirror the grid about the z=0 midplane ?
 
 "Define a grid object which stores all of these variables
 This will not change for the duration of the run."
-immutable Grid
+struct Grid
     nr::Int
     ntheta::Int
     nphi::Int
@@ -443,7 +444,7 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     if model == "verticalEta"
       # Convert from log10M_gas to Sigma_c
 
-      M_gas = 10.^par_vec[indSigma_c] * M_sun # [g]
+      M_gas = 10.0^par_vec[indSigma_c] * M_sun # [g]
 
       # Find gamma and r_c
       r_c = par_vec[2] * AU # [cm]
@@ -453,7 +454,7 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
       par_vec[indSigma_c] = Sigma_c
     elseif model == "standard" || model == "inner"
       # Convert from log10M_gas to Sigma_c
-      M_gas = 10.^par_vec[indSigma_c] * M_sun # [g]
+      M_gas = 10.0^par_vec[indSigma_c] * M_sun # [g]
 
       # Find gamma and r_c
       r_c = par_vec[2] * AU # [cm]
@@ -465,10 +466,10 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     elseif model == "nuker"
       indalpha = findin(reg_params, ["alpha"])
       # println("Converting logalpha at index: ", indalpha)
-      par_vec[indalpha] = 10.^par_vec[indalpha]
-      par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
+      par_vec[indalpha] = 10.0^par_vec[indalpha]
+      par_vec[indSigma_c] = 10.0^par_vec[indSigma_c]
     else
-      par_vec[indSigma_c] = 10.^par_vec[indSigma_c]
+      par_vec[indSigma_c] = 10.0^par_vec[indSigma_c]
     end
     # Then assembling these in the same orignial order as registered_params, into the parameter
     # type corresponding to the model.
@@ -484,7 +485,7 @@ function convert_dict(p::Dict, model::AbstractString)
 
     if model == "verticalEta" || model == "standard" || model == "inner" || model == "overdense"
 
-      M_gas = 10.^p["logM_gas"] * M_sun # [g]
+      M_gas = 10.0^p["logM_gas"] * M_sun # [g]
 
       # Find gamma and r_c
       r_c = p["r_c"] * AU # [cm]
@@ -495,11 +496,11 @@ function convert_dict(p::Dict, model::AbstractString)
 
     elseif model == "nuker"
       # add a new field, which is the conversion of logSigma_c to Sigma_c
-      p["alpha"] = 10^p["logalpha"]
-      p["Sigma_c"] = 10^p["logSigma_c"]
+      p["alpha"] = 10.0^p["logalpha"]
+      p["Sigma_c"] = 10.0^p["logSigma_c"]
     else
       # add a new field, which is the conversion of logSigma_c to Sigma_c
-      p["Sigma_c"] = 10^p["logSigma_c"]
+      p["Sigma_c"] = 10.0^p["logSigma_c"]
     end
 
     # Using this order of parameters, unpack the dictionary p into a vector
@@ -514,7 +515,7 @@ end
 "The common sense priors that apply to all parameter values"
 function lnprior_base(pars::AbstractParameters)
     # Create a giant short-circuit or loop to test for sensical parameter values.
-    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10 <= 0. || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
+    if pars.M_star <= 0.0 || pars.ksi <= 0.0 || pars.T_10 <= 0.0 || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
         # println("M_star ", pars.M_star)
         # println("r_c ", pars.r_c)
         # println("T_10 ", pars.T_10)
@@ -578,7 +579,7 @@ end
 
 function lnprior(pars::ParametersVertical, grid::Grid)
     # Create a giant short-circuit or loop to test for sensical parameter values.
-    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10a <= 0. || pars.T_10m <= 0. || pars.r_c <= 0.0  || pars.T_10a > 1500. || pars.q_m < 0. || pars.q_a < 0. || pars.q_m > 1.0 || pars.q_a > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0
+    if pars.M_star <= 0.0 || pars.ksi <= 0.0 || pars.T_10a <= 0.0 || pars.T_10m <= 0.0 || pars.r_c <= 0.0  || pars.T_10a > 1500.0 || pars.q_m < 0.0 || pars.q_a < 0.0 || pars.q_m > 1.0 || pars.q_a > 1.0 || pars.incl < 0. || pars.incl > 180.0 || pars.PA < -180.0 || pars.PA > 520.0 || pars.X_freeze > 1.0 || pars.sigma_s < 0.0
         throw(ModelException("Parameters outside of prior range."))
     end
 
@@ -605,7 +606,7 @@ end
 
 function lnprior(pars::ParametersVerticalEta, grid::Grid)
     # Create a giant short-circuit or loop to test for sensical parameter values.
-    if pars.M_star <= 0.0 || pars.ksi <= 0. || pars.T_10m <= 60. || pars.r_c <= 0.0  || pars.q_m < 0. || pars.q_m > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. || pars.X_freeze > 1.0 || pars.sigma_s < 0.0 || pars.eta < 0.2 || pars.eta > 6.0  || pars.h < 0.5 || pars.h > 6.0 || pars.delta < 0.5 || pars.delta > 6.0 || pars.gamma < 0.5 || pars.gamma > 3.0
+    if pars.M_star <= 0.0 || pars.ksi <= 0.0 || pars.T_10m <= 60.0 || pars.r_c <= 0.0  || pars.q_m < 0.0 || pars.q_m > 1.0 || pars.incl < 0.0 || pars.incl > 180.0 || pars.PA < -180.0 || pars.PA > 520.0 || pars.X_freeze > 1.0 || pars.sigma_s < 0.0 || pars.eta < 0.2 || pars.eta > 6.0  || pars.h < 0.5 || pars.h > 6.0 || pars.delta < 0.5 || pars.delta > 6.0 || pars.gamma < 0.5 || pars.gamma > 3.0
         throw(ModelException("Parameters outside of prior range."))
     end
 
@@ -631,7 +632,7 @@ function lnprior(pars::ParametersNuker, grid::Grid)
     # println("In lnprior(Nuker)")
     lnp = lnprior_base(pars)
 
-    if (pars.alpha < 1.0 ) || (pars.alpha > 100.) || (pars.beta < 2) || (pars.beta > 10)
+    if (pars.alpha < 1.0 ) || (pars.alpha > 100.0) || (pars.beta < 2) || (pars.beta > 10)
         # println("alpha: ", pars.alpha)
         # println("beta: ", pars.beta)
         # println("Alpha or Beta outside of prior range.")
@@ -671,7 +672,7 @@ function size_au(size_arcsec::Real, dpc::Real, grid::Grid)
 
     # because there seems to be a slight offset between what sizeau is specified and the actual
     # size of the image, we will also specifiy sizeau_command, which is the value to give to RADMC
-    sizeau_command = sizeau_desired/(1. + RADMC_SIZEAU_SHIFT)
+    sizeau_command = sizeau_desired/(1.0 + RADMC_SIZEAU_SHIFT)
 
     return (sizeau_desired, sizeau_command) # [AU]
 
@@ -680,39 +681,39 @@ end
 # Assume all inputs to these functions are in CGS units and in *cylindrical* coordinates.
 # Parametric type T allows passing individual Float64 or Vectors.
 # # Alternate functions accept pars passed around, where pars is in M_star, AU, etc...
-function velocity{T}(r::T, M_star::Float64)
+function velocity(r::T, M_star::Float64) where {T}
     sqrt.(G * M_star ./ r)
 end
-velocity{T}(r::T, pars::AbstractParameters) = velocity(r, pars.M_star * M_sun)
+velocity(r::T, pars::AbstractParameters) where {T} = velocity(r, pars.M_star * M_sun)
 
 # For the vertical temperature gradient
 function velocity(r::Float64, z::Float64, M_star::Float64)
-    sqrt.(G * M_star / (r^2 + z^2)^(3./2)) * r
+    sqrt.(G * M_star / (r^2 + z^2)^(3.0/2)) * r
 end
 velocity(r::Float64, z::Float64, pars::ParametersInner) = velocity(r, z, pars.M_star * M_sun)
 velocity(r::Float64, z::Float64, pars::ParametersVertical) = velocity(r, z, pars.M_star * M_sun)
 velocity(r::Float64, z::Float64, pars::ParametersVerticalEta) = velocity(r, z, pars.M_star * M_sun)
 
-function temperature{T}(r::T, T_10::Float64, q::Float64)
-    T_10 * (r ./ (10. * AU)).^(-q)
+function temperature(r::T, T_10::Float64, q::Float64) where {T}
+    T_10 * (r ./ (10.0 * AU)).^(-q)
 end
-temperature{T}(r::T, pars::AbstractParameters) = temperature(r, pars.T_10, pars.q)
+temperature(r::T, pars::AbstractParameters) where {T} = temperature(r, pars.T_10, pars.q)
 
-function Hp{T}(r::T, M_star::Float64, T_10::Float64, q::Float64)
+function Hp(r::T, M_star::Float64, T_10::Float64, q::Float64) where {T}
     temp = temperature(r, T_10, q)
-    sqrt.(kB * temp .* r.^3./(mu_gas * m_H * G * M_star))
+    sqrt.(kB * temp .* r.^3.0/(mu_gas * m_H * G * M_star))
 end
-Hp{T}(r::T,  pars::AbstractParameters) = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
+Hp(r::T,  pars::AbstractParameters) where {T} = Hp(r, pars.M_star * M_sun, pars.T_10, pars.q)
 # Scale height computed from midplane temperature for vertical temperature gradient model
-Hp{T}(r::T,  pars::Union{ParametersVertical,ParametersVerticalEta}) = Hp(r, pars.M_star * M_sun, pars.T_10m, pars.q_m)
+Hp(r::T,  pars::Union{ParametersVertical,ParametersVerticalEta}) where {T} = Hp(r, pars.M_star * M_sun, pars.T_10m, pars.q_m)
 
 # For the vertical temperature gradient model
-T_mid{T}(r::T, pars::ParametersVertical) = temperature(r, pars.T_10m, pars.q_m)
-T_atm{T}(r::T, pars::ParametersVertical) = temperature(r, pars.T_10a, pars.q_a)
+T_mid(r::T, pars::ParametersVertical) where {T} = temperature(r, pars.T_10m, pars.q_m)
+T_atm(r::T, pars::ParametersVertical) where {T} = temperature(r, pars.T_10a, pars.q_a)
 
-T_mid{T}(r::T, pars::ParametersVerticalEta) = temperature(r, pars.T_10m, pars.q_m)
+T_mid(r::T, pars::ParametersVerticalEta) where {T} = temperature(r, pars.T_10m, pars.q_m)
 
-function T_atm{T}(r::T, pars::ParametersVerticalEta)
+function T_atm(r::T, pars::ParametersVerticalEta) where {T}
     Tm = T_mid(r, pars)
 
     # the atmosphere temperature is the maximum of 500 or twice the midplane
@@ -723,11 +724,11 @@ end
 
 
 # Atmosphere height computed as multiple of scale height (computed at midplane)
-function z_q{T}(r::T, pars::ParametersVertical)
+function z_q(r::T, pars::ParametersVertical) where {T}
     return pars.h * Hp(r, pars)
 end
 
-function z_q{T}(r::T, pars::ParametersVerticalEta)
+function z_q(r::T, pars::ParametersVerticalEta) where {T}
 
     # Calculate the scale height at this radius
     H = Hp(r, pars) # [cm]
@@ -799,7 +800,7 @@ function Sigma(r::Float64, phi::Float64, pars::ParametersOverdense)
     gamma = pars.gamma
     Sigma_c = pars.Sigma_c
 
-    boost = 1 + (pars.amp * cos(phi - pars.omega * pi/180.))
+    boost = 1 + (pars.amp * cos(phi - pars.omega * pi/180.0))
 
     if r < (pars.r_1 * AU)
         S = pars.delta * boost * Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
@@ -861,7 +862,7 @@ function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
     S = Sigma(r, pars)
 
     # Calculate the density
-    rho = S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+    rho = S/(sqrt(2.0 * pi) * H) * exp(-0.5 * (z/H)^2)
 
     return rho
 end
@@ -873,7 +874,7 @@ function rho_gas(r::Float64, phi::Float64, z::Float64, pars::ParametersOverdense
     S = Sigma(r, phi, pars)
 
     # Calculate the density
-    rho = S/(sqrt(2. * pi) * H) * exp(-0.5 * (z/H)^2)
+    rho = S/(sqrt(2.0 * pi) * H) * exp(-0.5 * (z/H)^2)
 
     return rho
 end
@@ -884,7 +885,7 @@ function rho_gas_mid(r::Float64, pars::AbstractParameters)
     S = Sigma(r, pars)
 
     # Calculate the density at the midplane
-    rho = S/(sqrt(2. * pi) * H)
+    rho = S/(sqrt(2.0 * pi) * H)
 
     return rho
 
@@ -896,7 +897,7 @@ function dT(r::Float64, z::Float64, pars::ParametersVertical)
     Ta = T_atm(r, pars)
 
     if z >= zq
-        return 0.
+        return 0.0
     else
         Tm = T_mid(r, pars)
         # return - pi * pars.delta / (2 * zq) * (Tm - Ta) * (cos(pi * z/(2 * zq)))^(pars.delta - 1) * sin(pi * z / (2 * zq))
@@ -913,9 +914,9 @@ function dT(r::Float64, z::Float64, pars::ParametersVerticalEta)
     H = Hp(r, pars)
 
     if z >= zq
-        return 0.
+        return 0.0
     elseif z < H
-      return 0.
+      return 0.0
     else
         Tm = T_mid(r, pars)
 
@@ -943,84 +944,84 @@ function z_top(r::Float64, pars::Union{ParametersVertical, ParametersVerticalEta
 end
 
 
-function rho_gas(r::Float64, z::Float64, pars::Union{ParametersVertical, ParametersVerticalEta})
-
-    # Calculate the "top" of the atmosphere,
-    # a height where we are sure we can enforce that density = 0
-    ztop = z_top(r, pars)
-
-    # If we are querying a height above this, just return 0 now
-    if z > ztop
-        return constants.rho_gas_zero
-    end
-
-    # Calculate what the maximum surface density would be if we integrated all the way to  the midplane
-    sigma = Sigma(r, pars) / 2
-
-    # Calculate the photodissociation height
-    # Threshold column density
-    thresh_H2 = pars.sigma_s * Av_sigmaH / 2 # [n_H2/cm^2]
-    thresh = thresh_H2 * (mu_gas * amu / X_H2) # [g/cm^2] of gas
-
-    # If there is not even enough column density at the midplane in order to exceed the threshold
-    # to protect against photodissociation of CO, just return 0 now
-    # if sigma < thresh
-    #     return constants.rho_gas_zero
-    # end
-
-    # Create an array of heights that goes from the midplane (0, 0.001, ..., ztop)
-    zs = cat(1, [0], logspace(log10(0.001 * AU), log10(ztop), 64 - 1))
-
-    # Define the ODE at this radius r
-    function f(z, y)
-        # calculate y'
-        dlnrho(r, z, pars) * y
-    end
-
-    # Choose a starting guess corresponding to the midplane density for an isothermal model.
-    # This helps us get in the ballpark and avoid a lot of the numerical errors that result
-    start = rho_gas_mid(r, pars)
-
-    # Now solve the ODE on the grid of postulated values
-    # For the inner disk, we require a larger value of abstol
-    # We need to experiment with what is best
-    abstol=1e-22
-    z_out, y_out = ode45(f, start, zs; abstol=1e-22)
-
-    # where y_out is less than the minimum accuracy we can trust, just set it to the minimum value
-    y_out[y_out .< abstol] = abstol
-
-    # Integrate the output from the ODE solver to find the total (un-normalized) surface density
-    spl = Spline1D(z_out, y_out)
-    tot = integrate(spl, z_out[1], z_out[end])
-
-    # Apply a correction factor to the un-normalized densities
-    cor = sigma / tot
-    rhos = y_out .* cor
-
-    # This is the function that will be minimized
-    function g(zvar::Float64)
-        return abs(thresh - cor * integrate(spl, zvar, z_out[end]))
-    end
-
-    z_phot = optimize(g, z_out[1], z_out[end]).minimum
-
-    # Evaluate rho at this point
-    rho = cor * evaluate(spl, z)
-
-    # If we are above this height, return the gas density reduced by a factor of 100
-    if z > z_phot
-        rho = 1e-2 * rho
-    end
-
-    if rho < 0.0
-      println("r ", r/AU, " z ", z/AU, " z_top ", ztop/AU, " z_phot ", z_phot/AU, " y_out ", y_out)
-      return (start, z_out, y_out)
-      throw(ModelException("Rho less than 0.0"))
-    end
-
-    return rho
-end
+# function rho_gas(r::Float64, z::Float64, pars::Union{ParametersVertical, ParametersVerticalEta})
+#
+#     # Calculate the "top" of the atmosphere,
+#     # a height where we are sure we can enforce that density = 0
+#     ztop = z_top(r, pars)
+#
+#     # If we are querying a height above this, just return 0 now
+#     if z > ztop
+#         return constants.rho_gas_zero
+#     end
+#
+#     # Calculate what the maximum surface density would be if we integrated all the way to  the midplane
+#     sigma = Sigma(r, pars) / 2
+#
+#     # Calculate the photodissociation height
+#     # Threshold column density
+#     thresh_H2 = pars.sigma_s * Av_sigmaH / 2 # [n_H2/cm^2]
+#     thresh = thresh_H2 * (mu_gas * amu / X_H2) # [g/cm^2] of gas
+#
+#     # If there is not even enough column density at the midplane in order to exceed the threshold
+#     # to protect against photodissociation of CO, just return 0 now
+#     # if sigma < thresh
+#     #     return constants.rho_gas_zero
+#     # end
+#
+#     # Create an array of heights that goes from the midplane (0, 0.001, ..., ztop)
+#     zs = cat(1, [0], logspace(log10(0.001 * AU), log10(ztop), 64 - 1))
+#
+#     # Define the ODE at this radius r
+#     function f(z, y)
+#         # calculate y'
+#         dlnrho(r, z, pars) * y
+#     end
+#
+#     # Choose a starting guess corresponding to the midplane density for an isothermal model.
+#     # This helps us get in the ballpark and avoid a lot of the numerical errors that result
+#     start = rho_gas_mid(r, pars)
+#
+#     # Now solve the ODE on the grid of postulated values
+#     # For the inner disk, we require a larger value of abstol
+#     # We need to experiment with what is best
+#     abstol=1e-22
+#     z_out, y_out = ode45(f, start, zs; abstol=1e-22)
+#
+#     # where y_out is less than the minimum accuracy we can trust, just set it to the minimum value
+#     y_out[y_out .< abstol] = abstol
+#
+#     # Integrate the output from the ODE solver to find the total (un-normalized) surface density
+#     spl = Spline1D(z_out, y_out)
+#     tot = integrate(spl, z_out[1], z_out[end])
+#
+#     # Apply a correction factor to the un-normalized densities
+#     cor = sigma / tot
+#     rhos = y_out .* cor
+#
+#     # This is the function that will be minimized
+#     function g(zvar::Float64)
+#         return abs(thresh - cor * integrate(spl, zvar, z_out[end]))
+#     end
+#
+#     z_phot = optimize(g, z_out[1], z_out[end]).minimum
+#
+#     # Evaluate rho at this point
+#     rho = cor * evaluate(spl, z)
+#
+#     # If we are above this height, return the gas density reduced by a factor of 100
+#     if z > z_phot
+#         rho = 1e-2 * rho
+#     end
+#
+#     if rho < 0.0
+#       println("r ", r/AU, " z ", z/AU, " z_top ", ztop/AU, " z_phot ", z_phot/AU, " y_out ", y_out)
+#       return (start, z_out, y_out)
+#       throw(ModelException("Rho less than 0.0"))
+#     end
+#
+#     return rho
+# end
 
 # Now, replace these functions to simply multiply rho_gas by X_12CO/m_12CO, or X_13CO/m_13CO, etc.
 n_12CO(r::Float64, z::Float64, pars::AbstractParameters) = number_densities["12CO"] * rho_gas(r, z, pars)
@@ -1140,77 +1141,44 @@ function P_project(theta, phi)
     return mat
 end
 
-function convert_position(pars, r, theta, phi)
-    x = r * sin(theta) * cos(phi)
-    y = r * sin(theta) * sin(phi)
-    z = r * cos(theta)
 
-    sphere = Float64[r, theta, phi]
-    cart = Float64[x, y, z]
-
-    Px = P_x(pars.incl_inner * pi/180)
-    Pz = P_z(pars.Omega * pi/180)
-
-    cart_prime = Px.' * Pz.' * cart
-
-    x_prime, y_prime, z_prime = cart_prime
-
-    # now convert to spherical coordinates in the primed frame
-    r_prime = r
-    theta_prime = acos(z_prime / r)
-    phi_prime = atan2(y_prime, x_prime)
-
-    if phi_prime < 0
-        phi_prime += 2pi
-    end
-
-    sphere_prime = Float64[r_prime, theta_prime, phi_prime]
-
-    # Assert that the magnitudes of all of these vectors are the same
-    @assert isapprox(norm(cart), r) "Cartesian norm doesn't match "
-    @assert isapprox(norm(cart_prime), r) "Rotated cartesion norm doesn't match"
-
-    return (cart, cart_prime, sphere_prime)
-end
-
-
-# Get the components of the vector in RADMC coordinates
-function velocity_inner(pars, r, theta, phi)
-
-    Pproj = P_project(theta, phi)
-    # define rotation matrices
-    Px = P_x(pars.incl_inner * pi/180)
-    Pz = P_z(pars.Omega * pi/180)
-
-
-    # get primed coordinates
-    cart, cart_prime, sphere_prime = convert_position(pars, r, theta, phi)
-
-    # query the velocity field of the inner disk, in the primed frame,
-    # which will be projected along the hat{\phi^\prime} direction.
-    # for now, just call this v_phi_prime
-    r_prime, theta_prime, phi_prime = sphere_prime
-    r_cyl_prime = r_prime * sin(theta_prime)
-    z_cyl_prime = r_prime * cos(theta_prime)
-    vel_sphere_prime = Float64[0.0, 0.0, velocity(r_cyl_prime, z_cyl_prime, pars)]
-
-    # project it to the primed cartesian unit vectors
-    vel_cart_prime = Pproj * vel_sphere_prime
-
-    # now rotate this from the primed cartesian frame to the RADMC-3D cartesian frame
-    vel_cart = Pz * Px * vel_cart_prime
-
-    # now project it on to the spherical unit vectors in the RADMC-3D frame
-    vel_sphere = Pproj.' * vel_cart
-
-    # assert that the norm of all of these vectors is always zero
-    @assert isapprox(norm(vel_cart_prime), norm(vel_sphere_prime)) "Cartesian norm doesn't match "
-    @assert isapprox(norm(vel_cart), norm(vel_sphere_prime)) "Rotated cartesion norm doesn't match"
-    @assert isapprox(norm(vel_sphere), norm(vel_sphere_prime)) "Spherical vel doesn't match"
-
-    return vel_sphere
-
-end
+# # Get the components of the vector in RADMC coordinates
+# function velocity_inner(pars, r, theta, phi)
+#
+#     Pproj = P_project(theta, phi)
+#     # define rotation matrices
+#     Px = P_x(pars.incl_inner * pi/180)
+#     Pz = P_z(pars.Omega * pi/180)
+#
+#
+#     # get primed coordinates
+#     cart, cart_prime, sphere_prime = convert_position(pars, r, theta, phi)
+#
+#     # query the velocity field of the inner disk, in the primed frame,
+#     # which will be projected along the hat{\phi^\prime} direction.
+#     # for now, just call this v_phi_prime
+#     r_prime, theta_prime, phi_prime = sphere_prime
+#     r_cyl_prime = r_prime * sin(theta_prime)
+#     z_cyl_prime = r_prime * cos(theta_prime)
+#     vel_sphere_prime = Float64[0.0, 0.0, velocity(r_cyl_prime, z_cyl_prime, pars)]
+#
+#     # project it to the primed cartesian unit vectors
+#     vel_cart_prime = Pproj * vel_sphere_prime
+#
+#     # now rotate this from the primed cartesian frame to the RADMC-3D cartesian frame
+#     vel_cart = Pz * Px * vel_cart_prime
+#
+#     # now project it on to the spherical unit vectors in the RADMC-3D frame
+#     vel_sphere = Pproj.' * vel_cart
+#
+#     # assert that the norm of all of these vectors is always zero
+#     @assert isapprox(norm(vel_cart_prime), norm(vel_sphere_prime)) "Cartesian norm doesn't match "
+#     @assert isapprox(norm(vel_cart), norm(vel_sphere_prime)) "Rotated cartesion norm doesn't match"
+#     @assert isapprox(norm(vel_sphere), norm(vel_sphere_prime)) "Spherical vel doesn't match"
+#
+#     return vel_sphere
+#
+# end
 
 
 

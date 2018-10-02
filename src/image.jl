@@ -13,12 +13,12 @@
 "The image module contains various data types for reading and holding images produced by the radiative transfer programs (via `RADMC-3D`), as well as routines for processing these images."
 module image
 
-export imread, imToSky, imToSpec, SkyImage, blur, -
+export imread, imToSky, imToSpec, SkyImage, -
 export taureadImg, taureadPos
 
 using ..constants
-import Images # The Images.jl package, not affiliated w/ DiskJockey
-using Dierckx
+# import Images # The Images.jl package, not affiliated w/ DiskJockey
+# using Dierckx
 
 import Base.- # extend this for Image
 
@@ -33,7 +33,7 @@ Hold the raw output from `RADMC-3D` in a 3D array (npix_y, npix_x, nlam).
 RawImage reflects the RADMC convention that both x and y are increasing
 with array index. This means that to display the image as RADMC intends it,
 you must set the first array element to the lower left corner."
-type RawImage <: Image
+mutable struct RawImage <: Image
     data::Array{Float64, 3} # [ergs/s/cm^2/Hz/ster]
     pixsize_x::Float64 # [cm]
     pixsize_y::Float64 # [cm]
@@ -45,7 +45,7 @@ This convention is necessary for the FFT step
 However, to display this image in the traditional sky convention (North up,
 East to the left), you must set the first array element to the lower left
 corner *and* flip the array along the RA axis: `fliplr(data)` or flipdim(data, 2)"
-type SkyImage <: Image
+mutable struct SkyImage <: Image
     data::Array{Float64, 3} # [Jy/pixel]
     ra::Vector{Float64} # [arcsec]
     dec::Vector{Float64} # [arcsec]
@@ -58,7 +58,7 @@ The distance in cm above or below the plane tangent to the observer, which inter
 From the RADMC3D manual:
 The image output file image.out will now contain, for each pixel, the position along the ray in centimeters where τ = τs. The zero point is the surface perpendicular to the direction of observation, going through the pointing position (which is, by default the origin (0, 0, 0)). Positive values mean that the surface is closer to the observer than the plane, while negative values mean that the surface is behind the plane.
 So for this datastructure, it's the same thing as RawImage, just instead of intensity, we have distance above/below plane."
-type TausurfImg <: Image
+mutable struct TausurfImg <: Image
     data::Array{Float64, 3} # cm above/behind central projected plane of disk
     pixsize_x::Float64 # [cm]
     pixsize_y::Float64 # [cm]
@@ -67,7 +67,7 @@ end
 
 "Encapsulates the 3D position of the pixels representing the tau=1 surface, in the same datashape as the image.
 For each pixel, this is the x, y, or z position."
-type TausurfPos
+mutable struct TausurfPos
     data_x::Array{Float64, 3} # [cm]
     data_y::Array{Float64, 3} # [cm]
     data_z::Array{Float64, 3} # [cm]
@@ -284,41 +284,41 @@ function imToSky(img::RawImage, dpc::Float64)
 
 end
 
-"
-    blur(img::SkyImage, sigma)
-
-Following Images.jl, give the number of arcseconds in each dimension on how to Gaussian
-blur the channel maps. Unfortunately only aligned Gaussians are allowed so far, no rotation."
-function blur(img::SkyImage, sigma)
-    # convert sigma in arcseconds into pixels
-    # sigma is a length 2 array with the [sigma_y, sigma_x] blurring scales
-
-    # measure image size in arcsecs
-    width = img.ra[end] - img.ra[1] # [arcsec]
-    npix = size(img.data)[1]
-    nchan = size(img.data)[3]
-
-    println("Image width: $width [arcsec], npix: $npix, nchan: $nchan, sigma: $sigma [arcsec]")
-
-    pixel_arcsec = npix / width #
-
-    println("Pixel_arcsec: $pixel_arcsec")
-
-    sigma *= pixel_arcsec # [pixels]
-
-    println("Pixel sigma: $sigma [pixels]")
-
-    data_blur = Array(Float64, size(img.data)...)
-    # go through each channel
-    for i=1:nchan
-        # Now, load this into an Images.jl frame
-        img_Images = Images.Image(img.data[:,:,i])
-        data_blur[:,:,i] = Images.imfilter_gaussian(img_Images, sigma)
-    end
-
-    return SkyImage(data_blur, img.ra, img.dec, img.lams)
-
-end
+# "
+#     blur(img::SkyImage, sigma)
+#
+# Following Images.jl, give the number of arcseconds in each dimension on how to Gaussian
+# blur the channel maps. Unfortunately only aligned Gaussians are allowed so far, no rotation."
+# function blur(img::SkyImage, sigma)
+#     # convert sigma in arcseconds into pixels
+#     # sigma is a length 2 array with the [sigma_y, sigma_x] blurring scales
+#
+#     # measure image size in arcsecs
+#     width = img.ra[end] - img.ra[1] # [arcsec]
+#     npix = size(img.data)[1]
+#     nchan = size(img.data)[3]
+#
+#     println("Image width: $width [arcsec], npix: $npix, nchan: $nchan, sigma: $sigma [arcsec]")
+#
+#     pixel_arcsec = npix / width #
+#
+#     println("Pixel_arcsec: $pixel_arcsec")
+#
+#     sigma *= pixel_arcsec # [pixels]
+#
+#     println("Pixel sigma: $sigma [pixels]")
+#
+#     data_blur = Array(Float64, size(img.data)...)
+#     # go through each channel
+#     for i=1:nchan
+#         # Now, load this into an Images.jl frame
+#         img_Images = Images.Image(img.data[:,:,i])
+#         data_blur[:,:,i] = Images.imfilter_gaussian(img_Images, sigma)
+#     end
+#
+#     return SkyImage(data_blur, img.ra, img.dec, img.lams)
+#
+# end
 
 "Take an image and integrate all the frames to create a spatially-integrated spectrum"
 function imToSpec(img::SkyImage)
@@ -361,7 +361,7 @@ function integrateSpec(spec::Matrix{Float64}, lam0::Float64)
 end
 
 "Storage for zeroth moment map"
-type ZerothMoment <: Image
+mutable struct ZerothMoment <: Image
    data::Array{Float64, 2} # [Jy · Hz / pixel]
    ra::Vector{Float64} # [arcsec]
    dec::Vector{Float64} # [arcsec]

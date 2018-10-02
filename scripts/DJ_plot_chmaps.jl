@@ -36,7 +36,7 @@ using HDF5
 
 import PyPlot.plt
 using LaTeXStrings
-import Images
+# import Images
 
 species = config["species"]
 transition = config["transition"]
@@ -222,26 +222,26 @@ if parsed_args["log"]
     plot_chmaps(skim, fname="chmaps_log.png", log=true, contours=false)
 end
 
-if parsed_args["blur"]
-    beam = config["beam"]
-    rms = beam["rms"] # Jy/beam
-    BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
-    BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
-    BAVG = (BMAJ + BMIN)/2
-    BPA = beam["BPA"] # position angle East of North [degrees]
-
-    println("Beam sigma ", BAVG, " [arcsec]")
-
-    arcsec_ster = (4.25e10)
-    # Convert beam from arcsec^2 to Steradians
-    global rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
-
-    println("bluring maps")
-    sk_blur = blur(skim, [BAVG, BAVG])
-
-    println("Plotting blured maps")
-    plot_chmaps(sk_blur, fname="chmaps_blur.png", log=false, contours=true)
-end
+# if parsed_args["blur"]
+#     beam = config["beam"]
+#     rms = beam["rms"] # Jy/beam
+#     BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
+#     BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
+#     BAVG = (BMAJ + BMIN)/2
+#     BPA = beam["BPA"] # position angle East of North [degrees]
+#
+#     println("Beam sigma ", BAVG, " [arcsec]")
+#
+#     arcsec_ster = (4.25e10)
+#     # Convert beam from arcsec^2 to Steradians
+#     global rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
+#
+#     println("bluring maps")
+#     sk_blur = blur(skim, [BAVG, BAVG])
+#
+#     println("Plotting blured maps")
+#     plot_chmaps(sk_blur, fname="chmaps_blur.png", log=false, contours=true)
+# end
 
 if parsed_args["spectrum"]
     plot_spectrum(skim)

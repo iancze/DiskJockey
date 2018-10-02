@@ -9,7 +9,7 @@ using NPZ
 export Sampler, run_mcmc, run_schedule, reset_mcmc, write_samples, emcee_chain
 
 # There is a type, called the sampler.
-type Sampler
+mutable struct Sampler
     nwalkers::Int
     ndim::Int
     lnprobfn::Function

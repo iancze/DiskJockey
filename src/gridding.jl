@@ -3,6 +3,7 @@
 module gridding
 
 using ..image
+using Printf
 
 import Base.Math.@horner
 
@@ -131,19 +132,19 @@ end
 
 
 "
-    corrfun{T}(eta::T)
+    corrfun(eta::T) where {T}
 
 Gridding *correction* function, but able to be passed either floating point numbers or vectors of `Float64`."
-function corrfun{T}(eta::T)
+function corrfun(eta::T) where {T}
     return spheroid(eta)
 end
 
 "
-    corrfun{T}(eta::T, alpha::Float64)
+    corrfun(eta::T, alpha::Float64) where {T}
 
 Gridding *correction* function, used to pre-divide the image to correct for the effect
 of the `gcffun`. This function is also the Fourier transform of `gcffun`."
-function corrfun{T}(eta::T, alpha::Float64)
+function corrfun(eta::T, alpha::Float64) where {T}
     return spheroid(eta, alpha)
 end
 
@@ -224,20 +225,20 @@ function corrfun!(img::SkyImage, mu_RA, mu_DEC)
 end
 
 "
-    gcffun{T}(eta::T)
+    gcffun(eta::T) where {T}
 
 The gridding *convolution* function, used to do the convolution and interpolation of the visibilities in
 the Fourier domain. This is also the Fourier transform of `corrfun`."
-function gcffun{T}(eta::T)
+function gcffun(eta::T) where {T}
     return abs.(1 - eta.^2) .* spheroid(eta)
 end
 
 "
-    gcffun{T}(eta::T, alpha::Float64)
+    gcffun(eta::T, alpha::Float64) where {T}
 
 The gridding *convolution* function, with variable ``\\alpha``.
 "
-function gcffun{T}(eta::T, alpha::Float64)
+function gcffun(eta::T, alpha::Float64) where {T}
     return abs(1 - eta.^2).^alpha .* spheroid(eta, alpha)
 end
 

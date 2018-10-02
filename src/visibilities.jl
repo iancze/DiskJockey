@@ -17,14 +17,14 @@ export transform, rfftfreq, fftfreq, phase_shift, phase_shift!, max_baseline, ge
 export lnprob, lnprob_iter, lnprob_real
 export -
 
-using Base.Test
+using Test
 
 # Stores the data visibilities for a single channel
-type DataVis
+mutable struct DataVis
     lam::Float64 # [μm] Wavelength (in microns) corresponding to channel
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations in kilolambda, shape (nchan, nvis)
     vv::Vector{Float64} # [kλ]
-    VV::Vector{Complex128} # [Jy] Complex visibilities
+    VV::Vector{ComplexF64} # [Jy] Complex visibilities
     invsig::Vector{Float64} # 1/sigma [1/Jy]
     # NOTE that there is no flags field
 end
@@ -289,19 +289,19 @@ end
     RawModelVis
 
 Type to store the product of FFT'ing a single channel of a SkyImage."
-type RawModelVis
+mutable struct RawModelVis
     lam::Float64 # [μm] Wavelength (in microns) corresponding to channel
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
     vv::Vector{Float64} # [kλ]
-    VV::Matrix{Complex128} # Output from rfft
+    VV::Matrix{ComplexF64} # Output from rfft
 end
 
 # Taking the complex conjugate to make a full grid over all visibility space.
-type FullModelVis
+mutable struct FullModelVis
     lam::Float64 # [μm] Wavelength (in microns) corresponding to channel
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations
     vv::Vector{Float64} # [kλ]
-    VV::Matrix{Complex128} # Output from rfft
+    VV::Matrix{ComplexF64} # Output from rfft
 end
 
 "
@@ -318,9 +318,9 @@ function -(vis1::FullModelVis, vis2::FullModelVis)
 end
 
 # Produced by gridding a RawModelVis to match the data
-type ModelVis
+mutable struct ModelVis
     dvis::DataVis # A reference to the matching dataset
-    VV::Vector{Complex128} # vector of complex visibilities directly
+    VV::Vector{ComplexF64} # vector of complex visibilities directly
     # corresponding to the u, v locations in DataVis
 end
 
@@ -331,7 +331,7 @@ Given a DataSet and a FullModelVis, go through and interpolate at the
 u,v locations of the DataVis."
 function ModelVis(dvis::DataVis, fmvis::FullModelVis)
     nvis = length(dvis.VV)
-    VV = Array{Complex128}(nvis)
+    VV = Array{ComplexF64}(nvis)
     for i=1:nvis
         VV[i] = interpolate_uv(dvis.uu[i], dvis.vv[i], fmvis)
     end
@@ -350,7 +350,7 @@ function ModelVisRotate(dvis::DataVis, fmvis::FullModelVis, PA::Real)
 
     nvis = length(dvis.VV)
 
-    VV = Array{Complex128}(nvis)
+    VV = Array{ComplexF64}(nvis)
     for i=1:nvis
         # Rotate points according to PA
         uuprime = cos(PA) * dvis.uu[i] + sin(PA) * dvis.vv[i]
@@ -404,7 +404,7 @@ end
 "
     ModelVisReal(mvis::ModelVis)
 
-Convert a `ModelVis` object, with visibilities stored as `Complex128`, into a `ModelVisReal`, with real and imaginary visibility values stored separately as `Float64`."
+Convert a `ModelVis` object, with visibilities stored as `ComplexF64`, into a `ModelVisReal`, with real and imaginary visibility values stored separately as `Float64`."
 function ModelVisReal(mvis::ModelVis)
     return ModelVisReal(mvis.dvis, real(mvis.VV), imag(mvis.VV))
 end
@@ -433,7 +433,7 @@ Calculate the lnlikelihood using a single loop to do the phase shifting and summ
 "
 function lnprob(dvis::DataVis, mvis::ModelVis, mu_RA::Float64, mu_DEC::Float64)
     lnp::Float64 = 0.0
-    prefac::Complex128 = -2pi * 1.0im * 1e3 * arcsec
+    prefac::ComplexF64 = -2pi * 1.0im * 1e3 * arcsec
     for i=1:length(dvis.VV)
         lnp += abs2(dvis.invsig[i] * (dvis.VV[i] - mvis.VV[i] * exp(prefac * (dvis.uu[i] * mu_RA + dvis.vv[i] * mu_DEC))))
     end
@@ -732,14 +732,14 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         @assert all(abs.((vv .- fmvis.vv) ./ (vv .+ 1e-5)) .< tol)
 
         # output array
-        Vmodel = Array{Complex128}(nvis)
+        Vmodel = Array{ComplexF64}(nvis)
 
         for i=1:nvis
 
             Vdata = fmvis.VV[vinds[i], uinds[i]] # Array is packed like the image
 
             # 5. Loop over all 36 grid indices and sum to find the interpolation.
-            cum::Complex128 = 0.0 + 0.0im
+            cum::ComplexF64 = 0.0 + 0.0im
             for k=1:6
                 for l=1:6
                     cum += uws[k,i] * vws[l,i] * Vdata[l,k] # Array is packed like the image
@@ -829,7 +829,7 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     w = sum(uw) * sum(vw)
 
     # 5. Loop over all 36 grid indices and sum to find the interpolation.
-    cumulative::Complex128 = 0.0 + 0.0im
+    cumulative::ComplexF64 = 0.0 + 0.0im
     for i=1:6
         for j=1:6
             cumulative += uw[i] * vw[j] * VV[j,i] # Array is packed like the image
@@ -868,7 +868,7 @@ After numpy.fft.fftfreq
     f = [0, 1, ...,   n/2-1,     -n/2, ..., -1] / (d*n)   if n is even
     f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd."
 function fftfreq(n::Int, d::Float64)
-    val = 1./(n * d)
+    val = 1.0/(n * d)
     results = Array{Float64}(n)
     N = floor(Int, (n  - 1)/2) + 1
 
