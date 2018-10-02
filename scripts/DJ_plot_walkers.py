@@ -132,6 +132,21 @@ if args.draw is not None:
     sys.exit()
 
 
+# if we have a filter argument, remove these walkers from the plot, so that we can get
+# better look at the progress of the chains
+if args.filter > 0:
+    # calculate the median lnprob for each walker
+    walker_lnprobs = np.median(lnprobs, axis=1)
+    floor = np.percentile(walker_lnprobs, args.filter)
+    walker_filtered_ind = (walker_lnprobs > floor)
+
+    lnprobs = lnprobs[walker_filtered_ind]
+    chain = chain[walker_filtered_ind]
+    nwalkers, niter, ndim = chain.shape
+    print("After filtering, there are {} walkers.".format(nwalkers))
+
+
+
 import matplotlib.pyplot as plt
 
 iterations = np.arange(niter)
