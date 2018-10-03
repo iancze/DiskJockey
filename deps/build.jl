@@ -9,6 +9,9 @@ println("Current working directory ", pwd())
 download("http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/$binary_file", binary_file)
 println("Current working directory ", pwd())
 
+# Remove the directory, if a stale version exists from a previous build
+rm("radmc-3d/version_0.41/src", recursive=true)
+
 # Unzipping the file
 run(`unzip $binary_file`)
 
