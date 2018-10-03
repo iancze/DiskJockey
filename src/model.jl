@@ -56,7 +56,8 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real) #, eqmirror::Bool=t
     r_out = convert(Float64, r_out) * AU # [cm] Outer extent of disk
 
     #Define the cell *walls*
-    Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+    # Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+    Rs = 10 .^ range(log10(r_in), stop=log10(r_out), length=nr+1) # [cm] logarithmically spaced
 
     eqmirror = true
 
@@ -64,7 +65,8 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real) #, eqmirror::Bool=t
         ped = 0.1
         #Thetas = linspace(0, pi/2., ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
-        Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        # Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        Thetas = pi/2.0 .- (10 .^ range(log10(ped), stop=log10(pi/2.0 + ped), length=ntheta+1) .- ped)[end:-1:1]
         #Logarithmically spaced closer near the z=0
     else
         Thetas = linspace(0, pi, ntheta+1)
@@ -94,7 +96,8 @@ function Grid(nr::Int, ntheta::Int, nphi::Int, r_in::Real, r_out::Real)
     r_out = convert(Float64, r_out) * AU # [cm] Outer extent of disk
 
     #Define the cell *walls*
-    Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+    # Rs = logspace(log10(r_in), log10(r_out), nr+1) # [cm] logarithmically spaced
+    Rs = 10 .^ range(log10(r_in), stop=log10(r_out), length=nr+1) # [cm] logarithmically spaced
 
     eqmirror = true
 
@@ -102,7 +105,8 @@ function Grid(nr::Int, ntheta::Int, nphi::Int, r_in::Real, r_out::Real)
         ped = 0.1
         #Thetas = linspace(0, pi/2., ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
-        Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        # Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        Thetas = pi/2.0 .- (10 .^ range(log10(ped), stop=log10(pi/2. + ped), length=ntheta+1) .- ped)[end:-1:1]
         #Logarithmically spaced closer near the z=0
     else
         Thetas = linspace(0, pi, ntheta+1)
@@ -135,13 +139,15 @@ function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::I
 
     #Define the cell *walls*
     # logarithmically spaced inner grid
-    Rs_in = logspace(log10(r_in), log10(r_linstart), n_in + 1) # [cm]
+    # Rs_in = logspace(log10(r_in), log10(r_linstart), n_in + 1) # [cm]
+    Rs_in = 10 .^ range(log10(r_in), stop=log10(r_linstart), length=n_in + 1) # [cm]
 
     # linearly spaced middle grid
     Rs_mid = linspace(r_linstart, r_linend, n_mid + 1) # [cm]
 
     # logarithmically spaced outer grid
-    Rs_out = logspace(log10(r_linend), log10(r_out), n_out + 1) # [cm]
+    # Rs_out = logspace(log10(r_linend), log10(r_out), n_out + 1) # [cm]
+    Rs_out = 10 .^ range(log10(r_linend), stop=log10(r_out), length=n_out + 1) # [cm]
 
     Rs = cat(1, Rs_in[1:end-1], Rs_mid, Rs_out[2:end])
 
@@ -149,7 +155,8 @@ function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::I
         ped = 0.1
         #Thetas = linspace(0, pi/2., ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
-        Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        # Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
+        Thetas = pi/2.0 .- (10 .^ range(log10(ped), stop=log10(pi/2. + ped), length=ntheta+1) - ped)[end:-1:1]
         #Spaced closer near the z=0
     else
         Thetas = linspace(0, pi, ntheta+1)
@@ -419,18 +426,21 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     nparams = length(reg_params)
 
     # Make an empty vector of this same length
-    par_vec = Array{Float64}(nparams)
+    par_vec = Array{Float64}(undef, nparams)
 
     # This requires assigning p to fit_params
     # Find the indexes that correspond to fit_params
-    par_indexes = findin(reg_params, fit_params)
+    # par_indexes = findin(reg_params, fit_params)
+    par_indexes = findall((in)(fit_params), reg_params)
     # Stuff p directly into these
     par_vec[par_indexes] = p
 
     # Then reading fix_params from args
     # First, create an array of fixed values analogous to p
-    p_fixed = Float64[args[convert(Symbol, par)] for par in fix_params]
-    par_indexes = findin(reg_params, fix_params)
+    # p_fixed = Float64[args[convert(Symbol, par)] for par in fix_params]
+    p_fixed = Float64[args[Symbol(par)] for par in fix_params]
+    # par_indexes = findin(reg_params, fix_params)
+    par_indexes = findall((in)(fix_params), reg_params)
     par_vec[par_indexes] = p_fixed
 
     # Now that we are sampling for log10M_gas for the verticalEta model, this part gets tricky.
@@ -438,7 +448,9 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
     # Find the location of logSigma_c and make it Sigma_c
     # Even if we are using verticalEta, this will still be in here because it is in reg_params
     # Only though it currently corresponds to log10M_gas instead of log10Sigma_c
-    indSigma_c = findin(reg_params, ["Sigma_c"])
+    # indSigma_c = findin(reg_params, ["Sigma_c"])
+    indSigma_c = findall((in)(["Sigma_c"]), reg_params)
+    # println("indSigma_c looks like: ", indSigma_c)
     @assert length(indSigma_c) == 1 "Could not find Sigma_c in order to convert from logSigma_c or logM_gas."
 
     if model == "verticalEta"
@@ -453,18 +465,21 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
       Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
       par_vec[indSigma_c] = Sigma_c
     elseif model == "standard" || model == "inner"
+      # println("we have standard model")
+      # println(par_vec[indSigma_c])
       # Convert from log10M_gas to Sigma_c
-      M_gas = 10.0^par_vec[indSigma_c] * M_sun # [g]
+      M_gas = 10.0^par_vec[indSigma_c][1] * M_sun # [g]
 
       # Find gamma and r_c
       r_c = par_vec[2] * AU # [cm]
       gamma = par_vec[5]
 
       Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
-      par_vec[indSigma_c] = Sigma_c
+      par_vec[indSigma_c] .= Sigma_c
 
     elseif model == "nuker"
-      indalpha = findin(reg_params, ["alpha"])
+      # indalpha = findin(reg_params, ["alpha"])
+      indalpha = findall((in)(["alpha"]), reg_params)
       # println("Converting logalpha at index: ", indalpha)
       par_vec[indalpha] = 10.0^par_vec[indalpha]
       par_vec[indSigma_c] = 10.0^par_vec[indSigma_c]

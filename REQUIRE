@@ -10,5 +10,7 @@ HDF5
 ArgParse
 Logging
 NPZ
+AbstractFFTs
+FFTW
 ClusterManagers
 NaNMath

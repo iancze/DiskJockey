@@ -33,7 +33,9 @@ using DiskJockey.constants
 using DiskJockey.image
 using DiskJockey.model
 using HDF5
+using Printf
 
+import PyPlot
 import PyPlot.plt
 using LaTeXStrings
 # import Images
@@ -43,7 +45,7 @@ transition = config["transition"]
 lam0 = lam0s[species*transition]
 model = config["model"]
 
-# Read the incination, position angle, and (grid) radius of the disk. Plot ellipses.
+# Read the inclination, position angle, and (grid) radius of the disk. Plot ellipses.
 pars = config["parameters"]
 r_c = pars["r_c"]
 incl = pars["incl"]
@@ -134,7 +136,8 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
 
             else
                 #Flip the frame for Sky convention
-                frame = flipdim(img.data[:,:,iframe], 2)
+                # frame = flipdim(img.data[:,:,iframe], 2)
+                frame = reverse(img.data[:,:,iframe], dims=2)
 
                 if log
                     frame += 1e-15 #Add a tiny bit so that we don't have log10(0)

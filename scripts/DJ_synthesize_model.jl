@@ -32,7 +32,5 @@ grid = Grid(config["grid"])
 (sizeau_desired, sizeau_command) = size_au(config["size_arcsec"], pars.dpc, grid) # [AU]
 
 # lambda should have already been written by DJInitialize.jl
-tic()
-run(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`)
+@time run(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`)
 println("Synthesis runtime")
-toc()

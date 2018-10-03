@@ -2,6 +2,8 @@
 
 module visibilities
 
+using AbstractFFTs
+using FFTW
 using HDF5
 using ..image
 using ..gridding
@@ -62,7 +64,7 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     # Do the flagging channel by channel
 
     # Return an array of DataVis
-    out = Array{DataVis}(nlam)
+    out = Array{DataVis}(undef, nlam)
     if !flagged
         for i=1:nlam
             ch_flag = .~flag[:,i]
@@ -119,7 +121,7 @@ end
 Read just a subset of channels from the HDF5 file and return an array of DataVis."
 function DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=false)
     nchan = length(indices)
-    out = Array{DataVis}(nchan)
+    out = Array{DataVis}(undef, nchan)
     for i=1:nchan
         out[i] = DataVis(fname, indices[i], flagged)
     end
@@ -331,7 +333,7 @@ Given a DataSet and a FullModelVis, go through and interpolate at the
 u,v locations of the DataVis."
 function ModelVis(dvis::DataVis, fmvis::FullModelVis)
     nvis = length(dvis.VV)
-    VV = Array{ComplexF64}(nvis)
+    VV = Array{ComplexF64}(undef, nvis)
     for i=1:nvis
         VV[i] = interpolate_uv(dvis.uu[i], dvis.vv[i], fmvis)
     end
@@ -350,7 +352,7 @@ function ModelVisRotate(dvis::DataVis, fmvis::FullModelVis, PA::Real)
 
     nvis = length(dvis.VV)
 
-    VV = Array{ComplexF64}(nvis)
+    VV = Array{ComplexF64}(undef, nvis)
     for i=1:nvis
         # Rotate points according to PA
         uuprime = cos(PA) * dvis.uu[i] + sin(PA) * dvis.vv[i]
@@ -383,7 +385,7 @@ Return a model visibility file that contains the residuals."
 function ResidVis(dvarr::Array{DataVis, 1}, mvarr)
     nchan = length(dvarr)
     @assert length(mvarr) == nchan # make sure data and model are the same length.
-    rvarr = Array{DataVis}(nchan)
+    rvarr = Array{DataVis}(undef, nchan)
     for i=1:nchan
         dvis = dvarr[i]
         mvis = mvarr[i]
@@ -653,16 +655,16 @@ So, using a closure, those weighting terms are calculated once and then cached f
 function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64})
 
     nvis = length(dvis.VV)
-    uinds = Array{UnitRange{Int64}}(nvis)
-    vinds = Array{UnitRange{Int64}}(nvis)
-    uws = Array{Float64}(6, nvis) #stored along columns
-    vws = Array{Float64}(6, nvis)
+    uinds = Array{UnitRange{Int64}}(undef, nvis)
+    vinds = Array{UnitRange{Int64}}(undef, nvis)
+    uws = Array{Float64}(undef, 6, nvis) #stored along columns
+    vws = Array{Float64}(undef, 6, nvis)
 
     for i=1:nvis
         u = dvis.uu[i]
         v = dvis.vv[i]
-        iu0 = indmin(abs.(u - uu))
-        iv0 = indmin(abs.(v - vv))
+        iu0 = argmin(abs.(u .- uu))
+        iv0 = argmin(abs.(v .- vv))
 
         # now find the relative distance to this nearest grid point (not absolute)
         u0 = u - uu[iu0]
@@ -722,7 +724,7 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         vws[:,i] = vw
     end
 
-    tol = 1e-5 * ones(uu)
+    tol = 1e-5 * ones(Float64, sizeof(uu))
 
     # This function inherits all of the variables just defined in this scope (uu, vv)
     function interpolate(data::DataVis, fmvis::FullModelVis)
@@ -732,7 +734,7 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         @assert all(abs.((vv .- fmvis.vv) ./ (vv .+ 1e-5)) .< tol)
 
         # output array
-        Vmodel = Array{ComplexF64}(nvis)
+        Vmodel = Array{ComplexF64}(undef, nvis)
 
         for i=1:nvis
 
@@ -771,8 +773,8 @@ function interpolate_uv(u::Float64, v::Float64, vis::FullModelVis)
     # and vis.vv goes from negative to positive (North-South)
 
     # 1. Find the nearest gridpoint in the FFT'd image.
-    iu0 = indmin(abs.(u - vis.uu))
-    iv0 = indmin(abs.(v - vis.vv))
+    iu0 = argmin(abs.(u .- vis.uu))
+    iv0 = argmin(abs.(v .- vis.vv))
 
     # now find the relative distance from (u,v) to this nearest grid point (not absolute)
     u0 = u - vis.uu[iu0]
@@ -869,7 +871,7 @@ After numpy.fft.fftfreq
     f = [0, 1, ..., (n-1)/2, -(n-1)/2, ..., -1] / (d*n)   if n is odd."
 function fftfreq(n::Int, d::Float64)
     val = 1.0/(n * d)
-    results = Array{Float64}(n)
+    results = Array{Float64}(undef, n)
     N = floor(Int, (n  - 1)/2) + 1
 
     p1 = Float64[i for i=0:(N-1)]

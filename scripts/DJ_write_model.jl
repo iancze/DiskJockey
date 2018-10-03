@@ -63,9 +63,9 @@ for dset in dvarr
     visibilities.conj!(dset) # Swap UV convention
 end
 
-mvarr = Array{DataVis}(nchan)
-chi2s = Array{Float64}(nchan)
-lnprobs = Array{Float64}(nchan)
+mvarr = Array{DataVis}(undef, nchan)
+chi2s = Array{Float64}(undef, nchan)
+lnprobs = Array{Float64}(undef, nchan)
 
 for i=1:nchan
     dv = dvarr[i]

@@ -105,13 +105,13 @@ function imread(file="image.out")
     pixsize_y = parse(Float64, pixsize_y)
 
     # Read the wavelength array
-    lams = Array{Float64}(nlam)
+    lams = Array{Float64}(undef, nlam)
     for i=1:nlam
         lams[i] = parse(Float64, readline(fim))
     end
 
     # Create an array with the proper size, and then read the file into it
-    data = Array{Float64}(im_ny, im_nx, nlam)
+    data = Array{Float64}(undef, im_ny, im_nx, nlam)
 
     # According to the RADMC manual, section A.15, the pixels are ordered
     # left to right (increasing x) in the inner loop, and from bottom to top
@@ -266,14 +266,15 @@ function imToSky(img::RawImage, dpc::Float64)
     # conv = 1e23 * img.pixsize_x * img.pixsize_y / (dpc * pc)^2
 
     # Flip across RA dimension
-    dataJy = flipdim(img.data, 2) .* conv
+    # dataJy = flipdim(img.data, 2) .* conv
+    dataJy = reverse(img.data, dims=2) .* conv
 
     (im_ny, im_nx) = size(dataJy)[1:2] #y and x dimensions of the image
 
     # The locations of pixel centers in cm
     # if n_x = 16, goes [-7.5, -6.5, ..., -0.5, 0.5, ..., 6.5, 7.5] * pixsize
-    xx = ((Float64[i for i=0:im_nx-1] + 0.5) - im_nx/2.) * img.pixsize_x
-    yy = ((Float64[i for i=0:im_ny-1] + 0.5) - im_ny/2.) * img.pixsize_y
+    xx = ((Float64[i for i=0:im_nx-1] .+ 0.5) .- im_nx/2.) * img.pixsize_x
+    yy = ((Float64[i for i=0:im_ny-1] .+ 0.5) .- im_ny/2.) * img.pixsize_y
 
     # The locations of the pixel centers in relative arcseconds
     # Note both RA and DEC increase with array index.

@@ -40,7 +40,10 @@ end
 
 parsed_args = parse_args(ARGS, s)
 
-assets_dir = Pkg.dir("DiskJockey") * "/assets/"
+# rather kludgey substitute for previous Pkg.dir() call
+using DiskJockey
+srcdir = dirname(pathof(DiskJockey))
+assets_dir = srcdir * "/../assets/"
 
 # The user is going to start modeling a new disk, so copy in the new configuration file.
 if parsed_args["new-project"] != "no"

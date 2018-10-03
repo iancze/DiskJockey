@@ -230,7 +230,7 @@ end
 The gridding *convolution* function, used to do the convolution and interpolation of the visibilities in
 the Fourier domain. This is also the Fourier transform of `corrfun`."
 function gcffun(eta::T) where {T}
-    return abs.(1 - eta.^2) .* spheroid(eta)
+    return abs.(1 .- eta.^2) .* spheroid(eta)
 end
 
 "

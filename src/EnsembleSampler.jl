@@ -1,5 +1,6 @@
 module EnsembleSampler
 
+using Distributed
 using NPZ
 
 # This is a direct Julia port of [emcee](http://dan.iel.fm/emcee/current/), the ensemble sampler by Dan Foreman-Mackey et al.
@@ -29,8 +30,8 @@ function Sampler(nwalkers::Int, ndim::Int, lnprobfn::Function, test::Bool=false)
         @assert ndim < nwalkers "I don't believe you have more parameters than walkers! Try flipping them."
     end
 
-    chain = Array{Float64}((ndim, 0, nwalkers))
-    lnprob = Array{Float64}((nwalkers, 0))
+    chain = Array{Float64}(undef, (ndim, 0, nwalkers))
+    lnprob = Array{Float64}(undef, (nwalkers, 0))
     iterations = 0
 
     sampler = Sampler(nwalkers, ndim, lnprobfn, a, chain, lnprob, iterations)
@@ -88,10 +89,10 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
     # resize the chain by adding new rows to the array.
 
     # (ndim, iterations, nwalkers)
-    sampler.chain = cat(2, sampler.chain, Array{Float64}(sampler.ndim, iterations, sampler.nwalkers))
+    sampler.chain = cat(2, sampler.chain, Array{Float64}(undef, sampler.ndim, iterations, sampler.nwalkers))
 
     #(niterations, nwalkers)
-    sampler.lnprob = cat(2, sampler.lnprob, Array{Float64}(sampler.nwalkers, iterations))
+    sampler.lnprob = cat(2, sampler.lnprob, Array{Float64}(undef, sampler.nwalkers, iterations))
 
     for i=1:iterations
         sampler.iterations += 1
@@ -158,7 +159,7 @@ function propose_stretch(sampler::Sampler, p0, p1, lnprob0)
     # proposal.
 
     # self._random.rand(Ns) provides a 1D array of values in the range [0,1.) of size Ns
-    zz = ((sampler.a - 1.0) .* rand(Ns) .+ 1.0) .^ 2. ./ sampler.a
+    zz = ((sampler.a - 1.0) .* rand(Ns) .+ 1.0) .^ 2.0 ./ sampler.a
 
     # An array of random integers the size of the subset, designed to slice into the complimentary sample.
     rint = rand(1:Nc, Ns)
@@ -171,7 +172,7 @@ function propose_stretch(sampler::Sampler, p0, p1, lnprob0)
     newlnprob = get_lnprob(sampler, q)
 
     # Decide whether or not the proposals should be accepted.
-    lnpdiff = (sampler.ndim - 1.) .* log.(zz) .+ newlnprob .- lnprob0
+    lnpdiff = (sampler.ndim - 1.0) .* log.(zz) .+ newlnprob .- lnprob0
     accept = (lnpdiff .> log.(rand(Ns)))
 
     return q, newlnprob, accept
