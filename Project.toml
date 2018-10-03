@@ -1,0 +1,6 @@
+authors = ["Ian Czekala <iancze@gmail.com>"]
+name = "DiskJockey"
+uuid = "c449e886-c753-11e8-1751-fb35bbf40d92"
+version = "0.1.5"
+
+[deps]

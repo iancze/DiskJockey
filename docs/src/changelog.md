@@ -43,6 +43,25 @@ Now has proper labeling for models that fix parameters.
 
 A new script for checking that you've specified everything properly before launching a MCMC run. This way you can avoid syntax errors in the `config` scripts after queuing for a cluster job.
 
+## NUKER profile
+
+We've implemented the NUKER profile as a model for the surface density distribution. See Tripathi et al. 2017 for more details.
+
+## Distance
+
+We've removed the following fields from ``config.yaml`` for all models
+
+    # Distance prior setup
+    dpc_prior:
+      mu : 145.
+      sig : 20.
+
+The main reason is that because the dynamical mass results are completely degenerate with distance in a linear manner, it doesn't make sense to sample in distance, especially if the prior is a simple analytical form like a Gaussian. This means that the normal mode of operation will be to include ``"dpc"`` in the ``fix_params`` field, as is commonly done. If the users require sampling in ``dpc``, then they can remove it from ``fix_params`` and write a prior in a custom ``prior.jl`` file.
+
+## InitializeWalkers.ipynb to initialize_walkers.py
+
+Rather than editing the walker initialization script with an IPython notebook, instead it is now done with a simple python script. Functionally, these are the same, but the script removes the extra startup time of a Jupyter notebook.
+
 # Version 0.1.3
 
 ## Fix parameters
@@ -209,9 +228,9 @@ The specification of parameter types allowed me to greatly simplify the MCMC sam
 
 Created `InitializeWalkers.ipynb` that is copied to new directory to help specify walker starting positions. The user edits this with a Jupyter/IPython notebook.
 
-## Cookbook
+## New Cookbook available
 
-We now have a [`cookbook`](@ref) for AK Sco, check it out to get started!
+We now have a [Cookbook](@ref) for AK Sco, check it out to get started!
 
 `plot_walkers.py` now includes ability to determine highest density interval for quoting credible intervals and should automatically label the parameters after reading from `config.yaml`.
 

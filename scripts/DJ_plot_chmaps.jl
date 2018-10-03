@@ -33,17 +33,19 @@ using DiskJockey.constants
 using DiskJockey.image
 using DiskJockey.model
 using HDF5
+using Printf
 
+import PyPlot
 import PyPlot.plt
 using LaTeXStrings
-import Images
+# import Images
 
 species = config["species"]
 transition = config["transition"]
 lam0 = lam0s[species*transition]
 model = config["model"]
 
-# Read the incination, position angle, and (grid) radius of the disk. Plot ellipses.
+# Read the inclination, position angle, and (grid) radius of the disk. Plot ellipses.
 pars = config["parameters"]
 r_c = pars["r_c"]
 incl = pars["incl"]
@@ -57,7 +59,8 @@ height = width * cosd(incl) # [arcsec]
 
 # cmap = plt[:get_cmap]("viridis")
 # cmap = plt[:get_cmap]("inferno")
-cmap = plt[:get_cmap]("plasma")
+# cmap = plt[:get_cmap]("plasma")
+cmap = plt[:get_cmap]("Blues")
 
 # First contour is at 3 sigma, and then contours go up (or down) in multiples of spacing
 function get_levels(rms::Float64, vmax::Float64, spacing=3)
@@ -133,7 +136,8 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
 
             else
                 #Flip the frame for Sky convention
-                frame = flipdim(img.data[:,:,iframe], 2)
+                # frame = flipdim(img.data[:,:,iframe], 2)
+                frame = reverse(img.data[:,:,iframe], dims=2)
 
                 if log
                     frame += 1e-15 #Add a tiny bit so that we don't have log10(0)
@@ -221,26 +225,26 @@ if parsed_args["log"]
     plot_chmaps(skim, fname="chmaps_log.png", log=true, contours=false)
 end
 
-if parsed_args["blur"]
-    beam = config["beam"]
-    rms = beam["rms"] # Jy/beam
-    BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
-    BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
-    BAVG = (BMAJ + BMIN)/2
-    BPA = beam["BPA"] # position angle East of North [degrees]
-
-    println("Beam sigma ", BAVG, " [arcsec]")
-
-    arcsec_ster = (4.25e10)
-    # Convert beam from arcsec^2 to Steradians
-    global rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
-
-    println("bluring maps")
-    sk_blur = blur(skim, [BAVG, BAVG])
-
-    println("Plotting blured maps")
-    plot_chmaps(sk_blur, fname="chmaps_blur.png", log=false, contours=true)
-end
+# if parsed_args["blur"]
+#     beam = config["beam"]
+#     rms = beam["rms"] # Jy/beam
+#     BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
+#     BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
+#     BAVG = (BMAJ + BMIN)/2
+#     BPA = beam["BPA"] # position angle East of North [degrees]
+#
+#     println("Beam sigma ", BAVG, " [arcsec]")
+#
+#     arcsec_ster = (4.25e10)
+#     # Convert beam from arcsec^2 to Steradians
+#     global rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
+#
+#     println("bluring maps")
+#     sk_blur = blur(skim, [BAVG, BAVG])
+#
+#     println("Plotting blured maps")
+#     plot_chmaps(sk_blur, fname="chmaps_blur.png", log=false, contours=true)
+# end
 
 if parsed_args["spectrum"]
     plot_spectrum(skim)

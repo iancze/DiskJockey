@@ -84,7 +84,7 @@ lam0s = Dict{String, Float64}([("12CO2-1", cc/230.538e9 * 1e4 ),
 Av_sigmaH = 1.0e20 # [cm^-2] # Charlie's number
 
 # convert from arcseconds to radians
-arcsec = pi / (180. * 3600) # [radians]  = 1/206265 radian/arcsec
+arcsec = pi / (180.0 * 3600) # [radians]  = 1/206265 radian/arcsec
 
 # Used when determining the necessary number of pixels in an image, given distance. Anything below
 # 2 is not Nyquist sampled. This is currently set to 2.2 to provide a degree of oversampling.
@@ -92,7 +92,7 @@ nyquist_factor = 2.2
 
 # The bound at which to force the density to zero
 # n_H2 = 100 [1/cm^3] average H2 number density in diffuse ISM
-rho_gas_critical = (100./X_H2) * mu_gas * amu # [g/cm^3]
+rho_gas_critical = (100.0/X_H2) * mu_gas * amu # [g/cm^3]
 
 # The number of z points to use for the density interpolator
 n_z_interpolator = 64
@@ -111,7 +111,7 @@ RADMC_SIZEAU_SHIFT = 1.4233758746704833e-5
 function fftspace(width::Real, N::Int)
     @assert(N % 2 == 0, "N must be even.")
 
-    dx = width * 2. / N
+    dx = width * 2.0 / N
     xx = Array{Float64}(N)
     for i=1:N
         xx[i] = -width + (i - 1) * dx
@@ -139,11 +139,11 @@ end
 abstract type DiskJockeyException <: Exception end
 
 # Define the various types of Errors that we can Raise
-type ModelException <: DiskJockeyException
+mutable struct ModelException <: DiskJockeyException
     msg::String
 end
 
-type ImageException <: DiskJockeyException
+mutable struct ImageException <: DiskJockeyException
     msg::String
 end
 

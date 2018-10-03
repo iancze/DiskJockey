@@ -36,4 +36,6 @@ tau = parsed_args["tau"]
 tic()
 run(`radmc3d tausurf $tau incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda`)
 println("Tausurf runtime")
+# Move the image.out into a new file, since this conflicts with the normal channelmaps output.
+run(`cp image.out image_tausurf.out`)
 toc()

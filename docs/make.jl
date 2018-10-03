@@ -9,6 +9,7 @@ makedocs(
     analytics = "UA-5472810-7",
     pages = ["Home" => "index.md",
     "Introduction" => "dynamical_mass_intro.md",
+    "Installation" => "installation.md",
     "Models" => "models.md",
     "Formats" => "formats.md",
     "RADMC Setup" => "RADMC3D_setup.md",

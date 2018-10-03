@@ -4,6 +4,9 @@
 # In contrast to codes like mach_three.jl, this architecture means that within each likelihood call, the global lnprob for all channels is evaluated in *serial*, while the walkers themselves are parallelized.
 
 using ArgParse
+using Distributed
+@everywhere using Printf
+@everywhere using Test
 
 s = ArgParseSettings()
 @add_arg_table s begin
@@ -38,7 +41,8 @@ cpus = parsed_args["cpus"]
 
 if cpus != nothing
     using ClusterManagers
-    addprocs(LocalAffinityManager(;affinities=cpus))
+    np = length(cpus)
+    addprocs(LocalAffinityManager(;np=np, affinities=cpus))
 end
 
 # Since we've made this a #!/usr/bin/env julia script, we can no longer specify the extra
@@ -65,18 +69,18 @@ outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
 # This code is necessary for multiple simultaneous runs on a high performance cluster
 # so that different runs do not write into the same output directory
 if parsed_args["run_index"] == nothing
-    run_index = 0
-    outdir = outfmt(run_index)
+    global run_index = 0
+    global outdir = outfmt(run_index)
     while ispath(outdir)
         println(outdir, " exists")
-        run_index += 1
-        outdir = outfmt(run_index)
+        global run_index += 1
+        global outdir = outfmt(run_index)
     end
     # are we starting in a fresh directory?
     fresh = true
 else
-    run_index = parsed_args["run_index"]
-    outdir = outfmt(run_index)
+    global run_index = parsed_args["run_index"]
+    global outdir = outfmt(run_index)
     if ispath(outdir)
         # we are not starting in a fresh directory, so try loading pos0.npy from this directory.
         fresh = false
@@ -95,13 +99,13 @@ else
     println("$outdir exists, using current.")
 end
 
-
+@everywhere using AbstractFFTs
 @everywhere using DiskJockey.constants
 @everywhere using DiskJockey.visibilities
 @everywhere using DiskJockey.image
 @everywhere using DiskJockey.gridding
 @everywhere using DiskJockey.model
-@everywhere using Base.Test
+
 
 # Determine if we will be including the User-defined prior
 if isfile("prior.jl")
@@ -110,8 +114,6 @@ if isfile("prior.jl")
     # Make a copy to the outdirectory for future reference
     cp("prior.jl", outdir * "prior.jl")
 end
-
-println(methods(lnprior))
 
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])
@@ -139,12 +141,11 @@ for process in procs()
     @spawnat process global cfg=config
     @spawnat process global kl=keylist
 end
-println("Mapped variables to all processes")
 
 # Convert the parameter values from the config.yaml file from Dict{String, Float64} to
-# Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector
-# method
-@everywhere xargs = convert(Dict{Symbol}{Float64}, cfg["parameters"])
+# Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector method
+# @everywhere xargs = convert(Dict{Symbol}{Float64}, cfg["parameters"])
+@everywhere xargs = Dict{Symbol, Float64}(Symbol(index)=>value for (index, value) in pairs(cfg["parameters"]))
 
 # Read the fixed and free parameters from the config.yaml file
 @everywhere fix_params = cfg["fix_params"]
@@ -170,9 +171,6 @@ end
 @everywhere grd = cfg["grid"]
 @everywhere grid = Grid(grd)
 
-@everywhere dpc_mu = cfg["dpc_prior"]["mu"]
-@everywhere dpc_sig = cfg["dpc_prior"]["sig"]
-
 # calculate the interpolation closures, since we are keeping the angular size of the image
 # fixed thoughout the entire simulation.
 # calculate dl and dm (assuming they are equal).
@@ -186,7 +184,7 @@ end
 @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
 # For each channel, calculate the interpolation closures
-@everywhere int_arr = Array{Function}(nchan)
+@everywhere int_arr = Array{Function}(undef, nchan)
 @everywhere for (i, dset) in enumerate(dvarr)
     int_arr[i] = plan_interpolate(dset, uu, vv)
 end
@@ -207,9 +205,7 @@ end
     keydir = mktempdir() * "/"
 
     lnp = try
-
-        lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
-
+        lnpr = lnprior(pars, grid)
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
 
         # Copy all relevant configuration scripts to the keydir so that RADMC-3D can run.
@@ -232,7 +228,7 @@ end
 
         # Doppler shift the dataset wavelengths to rest-frame wavelength
         beta = pars.vel/c_kms # relativistic Doppler formula
-        lams = Array{Float64}(nchan)
+        lams = Array{Float64}(undef, nchan)
         for i=1:nchan
             lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
         end
@@ -240,7 +236,7 @@ end
         write_lambda(lams, keydir) # write into current directory
 
         # Run RADMC-3D, redirect output to /dev/null
-        run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`, DevNull))
+        run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`, devnull))
 
         # Read the RADMC-3D images from disk
         im = try
@@ -259,7 +255,7 @@ end
         # No shift needed, since we will shift the resampled visibilities
         corrfun!(skim)
 
-        lnprobs = Array{Float64}(nchan)
+        lnprobs = Array{Float64}(undef, nchan)
         # Do the Fourier domain stuff per channel
         for i=1:nchan
             dv = dvarr[i]
@@ -285,6 +281,7 @@ end
         # If an error occured through some of the known routines in this package ,
         # -Inf is returned as the value of lnp
         # Otherwise the error causese the program to exit
+        # println("Catching DiskJockeyException, returning -Inf")
         -Inf
 
     finally
