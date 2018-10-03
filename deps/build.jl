@@ -12,5 +12,6 @@ println("Current working directory ", pwd())
 # Unzipping the file
 run(`unzip $binary_file`)
 
+# make the binary
 cd("radmc-3d/version_0.41/src")
 run(`make`)
