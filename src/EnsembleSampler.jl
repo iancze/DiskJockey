@@ -89,10 +89,10 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
     # resize the chain by adding new rows to the array.
 
     # (ndim, iterations, nwalkers)
-    sampler.chain = cat(2, sampler.chain, Array{Float64}(undef, sampler.ndim, iterations, sampler.nwalkers))
+    sampler.chain = cat(sampler.chain, Array{Float64}(undef, sampler.ndim, iterations, sampler.nwalkers), dims=2)
 
     #(niterations, nwalkers)
-    sampler.lnprob = cat(2, sampler.lnprob, Array{Float64}(undef, sampler.nwalkers, iterations))
+    sampler.lnprob = cat(sampler.lnprob, Array{Float64}(undef, sampler.nwalkers, iterations), dims=2)
 
     for i=1:iterations
         sampler.iterations += 1
