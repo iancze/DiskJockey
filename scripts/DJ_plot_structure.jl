@@ -30,7 +30,7 @@ if parsed_args["M"]
     args = "velocity.png temperature.png scale_height.png surface_density.png density.png grid_topgrid.png"
     # If we have vertical gradient, add some extra to this
     println(args)
-    quit()
+    exit()
 end
 
 import PyPlot.plt
@@ -482,7 +482,7 @@ function plot_norm(pars::ParametersVertical, grid::Grid)
     # DiskJockey.model.rho_norm(10 * AU, pars)
     # DiskJockey.model.z_phot(10 * AU, pars)
     #
-    # quit()
+    # exit()
 
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)

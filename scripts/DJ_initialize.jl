@@ -43,7 +43,7 @@ parsed_args = parse_args(ARGS, s)
 # rather kludgey substitute for previous Pkg.dir() call
 using DiskJockey
 srcdir = dirname(pathof(DiskJockey))
-assets_dir = srcdir * "/../assets/"
+assets_dir = joinpath(srcdir, "../assets/")
 
 # The user is going to start modeling a new disk, so copy in the new configuration file.
 if parsed_args["new-project"] != "no"
@@ -55,14 +55,14 @@ if parsed_args["new-project"] != "no"
 
     println("Copied default config.yaml, initialize_walkers.py, and Makefile for the $model model to current working directory.")
     println("Exiting")
-    quit()
+    exit()
 end
 
 if parsed_args["prior"]
     cp(assets_dir * "prior.jl", pwd() * "/prior.jl")
     println("prior.jl copied to current directory. If you didn't mean to do this, delete this file now. Otherwise, edit this file with your favorite text editor to enforce the prior you would like to see for this specific disk. Please see the docs for more information.")
     println("Exiting")
-    quit()
+    exit()
 end
 
 using DiskJockey.constants
@@ -72,7 +72,7 @@ if parsed_args["version"]
     println("Your DiskJockey scripts are successfully linked.")
     println("You are running DiskJockey $DISKJOCKEY_VERSION")
     println("Exiting")
-    quit()
+    exit()
 end
 
 import YAML
@@ -94,7 +94,7 @@ if parsed_args["M"]
     end
 
     println(str)
-    quit()
+    exit()
 end
 
 using DiskJockey.model
@@ -115,7 +115,7 @@ if fit_every != 0
     println("To fit only every $(fit_every)-nd/rd/th channel, place the following line in your `config.yaml file.`")
     println("exclude : $exclude")
     println("Exiting")
-    quit()
+    exit()
 end
 
 # Create an output directory that will be useful for the results.
@@ -170,7 +170,6 @@ if config["gas"]
     end
 
     println("Copied over RADMC-3D gas input files.")
-
 
     vel = pars.vel # [km/s]
     npix = config["npix"] # number of pixels

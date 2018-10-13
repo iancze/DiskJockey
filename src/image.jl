@@ -331,7 +331,7 @@ function imToSpec(img::SkyImage)
     dDEC = abs(img.dec[2] - img.dec[1]) * arcsec
 
     # Add up all the flux in the pixels to create the spectrum
-    flux = squeeze(sum(img.data .* dRA .* dDEC, (1, 2)), (1,2))
+    flux = dropdims(sum(img.data .* dRA .* dDEC, dims=(1, 2)), dims=(1,2))
     spec = hcat(img.lams, flux) #First column is wl, second is flux
 
     return spec

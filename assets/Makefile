@@ -24,7 +24,7 @@ image_tausurf.out : $(OBJS)
 	DJ_synthesize_tausurf.jl
 
 .PHONY : chmaps
-chmaps : chmaps_linear.png chmaps_log.png
+chmaps : chmaps_linear.png 
 
 chmaps_linear.png : image.out
 	DJ_plot_chmaps.jl --linear

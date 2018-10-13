@@ -89,7 +89,7 @@ a log scale."""
 function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="channel_maps_sky.png")
 
     if log
-        ldata = log10.(img.data + 1e-99)
+        ldata = log10.(img.data .+ 1e-99)
         vvmax = maximum(ldata)
         norm = PyPlot.matplotlib[:colors][:Normalize](vvmax - 6, vvmax)
     else
@@ -184,7 +184,6 @@ function plot_spectrum(img::image.SkyImage; fname="spectrum.png")
 
     spec = imToSpec(img)
 
-
     ax[:plot](vels, spec[:,2], ls="steps-mid")
 
     ax[:set_ylabel](L"$f_\nu$ [Jy]")
@@ -195,8 +194,8 @@ function plot_spectrum(img::image.SkyImage; fname="spectrum.png")
     plt[:savefig](fname)
 
     # Calculate integrated line intensity.
-    tot = image.integrateSpec(spec, lam0)
-    println("Total line flux ", tot, " Jy / km / s")
+    # tot = image.integrateSpec(spec, lam0)
+    # println("Total line flux ", tot, " Jy / km / s")
 end
 
 pars = convert_dict(config["parameters"], config["model"])
