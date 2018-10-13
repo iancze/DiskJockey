@@ -1,6 +1,6 @@
 module model
 
-export write_grid, write_model, write_lambda, write_dust, Grid, size_au
+export generate_vel_mask, write_grid, write_model, write_lambda, write_dust, Grid, size_au
 export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, ParametersVerticalEta, ParametersNuker, convert_vector, convert_dict, registered_params
 export lnprior
 
@@ -22,6 +22,22 @@ function write_lambda(lams::AbstractArray, basedir::AbstractString)
     end
 
     close(fcam)
+end
+
+"Generate a boolean mask corresponding to the velocities which fall inside the user-specified mask ranges.
+arr is an array of [start, end] pairs, like arr = [[1.0, 3.0], [4.0, 5.2]]
+vels are the velocities corresponding to the dataset, like vels = [1.2, 2.4, 3.6], etc."
+function generate_vel_mask(arr, vels)
+    # initialize a boolean array of all trues
+    mask = trues(length(vels))
+
+    # iterate over the array of exclude values
+    for (left, right) in arr
+        # set those velocities which fall inside the range of channels to be false
+        mask[(left .< vels) .& (vels .< right)] .= false
+    end
+
+    return mask
 end
 
 const eqmirror = true # mirror the grid about the z=0 midplane ?

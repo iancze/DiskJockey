@@ -119,6 +119,8 @@ end
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
 
+
+
 # The data are stored in increasing frequency, so
 # exclude: [1] means exclude the most redshifted channel
 # whereas
@@ -126,9 +128,17 @@ nchan = length(dvarr)
 if haskey(config, "exclude")
     exclude = config["exclude"]
     # which channels of the dset to fit
-    keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+    # keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+
+    lam0 = lam0s[config["species"] * config["transition"]]
+    # calculate the velocities corresponding to dvarr
+    lams = Float64[dv.lam for dv in dvarr]
+    vels = c_kms * (lams .- lam0)/lam0
+    # get the mask
+    vel_mask = generate_vel_mask(exclude, vels)
 else
-    keylist = Int[i for i=1:nchan]
+    # keylist = Int[i for i=1:nchan]
+    vel_mask = trues(nchan)
 end
 
 # This program is meant to be started with the -p option.
@@ -139,7 +149,8 @@ println("Workers allocated ", nchild)
 for process in procs()
     @spawnat process global run_id=run_index
     @spawnat process global cfg=config
-    @spawnat process global kl=keylist
+    # @spawnat process global kl=keylist
+    @spawnat process global vmask=vel_mask
 end
 
 # Convert the parameter values from the config.yaml file from Dict{String, Float64} to
@@ -156,7 +167,8 @@ end
 end
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate
-@everywhere dvarr = DataVis(cfg["data_file"], kl)
+# @everywhere dvarr = DataVis(cfg["data_file"], kl)
+@everywhere dvarr = DataVis(cfg["data_file"], vmask)
 @everywhere visibilities.conj!(dvarr)
 @everywhere nchan = length(dvarr)
 

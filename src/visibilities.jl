@@ -128,6 +128,15 @@ function DataVis(fname::AbstractString, indices::Vector{Int}, flagged::Bool=fals
     return out
 end
 
+"
+    DataVis(fname::AbstractString, mask::BitArray, flagged::Bool=false)
+
+Read just a subset of channels from the HDF5 file and return an array of DataVis."
+function DataVis(fname::AbstractString, mask::BitArray{1}, flagged::Bool=false)
+    # load the array and mask it
+    return DataVis(fname, flagged)[mask]
+end
+
 struct DataVisReal
     lam::Float64 # [μm] Wavelength (in microns) corresponding to channel
     uu::Vector{Float64} # [kλ] Vectors of the u, v locations in kilolambda, shape (nchan, nvis)

@@ -13,8 +13,10 @@ grid:
   r_in: 0.1 # [AU] # Inner edge of model grid
   r_out: 2000. # [AU] # Outer edge of model grid
 
-# Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
-# exclude: [35, 36, 37, 38]
+# Are there any channels of the dataset to exclude? If so, provide their velocity ranges here in the format [[start1,end1],[start2,end2]].
+# The velocity corresponds to whatever frame you have exported your dataset in (LSRK, or BARY), calculated from
+# the frequencies in the HDF5 dataset and the restfrequency of the chosen transition.
+# exclude: [[3.0, 4.5], [4.5, 5.0]]
 
 # What type of model will we be fitting? This also affects which parameters to include.
 model : standard # choices of {standard, truncated, vertical, cavity, etc..}
