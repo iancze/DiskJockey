@@ -67,7 +67,7 @@ function DataVis(fname::AbstractString, flagged::Bool=false)
     out = Array{DataVis}(undef, nlam)
     if !flagged
         for i=1:nlam
-            ch_flag = .~flag[:,i]
+            ch_flag = flag[:,i]
             out[i] = DataVis(lams[i], uu[ch_flag,i], vv[ch_flag,i], VV[ch_flag, i], sqrt.(weight[ch_flag, i]))
         end
     else
@@ -95,7 +95,7 @@ function DataVis(fname::AbstractString, index::Int, flagged::Bool=false)
 
     if !flagged
         flag = convert(Array{Bool}, read(fid["flag"]))
-        ch_flag = .~flag[:,index]
+        ch_flag = flag[:,index]
     else
         ch_flag = ones(Bool, len) # Keep all visibilities, regardless of what flag says
     end
@@ -181,7 +181,7 @@ end
 
 Given a DataVis, convert the Cartesian spatial frequency coordinates ``(u,v)`` into a radial spatial coordinate ``q``."
 function get_qq(dv::DataVis)
-  sqrt(dv.uu.^2 .+ dv.vv.^2)
+  sqrt.(dv.uu.^2 .+ dv.vv.^2)
 end
 
 "

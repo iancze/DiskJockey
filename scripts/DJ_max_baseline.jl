@@ -30,11 +30,11 @@ transition = config["transition"]
 lam0 = lam0s[species*transition]
 grid = Grid(config["grid"])
 
-function wl_to_vel{T}(wl::T)
+function wl_to_vel(wl::T) where {T}
     return c_kms * (wl - lam0)/lam0
 end
 
-function vel_to_wl{T}(vel::T)
+function vel_to_wl(vel::T) where {T}
     beta = vel/c_kms # relativistic Doppler formula
     return lam0 * sqrt((1. - beta) / (1. + beta)) # [microns]
 end

@@ -99,21 +99,43 @@ end
 N = nchan * 2 * length(dvarr[1].VV)
 
 # Only use the unmasked channels in the chi2 calculation
+# if haskey(config, "exclude")
+#     exclude = config["exclude"]
+#     # which channels of the dset to fit
+#     keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+# else
+#     keylist = Int[i for i=1:nchan]
+# end
+
+# The data are stored in increasing frequency, so
+# exclude: [1] means exclude the most redshifted channel
+# whereas
+# exclude : [nchan] excludes the most blueshifted channel
 if haskey(config, "exclude")
     exclude = config["exclude"]
     # which channels of the dset to fit
-    keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+    # keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+
+    lam0 = lam0s[config["species"] * config["transition"]]
+    # calculate the velocities corresponding to dvarr
+    lams = Float64[dv.lam for dv in dvarr]
+    vels = c_kms * (lams .- lam0)/lam0
+    # get the mask
+    vel_mask = generate_vel_mask(exclude, vels)
 else
-    keylist = Int[i for i=1:nchan]
+    # keylist = Int[i for i=1:nchan]
+    vel_mask = trues(nchan)
 end
 
+
+
 println("Note: may include flagged visibilities!")
-chi2s = chi2s[keylist]
+chi2s = chi2s[vel_mask]
 # println("Chi^2 :", sum(chi2s))
 println("Reduced Chi^2 ", sum(chi2s)/N)
 
 # Calculate the lnprob between these two
-lnprobs = lnprobs[keylist]
+lnprobs = lnprobs[vel_mask]
 
 println("lnprior ", ln_prior)
 println("lnlikelihood ", sum(lnprobs))

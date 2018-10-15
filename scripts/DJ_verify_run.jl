@@ -17,6 +17,7 @@ parsed_args = parse_args(ARGS, s)
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
+using Statistics
 using DiskJockey.model
 using DiskJockey.constants
 using NPZ
@@ -32,7 +33,7 @@ reg_params = registered_params[model]
 println("Running model $model with the $species $transition transition.")
 println()
 
-println("We are fixing the following parameters:")
+println("We are fixing the following parameters to these values:")
 for param in fix_params
   println("$param : ", params[param])
 end
@@ -44,7 +45,7 @@ n_fit = length(fit_params)
 
 pos0 = npzread(config["pos0"])
 ndim, nwalkers = size(pos0)
-means = mean(pos0, 2) # Find the mean walker position for each parameter
+means = mean(pos0, dims=2) # Find the mean walker position for each parameter
 
 @assert ndim == n_fit "Number of specified parameters ($n_fit) does not match the number of dimensions in the walker file ($ndim)."
 
