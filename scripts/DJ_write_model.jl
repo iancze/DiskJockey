@@ -57,7 +57,7 @@ println("dRA is ", dRA, " arcsec")
 # For *this purpose only*, read in the flagged data in addition to the unflagged data
 # so that we can export a model for these otherwise flagged visibilities
 dvarr = DataVis(config["data_file"], true)
-# Do this as we do in `mach_three.jl`
+
 for dset in dvarr
     # Conjugation is necessary for the SMA and ALMA
     visibilities.conj!(dset) # Swap UV convention
@@ -127,8 +127,6 @@ else
     vel_mask = trues(nchan)
 end
 
-
-
 println("Note: may include flagged visibilities!")
 chi2s = chi2s[vel_mask]
 # println("Chi^2 :", sum(chi2s))
@@ -141,6 +139,7 @@ println("lnprior ", ln_prior)
 println("lnlikelihood ", sum(lnprobs))
 println("lnprob ", ln_prior + sum(lnprobs))
 
+# actually write the datasets (including flagged points) back to the HDF5 files
 visibilities.write(mvarr, parsed_args["out-model"])
 visibilities.write(rvarr, parsed_args["out-resid"])
 
