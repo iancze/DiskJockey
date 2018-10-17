@@ -1,4 +1,5 @@
 # This file is designed to test the visibility interpolation algorithm.
+
 import PyPlot
 import PyPlot.plt
 using LaTeXStrings
@@ -11,8 +12,6 @@ using DiskJockey.gauss
 
 # Because of the flipped nature of the sky (but not flipped nature of the UV plane)
 # there are some tricky conventions about how to pack the array.
-
-
 
 # Test to see if we get the convolutional interpolation correct by using a 2D
 # Elliptical Gaussian.
@@ -30,8 +29,8 @@ nx = 128
 ny = 128
 
 # full span of the image
-ra = fftspace(10., nx) # [arcsec]
-dec = fftspace(10., ny) # [arcsec]
+ra = fftspace(10.0, nx) # [arcsec]
+dec = fftspace(10.0, ny) # [arcsec]
 
 # convert ra and dec in [arcsec] to radians, and then take the sin to convert to ll, mm
 ll = sin.(ra * arcsec) # direction cosines
@@ -55,7 +54,7 @@ skim_plain2 = SkyImage(img_plain2, ra, dec, lam0)
 skim_plain3 = SkyImage(img_plain3, ra, dec, lam0)
 
 # Apply a centered correction function on the offset image and Fourier transform the image
-corrfun!(skim, 0., 0.)
+corrfun!(skim, 0.0, 0.0)
 shift_fft = transform(skim)
 
 # Now, create images that we will use as test cases for doing the interpolation before or after
@@ -100,8 +99,8 @@ end
 fig, ax = plt[:subplots](nrows=2, figsize=(5, 8))
 
 ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
-ax[1][:imshow](flipdim(skim.data[:,:,1], 2), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-ax[1][:contour](flipdim(skim.data[:,:,1], 2), origin="lower", extent=ext)
+ax[1][:imshow](reverse(skim.data[:,:,1], dims=2), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
+ax[1][:contour](reverse(skim.data[:,:,1], dims=2), origin="lower", extent=ext)
 ax[1][:set_title]("Sky Projection")
 ax[1][:set_xlabel](L"$\alpha$ [arcsec]")
 ax[1][:set_ylabel](L"$\delta$ [arcsec]")
@@ -121,7 +120,7 @@ plt[:savefig]("gaussian_img_array.png")
 fig, ax = plt[:subplots](nrows=1, figsize=(5, 5))
 # Real, analytic Gaussian
 ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
-aximg = ax[:imshow](flipdim(skim_plain1.data[:,:,1], 2), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext) #, norm = scale(img))
+aximg = ax[:imshow](reverse(skim_plain1.data[:,:,1], dims=2), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext) #, norm = scale(img))
 ax[:set_title]("image")
 ax[:set_xlabel](L"$\alpha$ [arcsec]")
 ax[:set_ylabel](L"$\delta$ [arcsec]")
@@ -168,9 +167,9 @@ function plot_1d(analytic, approx, fname)
 end
 
 n = 100
-uu = linspace(-100, 100, n) # [kλ]
-approx = Array{Complex128}(n)
-analytic = Array{Complex128}(n)
+uu = LinRange(-100, 100, n) # [kλ]
+approx = Array{ComplexF64}(undef, n)
+analytic = Array{ComplexF64}(undef, n)
 
 # First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
 # with no shift.
@@ -254,10 +253,10 @@ plot_1d(analytic, approx, "interpolation_linear_operations.png")
 
 # Create analytic function on a smaller grid
 n = 256
-uu = linspace(-150, 150, n)
-vv = linspace(-150, 150, n)
+uu = LinRange(-150, 150, n)
+vv = LinRange(-150, 150, n)
 
-function plot_2d(analytic::Matrix{Complex128}, approx::Matrix{Complex128}, fname::AbstractString)
+function plot_2d(analytic::Matrix{ComplexF64}, approx::Matrix{ComplexF64}, fname::AbstractString)
 
     println("Analyzing $fname")
 
@@ -343,7 +342,7 @@ end
 
 # First, let's see how the interpolated points, with *no shift*, correspond to the analytic form
 # with no shift.
-approx = Array{Complex128}(n, n)
+approx = Array{ComplexF64}(undef, n, n)
 analytic = FTGauss(uu, vv, p_center, 1) # can take in full arrays
 
 for i=1:n

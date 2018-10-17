@@ -112,7 +112,7 @@ function fftspace(width::Real, N::Int)
     @assert(N % 2 == 0, "N must be even.")
 
     dx = width * 2.0 / N
-    xx = Array{Float64}(N)
+    xx = Array{Float64}(undef, N)
     for i=1:N
         xx[i] = -width + (i - 1) * dx
     end

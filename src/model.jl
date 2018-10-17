@@ -79,13 +79,13 @@ function Grid(nr::Int, ntheta::Int, r_in::Real, r_out::Real) #, eqmirror::Bool=t
 
     if eqmirror
         ped = 0.1
-        #Thetas = linspace(0, pi/2., ntheta+1)
+        #Thetas = LinRange(0, pi/2., ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
         # Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
         Thetas = pi/2.0 .- (10 .^ range(log10(ped), stop=log10(pi/2.0 + ped), length=ntheta+1) .- ped)[end:-1:1]
         #Logarithmically spaced closer near the z=0
     else
-        Thetas = linspace(0, pi, ntheta+1)
+        Thetas = LinRange(0, pi, ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
         # Equally spaced in theta.
     end
@@ -119,18 +119,18 @@ function Grid(nr::Int, ntheta::Int, nphi::Int, r_in::Real, r_out::Real)
 
     if eqmirror
         ped = 0.1
-        #Thetas = linspace(0, pi/2., ntheta+1)
+        #Thetas = LinRange(0, pi/2., ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
         # Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
         Thetas = pi/2.0 .- (10 .^ range(log10(ped), stop=log10(pi/2. + ped), length=ntheta+1) .- ped)[end:-1:1]
         #Logarithmically spaced closer near the z=0
     else
-        Thetas = linspace(0, pi, ntheta+1)
+        Thetas = LinRange(0, pi, ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
         # Equally spaced in theta.
     end
 
-    Phis = linspace(0, 2pi, nphi+1) # [rad] cell walls for inactive coordinate
+    Phis = LinRange(0, 2pi, nphi+1) # [rad] cell walls for inactive coordinate
 
     #Define the cell centers as the average between walls
     rs = 0.5 * (Rs[1:end-1] + Rs[2:end]) # [cm]
@@ -159,7 +159,7 @@ function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::I
     Rs_in = 10 .^ range(log10(r_in), stop=log10(r_linstart), length=n_in + 1) # [cm]
 
     # linearly spaced middle grid
-    Rs_mid = linspace(r_linstart, r_linend, n_mid + 1) # [cm]
+    Rs_mid = LinRange(r_linstart, r_linend, n_mid + 1) # [cm]
 
     # logarithmically spaced outer grid
     # Rs_out = logspace(log10(r_linend), log10(r_out), n_out + 1) # [cm]
@@ -169,13 +169,13 @@ function Grid(r_in::Real, r_linstart::Real, r_linend::Real, r_out::Real, n_in::I
 
     if eqmirror
         ped = 0.1
-        #Thetas = linspace(0, pi/2., ntheta+1)
+        #Thetas = LinRange(0, pi/2., ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
         # Thetas = pi/2. - (logspace(log10(ped), log10(pi/2. + ped), ntheta+1) - ped)[end:-1:1]
         Thetas = pi/2.0 .- (10 .^ range(log10(ped), stop=log10(pi/2. + ped), length=ntheta+1) - ped)[end:-1:1]
         #Spaced closer near the z=0
     else
-        Thetas = linspace(0, pi, ntheta+1)
+        Thetas = LinRange(0, pi, ntheta+1)
         # [rad] Angles are internally defined in radians, not degrees
     end
 

@@ -8,8 +8,8 @@ import DiskJockey.model.lnprior_base
 import DiskJockey.constants.ModelException
 
 # for example, a replacement for the standard model might look like
-function lnprior(pars::ParametersStandard, dpc_mu::Float64, dpc_sig::Float64, grid::Grid)
-    lnp = lnprior_base(pars, dpc_mu, dpc_sig)
+function lnprior(pars::ParametersStandard, grid::Grid)
+    lnp = lnprior_base(pars)
 
     if pars.mu_RA > -20
         println("RA outside of bounds")

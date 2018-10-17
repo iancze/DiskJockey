@@ -17,6 +17,7 @@ parsed_args = parse_args(ARGS, s)
 import YAML
 config = YAML.load(open(parsed_args["config"]))
 
+using DiskJockey
 using DiskJockey.model
 using DiskJockey.constants
 
@@ -42,11 +43,11 @@ function plot_topgrid(pars::AbstractParameters, grid::Grid)
     ax = fig[:add_subplot](111, polar=true)
 
     # Something to span the circle
-    phis = linspace(0, 2pi, 100)
+    phis = LinRange(0, 2pi, 100)
 
     # Plot the grid cell edges in radius and phi
     for R in grid.Rs
-        rr = R * ones(phis)
+        rr = R * ones(length(phis))
         ax[:plot](phis, rr ./AU, "b", lw=0.1)
     end
 
@@ -81,15 +82,15 @@ end
 function plot_vel(pars::ParametersVertical, grid::Grid)
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
-    zs = linspace(0.0, 20 * AU, nz)
+    zs = LinRange(0.0, 20 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array{Float64}(nz, nr)
-    yy = Array{Float64}(nz, nr)
-    vels = Array{Float64}(nz, nr)
+    xx = Array{Float64}(undef, nz, nr)
+    yy = Array{Float64}(undef, nz, nr)
+    vels = Array{Float64}(undef, nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -114,7 +115,7 @@ function plot_vel(pars::ParametersVertical, grid::Grid)
     ax[:set_ylabel](L"$z$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
 
-    #ticks = np.linspace(0, np.max(cov), num=6)
+    #ticks = np.LinRange(0, np.max(cov), num=6)
     #cb.set_ticks(ticks)
     #cb.set_ticks(MaxNLocator(nbins=5))
 
@@ -185,15 +186,15 @@ end
 function plot_temp(pars::Union{ParametersVertical, ParametersVerticalEta}, grid::Grid)
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
-    zs = linspace(0.0, 20 * AU, nz)
+    zs = LinRange(0.0, 20 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array{Float64}(nz, nr)
-    yy = Array{Float64}(nz, nr)
-    temps = Array{Float64}(nz, nr)
+    xx = Array{Float64}(undef, nz, nr)
+    yy = Array{Float64}(undef, nz, nr)
+    temps = Array{Float64}(undef, nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -217,7 +218,7 @@ function plot_temp(pars::Union{ParametersVertical, ParametersVerticalEta}, grid:
     ax[:set_ylabel](L"$z$ [AU]")
     ax[:set_xlabel](L"$r$ [AU]")
 
-    #ticks = np.linspace(0, np.max(cov), num=6)
+    #ticks = np.LinRange(0, np.max(cov), num=6)
     #cb.set_ticks(ticks)
     #cb.set_ticks(MaxNLocator(nbins=5))
 
@@ -283,7 +284,7 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
-    Sigmas = Array{Float64}(grid.nr)
+    Sigmas = Array{Float64}(undef, grid.nr)
 
     for i=1:grid.nr
         Sigmas[i] = DiskJockey.model.Sigma(grid.rs[i], pars)
@@ -311,15 +312,15 @@ function plot_dens(pars::AbstractParameters, grid)
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 64
-    zs = linspace(0.0, 150 * AU, nz)
+    zs = LinRange(0.0, 150 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array{Float64}(nz, nr)
-    yy = Array{Float64}(nz, nr)
-    rhos = Array{Float64}(nz, nr)
+    xx = Array{Float64}(undef, nz, nr)
+    yy = Array{Float64}(undef, nz, nr)
+    rhos = Array{Float64}(undef, nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -347,7 +348,7 @@ function plot_dens(pars::AbstractParameters, grid)
 
 
 
-    #ticks = np.linspace(0, np.max(cov), num=6)
+    #ticks = np.LinRange(0, np.max(cov), num=6)
     #cb.set_ticks(ticks)
     #cb.set_ticks(MaxNLocator(nbins=5))
 
@@ -403,9 +404,9 @@ function plot_density_column(pars::ParametersVertical, grid::Grid)
 
     # Calculate a range of zs
     nz = 64
-    zs = linspace(0, 4 * AU, nz)
+    zs = LinRange(0, 4 * AU, nz)
 
-    un_lnrhos = Array{Float64}(nz)
+    un_lnrhos = Array{Float64}(undef, nz)
     for i=1:nz
         un_lnrhos[i] = DiskJockey.model.un_lnrho(r, zs[i], pars)
     end
@@ -511,7 +512,7 @@ function plot_ztop(pars::ParametersVertical, grid::Grid)
     fig = plt[:figure]()
     ax = fig[:add_subplot](111)
 
-    ztops = Array{Float64}(grid.nr)
+    ztops = Array{Float64}(undef, grid.nr)
 
     for i=1:grid.nr
         ztops[i] = DiskJockey.model.z_top(grid.rs[i], pars)
@@ -542,15 +543,15 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
 
     # Instead of spherical coordinates, do this with cartesian
     nz = 128
-    zs = linspace(0.0, 100 * AU, nz)
+    zs = LinRange(0.0, 100 * AU, nz)
     zz = zs./AU
 
     nr = grid.nr
     rs = grid.rs
 
-    xx = Array{Float64}(nz, nr)
-    yy = Array{Float64}(nz, nr)
-    rhos = Array{Float64}(nz, nr)
+    xx = Array{Float64}(undef, nz, nr)
+    yy = Array{Float64}(undef, nz, nr)
+    rhos = Array{Float64}(undef, nz, nr)
 
     for i=1:nz
         xx[i, :] = rr
@@ -567,7 +568,7 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
         end
     end
 
-    ztops = Array{Float64}(grid.nr)
+    ztops = Array{Float64}(undef, grid.nr)
     for i=1:grid.nr
         ztops[i] = DiskJockey.model.z_top(grid.rs[i], pars)
     end

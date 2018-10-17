@@ -17,8 +17,8 @@ println(pars_type.Sigma_c)
 # Test the vector conversion routine
 
 # Convert pars dictionary to dictionary of symbols
-xargs = convert(Dict{Symbol}{Float64}, pars)
-
+# xargs = convert(Dict{Symbol}{Float64}, pars)
+xargs = Dict{Symbol, Float64}(Symbol(index)=>value for (index, value) in pairs(pars))
 
 # According to model.jl, these are the total parameters. Let's fix some
 # "standard", ["M_star", "r_c", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]

@@ -251,17 +251,18 @@ end
         run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`, devnull))
 
         # Read the RADMC-3D images from disk
-        im = try
+        img = try
             imread() # we should already be in the sub-directory, no path required
         # If the synthesized image is screwed up, just say there is zero probability.
         catch SystemError
             throw(ImageException("Failed to read synthesized image for parameters ", p))
         end
 
-        phys_size = im.pixsize_x * npix/AU
+
+        phys_size = img.pixsize_x * npix/AU
 
         # Convert raw images to the appropriate distance
-        skim = imToSky(im, pars.dpc)
+        skim = imToSky(img, pars.dpc)
 
         # Apply the gridding correction function before doing the FFT
         # No shift needed, since we will shift the resampled visibilities
@@ -276,6 +277,7 @@ end
 
             # Interpolate the `vis_fft` to the same locations as the DataSet
             mvis = int_arr[i](dv, vis_fft)
+
 
             # Apply the phase shift here, which includes a correction for the half-pixel offset
             # inherent to any image synthesized with RADMC3D.

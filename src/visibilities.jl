@@ -655,6 +655,8 @@ Return a function that is used to interpolate the visibilities, in the
 spirit of interpolate_uv but *much* faster.
 Closures save time and money!
 
+The uu and vv vectors are the visibility coordinates for the dense visibility *model*.
+
 The point is that if the distance to the source and the size of the sythesized image
 are not changing, then we will always be interpolating from a dense Visibility grid that
 has the exact same U and V spacings, meaning that the weighting terms used to evaluate the
@@ -683,7 +685,7 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         du = abs(uu[4] - uu[1])
         dv = abs(vv[4] - vv[1])
 
-        # 2. Calculate the appropriate u and v indexes for the 6 nearest pixels
+        # Calculate the appropriate u and v indexes for the 6 nearest pixels
         # (3 on either side)
 
         # Are u0 and v0 to the left or the right of the index?
@@ -693,8 +695,8 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         # Check to make sure that at least three grid points exist in all directions
         lenu = length(uu)
         lenv = length(vv)
-        @assert iu0 >= 4
-        @assert iv0 >= 4
+        @assert iu0 >= 4 "The model visibility does not have the resolution to cover the largest baselines in the dataset."
+        @assert iv0 >= 4 "The model visibility does not have the resolution to cover the largest baselines in the dataset."
         @assert lenu - iu0 >= 4
         @assert lenv - iv0 >= 4
 
@@ -733,7 +735,8 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
         vws[:,i] = vw
     end
 
-    tol = 1e-5 * ones(Float64, sizeof(uu))
+    # tol = 1e-5 .* ones(Float64, length(uu))
+    tol = 1e-5 
 
     # This function inherits all of the variables just defined in this scope (uu, vv)
     function interpolate(data::DataVis, fmvis::FullModelVis)
@@ -749,7 +752,7 @@ function plan_interpolate(dvis::DataVis, uu::Vector{Float64}, vv::Vector{Float64
 
             Vdata = fmvis.VV[vinds[i], uinds[i]] # Array is packed like the image
 
-            # 5. Loop over all 36 grid indices and sum to find the interpolation.
+            # Loop over all 36 grid indices and sum to find the interpolation.
             cum::ComplexF64 = 0.0 + 0.0im
             for k=1:6
                 for l=1:6

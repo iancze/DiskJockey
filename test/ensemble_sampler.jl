@@ -1,4 +1,6 @@
 using DiskJockey.EnsembleSampler
+using Distributed
+using LinearAlgebra
 
 # Rosenbrock function
 @everywhere function lnprob(p)
@@ -35,7 +37,7 @@ ndim = 2
 sampler = Sampler(nwalkers, ndim, lnprob)
 
 # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
-pos0 = Array{Float64}(ndim, nwalkers)
+pos0 = Array{Float64}(undef, ndim, nwalkers)
 for i=1:nwalkers
     pos0[:,i] = randn(ndim)
 end
@@ -74,7 +76,7 @@ ndim = 4
 sampler = Sampler(nwalkers, ndim, lnprob, true)
 
 # pos0 is the starting position, it needs to be a (ndim, nwalkers array)
-pos0 = Array{Float64}(ndim, nwalkers)
+pos0 = Array{Float64}(undef, ndim, nwalkers)
 for i=1:nwalkers
     pos0[:,i] = randn(ndim)
 end

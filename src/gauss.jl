@@ -3,6 +3,7 @@ module gauss
 
 export imageGauss, FTGauss
 
+using LinearAlgebra
 using ..constants
 
 
@@ -46,7 +47,7 @@ function imageGauss(ll::AbstractVector{Float64}, mm::AbstractVector{Float64}, p:
     nx = length(ll)
     ny = length(mm)
 
-    img = Array{Float64}(ny, nx)
+    img = Array{Float64}(undef, ny, nx)
     mu = p[1:2] * arcsec #ll and mm shifts
     sigma_x = p[3] * arcsec
     sigma_y = p[4] * arcsec
@@ -55,7 +56,7 @@ function imageGauss(ll::AbstractVector{Float64}, mm::AbstractVector{Float64}, p:
     Sigma = Float64[[sigma_x^2, sigma_xy] [sigma_xy, sigma_y^2]]
     rot = [[cosd(theta), +sind(theta)] [-sind(theta), cosd(theta)]]
     # Sigma = Diagonal((p[3:4] * arcsec).^2) #Convert from arcsec to radians
-    pre = 1. / (2pi * sqrt(det(Sigma))) * k
+    pre = 1.0 / (2pi * sqrt(det(Sigma))) * k
     for j=1:ny
         for i=1:nx
             # Rotation of Gaussian occurs about origin, so subtract off mean first.
@@ -119,7 +120,7 @@ function FTGauss(uu::AbstractVector{Float64}, vv::AbstractVector{Float64}, p::Ve
     nu = length(uu)
     nv = length(vv)
     # Both uu and vv increase with array index
-    img = Array{Complex128}(nv, nu)
+    img = Array{ComplexF64}(undef, nv, nu)
     for j=1:nv
         for i=1:nu
             img[j, i] = FTGauss(uu[i], vv[j], p, k, theta=theta)
