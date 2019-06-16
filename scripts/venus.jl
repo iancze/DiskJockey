@@ -141,6 +141,8 @@ else
     vel_mask = trues(nchan)
 end
 
+println("Using the following velocities: ", vels[vel_mask])
+
 # This program is meant to be started with the -p option.
 nchild = nworkers()
 println("Workers allocated ", nchild)

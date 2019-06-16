@@ -244,12 +244,6 @@ def plot_hdis(flatchain, fname="hdi.png"):
 if args.hdis:
     plot_hdis(flatchain)
 
-# Compute the autocorrelation time, following emcee
-# Notes here: http://dfm.io/posts/autocorr/
-print("Integrated autocorrelation time")
-from emcee import autocorr
-print(autocorr.integrated_time(chain))
-
 
 # Make the triangle plot
 if args.tri:
@@ -258,3 +252,9 @@ if args.tri:
     figure.savefig("triangle.png")
 else:
     print("Not plotting triangle, no --tri flag.")
+
+# Compute the autocorrelation time, following emcee
+# Notes here: http://dfm.io/posts/autocorr/
+print("Integrated autocorrelation time")
+from emcee import autocorr
+print(autocorr.integrated_time(chain))

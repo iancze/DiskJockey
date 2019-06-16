@@ -127,7 +127,7 @@ else
     vel_mask = trues(nchan)
 end
 
-println("Note: may include flagged visibilities!")
+println("Note: may include flagged visibilities! Use DJ_calc_lnprob_resid.jl to calculate lnprob with correct flags.")
 chi2s = chi2s[vel_mask]
 # println("Chi^2 :", sum(chi2s))
 println("Reduced Chi^2 ", sum(chi2s)/N)

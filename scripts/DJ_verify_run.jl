@@ -19,6 +19,7 @@ config = YAML.load(open(parsed_args["config"]))
 
 using Statistics
 using DiskJockey.model
+using DiskJockey.visibilities
 using DiskJockey.constants
 using NPZ
 
@@ -56,3 +57,25 @@ for (par, mu) in zip(fit_params, means)
 end
 
 println("Using $nwalkers walkers in the MCMC sampling.")
+
+# load data and figure out how many channels
+dvarr = DataVis(config["data_file"])
+nchan = length(dvarr)
+
+if haskey(config, "exclude")
+    exclude = config["exclude"]
+    # which channels of the dset to fit
+    # keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+
+    lam0 = lam0s[config["species"] * config["transition"]]
+    # calculate the velocities corresponding to dvarr
+    lams = Float64[dv.lam for dv in dvarr]
+    vels = c_kms * (lams .- lam0)/lam0
+    # get the mask
+    vel_mask = generate_vel_mask(exclude, vels)
+else
+    # keylist = Int[i for i=1:nchan]
+    vel_mask = trues(nchan)
+end
+
+println("Using the following velocity channels: ", vels[vel_mask])

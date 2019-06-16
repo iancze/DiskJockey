@@ -51,6 +51,7 @@ r_c = pars["r_c"]
 incl = pars["incl"]
 PA = pars["PA"]
 dpc = pars["dpc"]
+vel_sys = pars["vel"]
 
 # from matplotlib.patches import Ellipse
 #     ax[:add_artist](PyPlot.matplotlib[:patches][:Ellipse](xy=xy, width=BMIN, height=BMAJ, angle=BPA, facecolor="0.8", linewidth=0.2))
@@ -74,14 +75,6 @@ function get_levels(rms::Float64, vmax::Float64, spacing=3)
 
     return levels
 end
-
-# function plot_beam(ax, BMAJ, BMIN, xy=(1,-1))
-#     BMAJ = 3600. * header["BMAJ"] # [arcsec]
-#     BMIN = 3600. * header["BMIN"] # [arcsec]
-#     BPA =  header["BPA"] # degrees East of North
-#     # from matplotlib.patches import Ellipse
-#     ax[:add_artist](PyPlot.matplotlib[:patches][:Ellipse](xy=xy, width=BMIN, height=BMAJ, angle=BPA, facecolor="0.8", linewidth=0.2))
-# end
 
 # Plot the channel maps using sky convention
 """Plot the channel maps using the sky convention. If log is true, plot intensity using
@@ -126,7 +119,7 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
                 ax[row, col][:xaxis][:set_ticklabels]([])
                 ax[row, col][:yaxis][:set_ticklabels]([])
             else
-                ax[row, col][:set_xlabel](L"$\Delta \alpha$ ('')")
+                ax[row, col][:set_xlabel](L"$\Delta \alpha \cos \delta$ ('')")
                 ax[row, col][:set_ylabel](L"$\Delta \delta$ ('')")
             end
 
@@ -165,6 +158,7 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
                 end
 
                 ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
+                ax[row, col][:annotate](@sprintf("%.1f", vels_obs[iframe]), (0.1, 0.9), xycoords="axes fraction", size=8)
             end
 
         end
@@ -204,16 +198,20 @@ pars = convert_dict(config["parameters"], config["model"])
 im = imread()
 skim = imToSky(im, pars.dpc)
 
-# Do the velocity conversion here for plot labels
+# Do the velocity conversion here for plot labels in the disk-frame
 global nlam = length(skim.lams)
 # convert wavelengths to velocities
 global vels = c_kms * (skim.lams .- lam0)/lam0
+
+# calculate velocities in the observed frame (whatever the dataset is)
+global vels_obs = vels .+ vel_sys
 
 # Make sure we are always plotting channels from blueshift to redshift.
 if vels[2] < vels[1]
   println("Flipping channel maps to plot in order of increasing velocity.")
   skim.data = skim.data[:,:,end:-1:1]
   vels = vels[end:-1:1]
+  vels_obs = vels_obs[end:-1:1]
 end
 
 if parsed_args["linear"]
@@ -223,27 +221,6 @@ end
 if parsed_args["log"]
     plot_chmaps(skim, fname="chmaps_log.png", log=true, contours=false)
 end
-
-# if parsed_args["blur"]
-#     beam = config["beam"]
-#     rms = beam["rms"] # Jy/beam
-#     BMAJ = beam["BMAJ"]/2 # semi-major axis [arcsec]
-#     BMIN = beam["BMIN"]/2 # semi-minor axis [arcsec]
-#     BAVG = (BMAJ + BMIN)/2
-#     BPA = beam["BPA"] # position angle East of North [degrees]
-#
-#     println("Beam sigma ", BAVG, " [arcsec]")
-#
-#     arcsec_ster = (4.25e10)
-#     # Convert beam from arcsec^2 to Steradians
-#     global rms = rms/(pi * BMAJ * BMIN) * arcsec_ster
-#
-#     println("bluring maps")
-#     sk_blur = blur(skim, [BAVG, BAVG])
-#
-#     println("Plotting blured maps")
-#     plot_chmaps(sk_blur, fname="chmaps_blur.png", log=false, contours=true)
-# end
 
 if parsed_args["spectrum"]
     plot_spectrum(skim)
