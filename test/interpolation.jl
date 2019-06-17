@@ -88,7 +88,7 @@ vis_fft_offset = transform(skim_plain3)
 # Return a normalized instance that is symmetric about 0
 function scale(data)
     s = maximum(abs.(data))
-    return norm = plt[:Normalize](vmin=-s, vmax=s, clip=false)
+    return norm = plt.Normalize(vmin=-s, vmax=s, clip=false)
 end
 
 
@@ -96,40 +96,40 @@ end
 
 # Because the sky convention is different than the way the SkyImage is stored,
 # we need to flip the array for plotting
-fig, ax = plt[:subplots](nrows=2, figsize=(5, 8))
+fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
 ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
-ax[1][:imshow](reverse(skim.data[:,:,1], dims=2), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-ax[1][:contour](reverse(skim.data[:,:,1], dims=2), origin="lower", extent=ext)
-ax[1][:set_title]("Sky Projection")
-ax[1][:set_xlabel](L"$\alpha$ [arcsec]")
-ax[1][:set_ylabel](L"$\delta$ [arcsec]")
+ax[1].imshow(reverse(skim.data[:,:,1], dims=2), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[1].contour(reverse(skim.data[:,:,1], dims=2), origin="lower", extent=ext)
+ax[1].set_title("Sky Projection")
+ax[1].set_xlabel(L"$\alpha$ [arcsec]")
+ax[1].set_ylabel(L"$\delta$ [arcsec]")
 
 ext = (ll[1], ll[end], mm[1], mm[end])
-ax[2][:imshow](skim.data[:,:,1], interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-ax[2][:contour](skim.data[:,:,1], origin="lower", extent=ext)
-ax[2][:set_title]("Raw Array")
-ax[2][:set_xlabel](L"$ll$")
-ax[2][:set_ylabel](L"$mm$")
+ax[2].imshow(skim.data[:,:,1], interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[2].contour(skim.data[:,:,1], origin="lower", extent=ext)
+ax[2].set_title("Raw Array")
+ax[2].set_xlabel(L"$ll$")
+ax[2].set_ylabel(L"$mm$")
 
-fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
-plt[:savefig]("gaussian_img_array.png")
+fig.subplots_adjust(left=0.15, right=0.85, hspace=0.25)
+plt.savefig("gaussian_img_array.png")
 
 
 # Basic plot of the *centered* Gaussian image.
-fig, ax = plt[:subplots](nrows=1, figsize=(5, 5))
+fig, ax = plt.subplots(nrows=1, figsize=(5, 5))
 # Real, analytic Gaussian
 ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
-aximg = ax[:imshow](reverse(skim_plain1.data[:,:,1], dims=2), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext) #, norm = scale(img))
-ax[:set_title]("image")
-ax[:set_xlabel](L"$\alpha$ [arcsec]")
-ax[:set_ylabel](L"$\delta$ [arcsec]")
+aximg = ax.imshow(reverse(skim_plain1.data[:,:,1], dims=2), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext) #, norm = scale(img))
+ax.set_title("image")
+ax.set_xlabel(L"$\alpha$ [arcsec]")
+ax.set_ylabel(L"$\delta$ [arcsec]")
 #[left, bottom, width, height]
-cax = fig[:add_axes]([0.84, 0.25, 0.03, 0.45])
-cb = fig[:colorbar](aximg, cax=cax)
+cax = fig.add_axes([0.84, 0.25, 0.03, 0.45])
+cb = fig.colorbar(aximg, cax=cax)
 
-fig[:subplots_adjust](left=0.15, right=0.85, hspace=0.25)
-plt[:savefig]("gaussian_img_center.png")
+fig.subplots_adjust(left=0.15, right=0.85, hspace=0.25)
+plt.savefig("gaussian_img_center.png")
 
 
 # It's nice to see these plots and what they look like, but it doesn't really make sense
@@ -145,25 +145,25 @@ nu = length(shift_fft.uu)
 zer = zeros(nu)
 
 function plot_1d(analytic, approx, fname)
-    fig, ax = plt[:subplots](nrows=2, figsize=(5, 8))
-    ax[1][:plot](shift_fft.uu, zer, ".k", label="Grid spacing")
-    ax[1][:plot](uu, real(approx), "ob", label="Interp")
-    ax[1][:plot](uu, real(analytic), ".r", label="Analytic")
+    fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
+    ax[1].plot(shift_fft.uu, zer, ".k", label="Grid spacing")
+    ax[1].plot(uu, real(approx), "ob", label="Interp")
+    ax[1].plot(uu, real(analytic), ".r", label="Analytic")
     # ax[1][:plot](vis_fft.uu, real(analytic_u), "or", label="Analytic")
-    ax[1][:set_xlim](-100, 100)
-    ax[1][:set_title]("Real")
-    ax[1][:set_xlabel](L"u [k $\lambda$]")
-    ax[1][:legend]()
+    ax[1].set_xlim(-100, 100)
+    ax[1].set_title("Real")
+    ax[1].set_xlabel(L"u [k $\lambda$]")
+    ax[1].legend()
 
-    ax[2][:plot](shift_fft.uu, zer, ".k", label="Grid spacing")
-    ax[2][:plot](uu, imag(approx), "ob", label="Interp")
-    ax[2][:plot](uu, imag(analytic), ".r", label="Analytic")
+    ax[2].plot(shift_fft.uu, zer, ".k", label="Grid spacing")
+    ax[2].plot(uu, imag(approx), "ob", label="Interp")
+    ax[2].plot(uu, imag(analytic), ".r", label="Analytic")
     # ax[2][:plot](vis_fft.uu, imag(analytic_u), "or", label="Analytic")
-    ax[2][:set_xlim](-100, 100)
-    ax[2][:set_title]("Imag")
-    ax[2][:set_xlabel](L"u [k $\lambda$]")
+    ax[2].set_xlim(-100, 100)
+    ax[2].set_title("Imag")
+    ax[2].set_xlabel(L"u [k $\lambda$]")
 
-    plt[:savefig](fname)
+    plt.savefig(fname)
 end
 
 n = 100
@@ -262,25 +262,25 @@ function plot_2d(analytic::Matrix{ComplexF64}, approx::Matrix{ComplexF64}, fname
 
     # Plot the reals first
 
-    fig, ax = plt[:subplots](nrows=3, figsize=(5, 11))
+    fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
 
     ext = (uu[1], uu[end], vv[1], vv[end])
 
-    axan = ax[1][:imshow](real(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-    ax[1][:set_title]("Analytic FT")
-    ax[1][:set_xlabel](L"uu [k$\lambda$]")
-    ax[1][:set_ylabel](L"vv [k$\lambda$]")
+    axan = ax[1].imshow(real(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[1].set_title("Analytic FT")
+    ax[1].set_xlabel(L"uu [k$\lambda$]")
+    ax[1].set_ylabel(L"vv [k$\lambda$]")
 
-    cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
-    cb = fig[:colorbar](axan, cax=cax)
+    cax = fig.add_axes([0.84, 0.70, 0.03, 0.25])
+    cb = fig.colorbar(axan, cax=cax)
 
-    axfft = ax[2][:imshow](real(approx), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-    ax[2][:set_title]("Interpolated Visibilites from FFT")
-    ax[2][:set_xlabel](L"uu [k$\lambda$]")
-    ax[2][:set_ylabel](L"vv [k$\lambda$]")
+    axfft = ax[2].imshow(real(approx), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[2].set_title("Interpolated Visibilites from FFT")
+    ax[2].set_xlabel(L"uu [k$\lambda$]")
+    ax[2].set_ylabel(L"vv [k$\lambda$]")
 
-    cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
-    cb = fig[:colorbar](axfft, cax=cax)
+    cax = fig.add_axes([0.84, 0.40, 0.03, 0.25])
+    cb = fig.colorbar(axfft, cax=cax)
 
     diff = real(analytic - approx)
 
@@ -291,50 +291,50 @@ function plot_2d(analytic::Matrix{ComplexF64}, approx::Matrix{ComplexF64}, fname
     println("Total sqrt(modsquared) difference across image ", sqrt(sum(abs2, diff)))
 
 
-    axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt[:get_cmap]("bwr"), extent=ext, norm=scale(diff))
-    ax[3][:set_title]("Difference")
-    ax[3][:set_xlabel](L"uu [k$\lambda$]")
-    ax[3][:set_ylabel](L"vv [k$\lambda$]")
+    axdif = ax[3].imshow(diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
+    ax[3].set_title("Difference")
+    ax[3].set_xlabel(L"uu [k$\lambda$]")
+    ax[3].set_ylabel(L"vv [k$\lambda$]")
 
-    cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
-    cb = fig[:colorbar](axdif, cax=cax)
+    cax = fig.add_axes([0.84, 0.10, 0.03, 0.25])
+    cb = fig.colorbar(axdif, cax=cax)
 
-    fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
+    fig.subplots_adjust(hspace=0.25, top=0.97, bottom=0.06)
 
-    plt[:savefig](fname * "_real.png")
+    plt.savefig(fname * "_real.png")
 
 
-    fig, ax = plt[:subplots](nrows=3, figsize=(5, 11))
+    fig, ax = plt.subplots(nrows=3, figsize=(5, 11))
 
-    axan = ax[1][:imshow](imag(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-    ax[1][:set_title]("Analytic FT")
-    ax[1][:set_xlabel](L"uu [k$\lambda$]")
-    ax[1][:set_ylabel](L"vv [k$\lambda$]")
+    axan = ax[1].imshow(imag(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[1].set_title("Analytic FT")
+    ax[1].set_xlabel(L"uu [k$\lambda$]")
+    ax[1].set_ylabel(L"vv [k$\lambda$]")
 
-    cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
-    cb = fig[:colorbar](axan, cax=cax)
+    cax = fig.add_axes([0.84, 0.70, 0.03, 0.25])
+    cb = fig.colorbar(axan, cax=cax)
 
-    axfft = ax[2][:imshow](imag(approx), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-    ax[2][:set_title]("Interpolated Visibilites from FFT")
-    ax[2][:set_xlabel](L"uu [k$\lambda$]")
-    ax[2][:set_ylabel](L"vv [k$\lambda$]")
+    axfft = ax[2].imshow(imag(approx), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+    ax[2].set_title("Interpolated Visibilites from FFT")
+    ax[2].set_xlabel(L"uu [k$\lambda$]")
+    ax[2].set_ylabel(L"vv [k$\lambda$]")
 
-    cax = fig[:add_axes]([0.84, 0.40, 0.03, 0.25])
-    cb = fig[:colorbar](axfft, cax=cax)
+    cax = fig.add_axes([0.84, 0.40, 0.03, 0.25])
+    cb = fig.colorbar(axfft, cax=cax)
 
     diff = imag(analytic - approx)
 
-    axdif = ax[3][:imshow](diff, interpolation="none", origin="lower", cmap=plt[:get_cmap]("bwr"), extent=ext, norm=scale(diff))
-    ax[3][:set_title]("Difference")
-    ax[3][:set_xlabel](L"uu [k$\lambda$]")
-    ax[3][:set_ylabel](L"vv [k$\lambda$]")
+    axdif = ax[3].imshow(diff, interpolation="none", origin="lower", cmap=plt.get_cmap("bwr"), extent=ext, norm=scale(diff))
+    ax[3].set_title("Difference")
+    ax[3].set_xlabel(L"uu [k$\lambda$]")
+    ax[3].set_ylabel(L"vv [k$\lambda$]")
 
-    cax = fig[:add_axes]([0.84, 0.10, 0.03, 0.25])
-    cb = fig[:colorbar](axdif, cax=cax)
+    cax = fig.add_axes([0.84, 0.10, 0.03, 0.25])
+    cb = fig.colorbar(axdif, cax=cax)
 
-    fig[:subplots_adjust](hspace=0.25, top=0.97, bottom=0.06)
+    fig.subplots_adjust(hspace=0.25, top=0.97, bottom=0.06)
 
-    plt[:savefig](fname * "_imag.png")
+    plt.savefig(fname * "_imag.png")
 
     println()
 
@@ -395,24 +395,24 @@ plot_2d(analytic, approx, "2D_interpolation_shift_image")
 
 
 
-fig, ax = plt[:subplots](nrows=2, figsize=(5, 8))
+fig, ax = plt.subplots(nrows=2, figsize=(5, 8))
 
-axan = ax[1][:imshow](abs.(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-ax[1][:set_title]("Amplitude [Analytic]")
-ax[1][:set_xlabel](L"uu [k$\lambda$]")
-ax[1][:set_ylabel](L"vv [k$\lambda$]")
+axan = ax[1].imshow(abs.(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[1].set_title("Amplitude [Analytic]")
+ax[1].set_xlabel(L"uu [k$\lambda$]")
+ax[1].set_ylabel(L"vv [k$\lambda$]")
 
-cax = fig[:add_axes]([0.84, 0.70, 0.03, 0.25])
-cb = fig[:colorbar](axan, cax=cax)
+cax = fig.add_axes([0.84, 0.70, 0.03, 0.25])
+cb = fig.colorbar(axan, cax=cax)
 
-axfft = ax[2][:imshow](angle.(analytic), interpolation="none", origin="lower", cmap=plt[:get_cmap]("Greys"), extent=ext)
-ax[2][:set_title]("Phase [Analytic]")
-ax[2][:set_xlabel](L"uu [k$\lambda$]")
-ax[2][:set_ylabel](L"vv [k$\lambda$]")
+axfft = ax[2].imshow(angle.(analytic), interpolation="none", origin="lower", cmap=plt.get_cmap("Greys"), extent=ext)
+ax[2].set_title("Phase [Analytic]")
+ax[2].set_xlabel(L"uu [k$\lambda$]")
+ax[2].set_ylabel(L"vv [k$\lambda$]")
 
-cax = fig[:add_axes]([0.84, 0.20, 0.03, 0.25])
-cb = fig[:colorbar](axfft, cax=cax)
+cax = fig.add_axes([0.84, 0.20, 0.03, 0.25])
+cb = fig.colorbar(axfft, cax=cax)
 
-fig[:subplots_adjust](hspace=0.25, top=0.95, bottom=0.1)
+fig.subplots_adjust(hspace=0.25, top=0.95, bottom=0.1)
 
-plt[:savefig]("interpolation_phase.png")
+plt.savefig("interpolation_phase.png")
