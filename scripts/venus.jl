@@ -120,6 +120,10 @@ dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
 
 
+lam0 = lam0s[config["species"] * config["transition"]]
+# calculate the velocities corresponding to dvarr
+lams = Float64[dv.lam for dv in dvarr]
+vels = c_kms * (lams .- lam0)/lam0
 
 # The data are stored in increasing frequency, so
 # exclude: [1] means exclude the most redshifted channel
@@ -129,11 +133,7 @@ if haskey(config, "exclude")
     exclude = config["exclude"]
     # which channels of the dset to fit
     # keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
-
-    lam0 = lam0s[config["species"] * config["transition"]]
-    # calculate the velocities corresponding to dvarr
-    lams = Float64[dv.lam for dv in dvarr]
-    vels = c_kms * (lams .- lam0)/lam0
+    
     # get the mask
     vel_mask = generate_vel_mask(exclude, vels)
 else
