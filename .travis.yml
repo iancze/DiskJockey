@@ -2,7 +2,7 @@ language: julia
 julia:
   # - release
   # - nightly
-  - 0.6
+  - 1.1
 
 # Need to install a Fortran compiler for Dierckx and RADMC-3D depedency
 before_install:

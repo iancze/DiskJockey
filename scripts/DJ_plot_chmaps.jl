@@ -84,11 +84,11 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
     if log
         ldata = log10.(img.data .+ 1e-99)
         vvmax = maximum(ldata)
-        norm = PyPlot.matplotlib[:colors][:Normalize](vvmax - 6, vvmax)
+        norm = PyPlot.matplotlib.colors.Normalize(vvmax - 6, vvmax)
     else
         vvmax = maximum(abs, img.data)
         # println(vmin, " ", vmax, " ", vvmax)
-        norm = PyPlot.matplotlib[:colors][:Normalize](0, vvmax)
+        norm = PyPlot.matplotlib.colors.Normalize(0, vvmax)
 
         if contours
             levels = get_levels(rms, vvmax)
@@ -109,23 +109,23 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
     yy = (nrows + 1) * 1.5
     dy = 1.5
 
-    fig, ax = plt[:subplots](nrows=nrows, ncols=ncols, figsize=(xx, yy))
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(xx, yy))
 
     for row=1:nrows
         for col=1:ncols
             iframe = col + (row - 1) * ncols
 
             if col != 1 || row != nrows
-                ax[row, col][:xaxis][:set_ticklabels]([])
-                ax[row, col][:yaxis][:set_ticklabels]([])
+                ax[row, col].xaxis.set_ticklabels([])
+                ax[row, col].yaxis.set_ticklabels([])
             else
-                ax[row, col][:set_xlabel](L"$\Delta \alpha \cos \delta$ ('')")
-                ax[row, col][:set_ylabel](L"$\Delta \delta$ ('')")
+                ax[row, col].set_xlabel(L"$\Delta \alpha \cos \delta$ ('')")
+                ax[row, col].set_ylabel(L"$\Delta \delta$ ('')")
             end
 
             if iframe > nlam
                 # Plot a blank square if we run out of channels
-                ax[row, col][:imshow](zeros((im_ny, im_nx)), cmap=cmap, vmin=0, vmax=20, extent=ext, origin="lower")
+                ax[row, col].imshow(zeros((im_ny, im_nx)), cmap=cmap, vmin=0, vmax=20, extent=ext, origin="lower")
 
             else
                 #Flip the frame for Sky convention
@@ -135,57 +135,57 @@ function plot_chmaps(img::image.SkyImage; log=false, contours=true, fname="chann
                 if log
                     frame += 1e-15 #Add a tiny bit so that we don't have log10(0)
                     lframe = log10.(frame)
-                    im = ax[row, col][:imshow](lframe, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
+                    im = ax[row, col].imshow(lframe, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
 
                 else
-                    im = ax[row, col][:imshow](frame, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
+                    im = ax[row, col].imshow(frame, extent=ext, interpolation="none", origin="lower", cmap=cmap, norm=norm)
 
                     if contours
-                        ax[row, col][:contour](frame, origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
+                        ax[row, col].contour(frame, origin="lower", colors="k", levels=levels, extent=ext, linestyles="solid", linewidths=0.2)
                     end
 
                 end
 
-                ax[row, col][:add_artist](PyPlot.matplotlib[:patches][:Ellipse]((0,0), width, height, PA, linewidth=0.15, facecolor="none", edgecolor="w"))
+                ax[row, col].add_artist(PyPlot.matplotlib.patches.Ellipse((0,0), width, height, PA, linewidth=0.15, facecolor="none", edgecolor="w"))
 
                 if iframe==1
                     # Plot the colorbar
-                    cax = fig[:add_axes]([(xx - 0.35 * dx)/xx, (yy - 1.5 * dy)/yy, (0.1 * dx)/xx, dy/yy])
-                    cbar = fig[:colorbar](mappable=im, cax=cax)
+                    cax = fig.add_axes([(xx - 0.35 * dx)/xx, (yy - 1.5 * dy)/yy, (0.1 * dx)/xx, dy/yy])
+                    cbar = fig.colorbar(mappable=im, cax=cax)
 
-                    cbar[:ax][:tick_params](labelsize=6)
-                    fig[:text](0.99, (yy - 1.7 * dy)/yy, "Jy/beam", size=8, ha="right")
+                    cbar.ax.tick_params(labelsize=6)
+                    fig.text(0.99, (yy - 1.7 * dy)/yy, "Jy/beam", size=8, ha="right")
                 end
 
-                ax[row, col][:annotate](@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
-                ax[row, col][:annotate](@sprintf("%.1f", vels_obs[iframe]), (0.1, 0.9), xycoords="axes fraction", size=8)
+                ax[row, col].annotate(@sprintf("%.1f", vels[iframe]), (0.1, 0.8), xycoords="axes fraction", size=8)
+                ax[row, col].annotate(@sprintf("%.1f", vels_obs[iframe]), (0.1, 0.9), xycoords="axes fraction", size=8)
             end
 
         end
     end
 
-    fig[:subplots_adjust](hspace=0.00, wspace=0.00, top=(yy - 0.5 * dy)/yy, bottom=(0.5 * dy)/yy, left=(0.5 * dx)/xx, right=(xx - 0.5 * dy)/xx)
+    fig.subplots_adjust(hspace=0.00, wspace=0.00, top=(yy - 0.5 * dy)/yy, bottom=(0.5 * dy)/yy, left=(0.5 * dx)/xx, right=(xx - 0.5 * dy)/xx)
 
-    plt[:savefig](fname, dpi=600)
+    plt.savefig(fname, dpi=600)
 
 end
 
 # Plot the spatially-integrated spectrum
 function plot_spectrum(img::image.SkyImage; fname="spectrum.png")
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
     spec = imToSpec(img)
 
-    ax[:plot](vels, spec[:,2], ls="steps-mid")
+    ax.plot(vels, spec[:,2], ls="steps-mid")
 
-    ax[:set_ylabel](L"$f_\nu$ [Jy]")
-    ax[:set_xlabel](L"$v$ [km/s]")
+    ax.set_ylabel(L"$f_\nu$ [Jy]")
+    ax.set_xlabel(L"$v$ [km/s]")
 
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig](fname)
+    plt.savefig(fname)
 
     # Calculate integrated line intensity.
     # tot = image.integrateSpec(spec, lam0)

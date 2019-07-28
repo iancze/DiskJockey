@@ -17,9 +17,6 @@ s = ArgParseSettings()
     "--run_index", "-r"
     help = "Output run index"
     arg_type = Int
-    "--plotly"
-    help = "Send the chain samples to plot.ly?"
-    action = :store_true
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
@@ -325,23 +322,7 @@ using DiskJockey.EnsembleSampler
 
 sampler = Sampler(nwalkers, ndim, fprob, parsed_args["test"])
 
-if parsed_args["plotly"]
-    function f(sampler::Sampler, outdir::AbstractString)
-        # Run the chain to plotly
-        println("Called plotly.")
-        chain_file = "$(outdir)chain.npy"
-        config_file = "config.yaml"
-        name = config["name"]
-        try
-            spawn(`plotly_walkers.py --name $name --chain $chain_file --config $config_file`)
-        catch
-            println("Couldn't reach plotly server.")
-        end
-    end
-    run_schedule(sampler, pos0, config["samples"], config["loops"], outdir, f)
-else
-    run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
-end
+run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
 
 write_samples(sampler, outdir)
 

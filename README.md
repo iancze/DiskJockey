@@ -7,7 +7,7 @@ DiskJockey
 
 ![Logo](logo.png)
 
-Copyright Ian Czekala and collaborators 2014-17
+Copyright Ian Czekala and collaborators 2014-19
 
 email: iancze@gmail.com
 

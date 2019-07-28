@@ -39,8 +39,8 @@ using LaTeXStrings
 
 # Plot looking down, in polar coordinates
 function plot_topgrid(pars::AbstractParameters, grid::Grid)
-    fig = plt[:figure](figsize=(8,8))
-    ax = fig[:add_subplot](111, polar=true)
+    fig = plt.figure(figsize=(8,8))
+    ax = fig.add_subplot(111, polar=true)
 
     # Something to span the circle
     phis = LinRange(0, 2pi, 100)
@@ -48,11 +48,11 @@ function plot_topgrid(pars::AbstractParameters, grid::Grid)
     # Plot the grid cell edges in radius and phi
     for R in grid.Rs
         rr = R * ones(length(phis))
-        ax[:plot](phis, rr ./AU, "b", lw=0.1)
+        ax.plot(phis, rr ./AU, "b", lw=0.1)
     end
 
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
-    plt[:savefig]("grid_topgrid.png", dpi=300)
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
+    plt.savefig("grid_topgrid.png", dpi=300)
 end
 
 function plot_sidegrid(pars::AbstractParameters, grid::Grid)
@@ -62,20 +62,20 @@ end
 function plot_vel(pars::AbstractParameters, grid::Grid)
     vels = DiskJockey.model.velocity(grid.rs, pars) .* 1e-5 # convert from cm/s to km/s
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
-    ax[:semilogx](rr, vels)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.semilogx(rr, vels)
 
     # Now, go overlay small grey lines vertically
     for cell_edge in grid.Rs/AU
-        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+        ax.axvline(cell_edge, color="0.5", lw=0.4)
     end
 
-    ax[:set_ylabel](L"$v_\phi$ [km/s]")
-    ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    ax.set_ylabel(L"$v_\phi$ [km/s]")
+    ax.set_xlabel(L"$r$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("velocity.png")
+    plt.savefig("velocity.png")
 end
 
 # Instead of a 1D slice, we'll need to do a 2D field
@@ -109,11 +109,11 @@ function plot_vel(pars::ParametersVertical, grid::Grid)
 
     levels = Float64[0.0, 1.0, 5.0, 10.0, 20.0, 40.]
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
-    ax[:set_ylabel](L"$z$ [AU]")
-    ax[:set_xlabel](L"$r$ [AU]")
+    ax.set_ylabel(L"$z$ [AU]")
+    ax.set_xlabel(L"$r$ [AU]")
 
     #ticks = np.LinRange(0, np.max(cov), num=6)
     #cb.set_ticks(ticks)
@@ -145,41 +145,41 @@ function plot_vel(pars::ParametersVertical, grid::Grid)
     # ax[:set_ylim](0, maximum(zz))
 
     # convert from cm/s to km/s
-    img = ax[:contourf](xx, yy, 1e-5 * vels, levels=levels)
+    img = ax.contourf(xx, yy, 1e-5 * vels, levels=levels)
 
-    ax[:set_xscale]("log")
+    ax.set_xscale("log")
 
     # # Now, go overlay small grey lines vertically
     # for cell_edge in grid.Rs/AU
     #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
     # end
 
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.77)
 
-    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
-    cb = fig[:colorbar](img, cax=cax)
+    cax = fig.add_axes([0.82, 0.22, 0.03, 0.65])
+    cb = fig.colorbar(img, cax=cax)
 
-    plt[:savefig]("velocity.png")
+    plt.savefig("velocity.png")
 end
 
 # temperature structure
 function plot_temp(pars::AbstractParameters, grid::Grid)
     temps = DiskJockey.model.temperature(grid.rs, pars)
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
-    ax[:semilogx](rr, temps)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.semilogx(rr, temps)
 
     # Now, go overlay small grey lines vertically
     for cell_edge in grid.Rs/AU
-        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+        ax.axvline(cell_edge, color="0.5", lw=0.4)
     end
 
-    ax[:set_ylabel](L"$T$ [K]")
-    ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    ax.set_ylabel(L"$T$ [K]")
+    ax.set_xlabel(L"$r$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("temperature.png")
+    plt.savefig("temperature.png")
 end
 
 
@@ -212,11 +212,11 @@ function plot_temp(pars::Union{ParametersVertical, ParametersVerticalEta}, grid:
 
     levels = Float64[0.0, 5.0, 10.0, 20.0, 30., 40., 50.0, 100.0]
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
-    ax[:set_ylabel](L"$z$ [AU]")
-    ax[:set_xlabel](L"$r$ [AU]")
+    ax.set_ylabel(L"$z$ [AU]")
+    ax.set_xlabel(L"$r$ [AU]")
 
     #ticks = np.LinRange(0, np.max(cov), num=6)
     #cb.set_ticks(ticks)
@@ -248,41 +248,41 @@ function plot_temp(pars::Union{ParametersVertical, ParametersVerticalEta}, grid:
     # ax[:set_ylim](0, maximum(zz))
 
 
-    img = ax[:contourf](xx, yy, temps, levels=levels)
+    img = ax.contourf(xx, yy, temps, levels=levels)
 
-    ax[:set_xscale]("log")
+    ax.set_xscale("log")
 
     # # Now, go overlay small grey lines vertically
     # for cell_edge in grid.Rs/AU
     #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
     # end
 
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.77)
 
-    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
-    cb = fig[:colorbar](img, cax=cax)
+    cax = fig.add_axes([0.82, 0.22, 0.03, 0.65])
+    cb = fig.colorbar(img, cax=cax)
 
-    plt[:savefig]("temperature.png")
+    plt.savefig("temperature.png")
 end
 
 # scale height
 function plot_height(pars::AbstractParameters, grid::Grid)
     heights = DiskJockey.model.Hp(grid.rs, pars) ./ AU
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
-    ax[:semilogx](rr, heights)
-    ax[:set_ylabel](L"$H_p$ [AU]")
-    ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.semilogx(rr, heights)
+    ax.set_ylabel(L"$H_p$ [AU]")
+    ax.set_xlabel(L"$r$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("scale_height.png")
+    plt.savefig("scale_height.png")
 end
 
 function plot_surface_density(pars::AbstractParameters, grid::Grid)
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
     Sigmas = Array{Float64}(undef, grid.nr)
 
@@ -291,18 +291,18 @@ function plot_surface_density(pars::AbstractParameters, grid::Grid)
     end
 
     # ax[:loglog](rr, Sigmas)
-    ax[:semilogy](rr, Sigmas)
+    ax.semilogy(rr, Sigmas)
 
     # Now, go overlay small grey lines vertically for the radial cells
     for cell_edge in grid.Rs/AU
-        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+        ax.axvline(cell_edge, color="0.5", lw=0.4)
     end
 
-    ax[:set_ylabel](L"$\Sigma\, [\mathrm{g/cm}^2]$")
-    ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    ax.set_ylabel(L"$\Sigma\, [\mathrm{g/cm}^2]$")
+    ax.set_xlabel(L"$r$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("surface_density.png")
+    plt.savefig("surface_density.png")
 end
 
 
@@ -340,11 +340,11 @@ function plot_dens(pars::AbstractParameters, grid)
 
     levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9]
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
-    ax[:set_ylabel](L"$z$ [AU]")
-    ax[:set_xlabel](L"$r$ [AU]")
+    ax.set_ylabel(L"$z$ [AU]")
+    ax.set_xlabel(L"$r$ [AU]")
 
 
 
@@ -378,21 +378,21 @@ function plot_dens(pars::AbstractParameters, grid)
     # ax[:set_ylim](0, maximum(zz))
 
 
-    img = ax[:contourf](xx, yy, nlog, levels=levels)
+    img = ax.contourf(xx, yy, nlog, levels=levels)
 
-    ax[:set_xscale]("log")
+    ax.set_xscale("log")
 
     # Now, go overlay small grey lines vertically
     for cell_edge in grid.Rs/AU
-        ax[:axvline](cell_edge, color="0.5", lw=0.4)
+        ax.axvline(cell_edge, color="0.5", lw=0.4)
     end
 
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.77)
 
-    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
-    cb = fig[:colorbar](img, cax=cax)
+    cax = fig.add_axes([0.82, 0.22, 0.03, 0.65])
+    cb = fig.colorbar(img, cax=cax)
 
-    plt[:savefig]("density.png")
+    plt.savefig("density.png")
 end
 
 # Plot a 1D slice of the vertical density structure at a particular radius
@@ -414,21 +414,21 @@ function plot_density_column(pars::ParametersVertical, grid::Grid)
     # calculate un_rhos for these zs
     rhos = norm_rho .* exp(un_lnrhos)
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
-    ax[:semilogy](zs./AU, rhos/(mu_gas * m_H))
+    ax.semilogy(zs./AU, rhos/(mu_gas * m_H))
 
     # Now, go overlay small grey lines vertically for the radial cells
     # for cell_edge in grid.Rs/AU
     #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
     # end
 
-    ax[:set_ylabel](L"$\rho_\mathrm{gas} \, [\mathrm{n/cm}^3]$")
-    ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    ax.set_ylabel(L"$\rho_\mathrm{gas} \, [\mathrm{n/cm}^3]$")
+    ax.set_xlabel(L"$r$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("density_column.png")
+    plt.savefig("density_column.png")
 
 end
 
@@ -441,21 +441,21 @@ function plot_density_column_CO(pars::ParametersVertical, grid::Grid)
     # Gas density of CO [g/cm^3]
     zs, rhos = DiskJockey.model.rho_column_CO(r, zs, rhos, pars)
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
-    ax[:semilogy](zs./AU, DiskJockey.constants.f_12CO * DiskJockey.constants.X_H2 * rhos/(mu_gas * m_H))
+    ax.semilogy(zs./AU, DiskJockey.constants.f_12CO * DiskJockey.constants.X_H2 * rhos/(mu_gas * m_H))
 
     # Now, go overlay small grey lines vertically for the radial cells
     # for cell_edge in grid.Rs/AU
     #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
     # end
 
-    ax[:set_ylabel](L"$\rho_\mathrm{CO} \, [\mathrm{n/cm}^3]$")
-    ax[:set_xlabel](L"$z$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    ax.set_ylabel(L"$\rho_\mathrm{CO} \, [\mathrm{n/cm}^3]$")
+    ax.set_xlabel(L"$z$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("density_column_CO.png")
+    plt.savefig("density_column_CO.png")
 
 end
 
@@ -485,8 +485,8 @@ function plot_norm(pars::ParametersVertical, grid::Grid)
     #
     # exit()
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
     norms = Array{Float64}(grid.nr)
 
@@ -494,23 +494,23 @@ function plot_norm(pars::ParametersVertical, grid::Grid)
         norms[i] = DiskJockey.model.rho_norm(grid.rs[i], pars)
     end
 
-    fig, ax = plt[:subplots](figsize=(6,6))
+    fig, ax = plt.subplots(figsize=(6,6))
 
     # ax[:loglog](rr, Sigmas)
-    ax[:loglog](rr, norms)
+    ax.loglog(rr, norms)
 
-    ax[:set_ylabel](L"$norm$")
+    ax.set_ylabel(L"$norm$")
 
-    ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    ax.set_xlabel(L"$r$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("norm.png")
+    pltsavefig("norm.png")
 end
 
 function plot_ztop(pars::ParametersVertical, grid::Grid)
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
     ztops = Array{Float64}(undef, grid.nr)
 
@@ -518,17 +518,17 @@ function plot_ztop(pars::ParametersVertical, grid::Grid)
         ztops[i] = DiskJockey.model.z_top(grid.rs[i], pars)
     end
 
-    fig, ax = plt[:subplots](figsize=(6,6))
+    fig, ax = plt.subplots(figsize=(6,6))
 
     # ax[:loglog](rr, Sigmas)
-    ax[:semilogx](rr, ztops ./ AU)
+    ax.semilogx(rr, ztops ./ AU)
 
-    ax[:set_ylabel](L"$z_\mathrm{top}$ [AU]")
+    ax.set_ylabel(L"$z_\mathrm{top}$ [AU]")
 
-    ax[:set_xlabel](L"$r$ [AU]")
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.85)
+    ax.set_xlabel(L"$r$ [AU]")
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.85)
 
-    plt[:savefig]("ztop.png")
+    plt.savefig("ztop.png")
 end
 
 function plot_dens(pars::ParametersVertical, grid::Grid)
@@ -579,30 +579,30 @@ function plot_dens(pars::ParametersVertical, grid::Grid)
 
     levels = Float64[0.0, 1.0, 2.0, 3.0, 4.0, 5, 6, 7, 8, 9, 10, 11, 12]
 
-    fig = plt[:figure]()
-    ax = fig[:add_subplot](111)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
 
-    ax[:set_ylabel](L"$z$ [AU]")
-    ax[:set_xlabel](L"$r$ [AU]")
+    ax.set_ylabel(L"$z$ [AU]")
+    ax.set_xlabel(L"$r$ [AU]")
 
-    img = ax[:contourf](xx, yy, nlog, levels=levels)
+    img = ax.contourf(xx, yy, nlog, levels=levels)
 
-    ax[:plot](rr, ztops ./ AU)
+    ax.plot(rr, ztops ./ AU)
 
-    ax[:set_xscale]("log")
-    ax[:set_ylim](0, 100)
+    ax.set_xscale("log")
+    ax.set_ylim(0, 100)
 
     # Now, go overlay small grey lines vertically
     # for cell_edge in grid.Rs/AU
     #     ax[:axvline](cell_edge, color="0.5", lw=0.4)
     # end
 
-    fig[:subplots_adjust](left=0.15, bottom=0.15, right=0.77)
+    fig.subplots_adjust(left=0.15, bottom=0.15, right=0.77)
 
-    cax = fig[:add_axes]([0.82, 0.22, 0.03, 0.65])
-    cb = fig[:colorbar](img, cax=cax)
+    cax = fig.add_axes([0.82, 0.22, 0.03, 0.65])
+    cb = fig.colorbar(img, cax=cax)
 
-    plt[:savefig]("density.png")
+    plt.savefig("density.png")
 end
 
 

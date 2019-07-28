@@ -7,7 +7,7 @@ export RADMC_SIZEAU_SHIFT
 export DiskJockeyException, ModelException, ImageException
 export DISKJOCKEY_VERSION
 
-DISKJOCKEY_VERSION = v"0.1.4"
+DISKJOCKEY_VERSION = v"0.1.5"
 
 # Conversion from astronomical units to CGS units
 M_sun = 1.99e33 # [g]

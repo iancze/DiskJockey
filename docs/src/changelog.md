@@ -2,6 +2,19 @@
 
 The following are the changes that have been implemented since the previous version. All versions are tagged as releases and available as a clone off of the master branch.
 
+# Version 0.1.6
+
+## Optimization routines
+
+In addition to the normal MCMC sampling routines, we've included the option to use an optimizer instead, via `BlackBoxOptim.jl`. This should greatly expedite getting an estimate of the "best-fit" model, but shouldn't replace a full MCMC to get the posterior distributions.
+
+## Removed plotly
+Removed plotly support, since this was just adding bloat.
+
+# Version 0.1.5
+
+Updates to make everything compatible with Julia v1.0. 
+
 # Version 0.1.4
 
 Upgraded to Julia version 0.6. To upgrade to this version of DiskJockey, you will first need to upgrade your own Julia distribution to 0.6 as well. I apologize for the frequent upgrades of Julia, but since Julia is itself a fast-developing language, it makes the most sense to just bite the bullet and upgrade every time the programming language upgrades as well. Once Julia reaches v1.0 (sometime in 2018, perhaps), these changes should become less frequent.

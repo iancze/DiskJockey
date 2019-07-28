@@ -44,9 +44,6 @@ run(`python edit_config.py --fix-distance --model=standard`)
 # Run the initialization and plotting scripts
 run(`make all`)
 
-# before we clean everything, use the old image.out to test the interpolation closure routine
-include("interpolation_plan.jl")
-
 # Run venus.jl and see if we sample properly. The idea is to get a simple test with a few walkers without running forever.
 run(`venus.jl --test`)
 
