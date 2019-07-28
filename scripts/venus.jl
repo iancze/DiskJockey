@@ -307,6 +307,9 @@ end
 
 end
 
+
+# Decide if we're going to optimize the parameters or sample the posteriors.
+
 using NPZ
 
 if fresh

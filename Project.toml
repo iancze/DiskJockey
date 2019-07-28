@@ -6,6 +6,7 @@ version = "0.1.5"
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 ClusterManagers = "34f1f09b-3a8b-5176-ab39-66d58a4d544e"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"

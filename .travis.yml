@@ -23,18 +23,18 @@ before_install:
   - source activate test-environment
   # - python setup.py install
 
-script:
-  - git fetch --unshallow
-  - echo "We are in $(pwd) directory."
-  - julia --color=yes -e 'Pkg.clone(pwd())'
-  - julia --color=yes -e 'Pkg.build("DiskJockey")'
-  # check to see what's up with the pycall problem
-  - conda info --envs
-  - conda list
-  # - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
-  # Necessary to install Matplotlib via it's own Conda install
-  # - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
-  - LD_PRELOAD=${HOME}/.julia/v0.6/Conda/deps/usr/lib/libz.so julia --check-bounds=yes -e 'Pkg.test("DiskJockey", coverage=true)'
+#script:
+#  - git fetch --unshallow
+#  - echo "We are in $(pwd) directory."
+#  - julia --color=yes -e 'Pkg.clone(pwd())'
+#  - julia --color=yes -e 'Pkg.build("DiskJockey")'
+#  # check to see what's up with the pycall problem
+#  - conda info --envs
+#  - conda list
+#  # - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
+#  # Necessary to install Matplotlib via it's own Conda install
+#  # - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
+#  - LD_PRELOAD=${HOME}/.julia/v0.6/Conda/deps/usr/lib/libz.so julia --check-bounds=yes -e 'Pkg.test("DiskJockey", coverage=true)'
 
 # This the default script that is run
 # julia -e 'Pkg.clone(pwd())'
