@@ -1,4 +1,5 @@
 #!/usr/bin/env julia
+using Pkg; Pkg.activate("DiskJockey")
 
 # Because we've been having so many errors with launching, run a check script.
 # Load config, print the parameters that we will be sampling and the mean starting position of the walkers.

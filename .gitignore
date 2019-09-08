@@ -171,3 +171,9 @@ Session.vim
 # Documentation
 docs/build/
 docs/site/
+
+# Julia stuff 
+Manifest.toml
+*.jl.cov
+*.jl.*.cov
+*.jl.mem

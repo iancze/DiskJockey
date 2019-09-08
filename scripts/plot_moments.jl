@@ -1,4 +1,6 @@
 #!/usr/bin/env julia
+using Pkg; Pkg.activate("DiskJockey")
+
 
 # Plot the 0th and 1st moment maps from the synthesized image.
 

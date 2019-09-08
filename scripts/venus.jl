@@ -3,6 +3,8 @@
 # Uses the EnsembleSampler to explore the posterior.
 # In contrast to codes like mach_three.jl, this architecture means that within each likelihood call, the global lnprob for all channels is evaluated in *serial*, while the walkers themselves are parallelized.
 
+using Pkg; Pkg.activate("DiskJockey")
+
 using ArgParse
 using Distributed
 @everywhere using Printf
@@ -24,6 +26,9 @@ s = ArgParseSettings()
     help = "Which CPUS to add"
     arg_type = Array{Int, 1}
     eval_arg = true
+    "--optim"
+    help = "Optimize instead of sample?"
+    action = :store_true
     "--test"
     help = "Is this a test run of venus.jl? Allow using many fewer walkers for eval purposes."
     action = :store_true
@@ -122,23 +127,15 @@ lam0 = lam0s[config["species"] * config["transition"]]
 lams = Float64[dv.lam for dv in dvarr]
 vels = c_kms * (lams .- lam0)/lam0
 
-# The data are stored in increasing frequency, so
-# exclude: [1] means exclude the most redshifted channel
-# whereas
-# exclude : [nchan] excludes the most blueshifted channel
+# create a mask that excludes channels we don't want
 if haskey(config, "exclude")
     exclude = config["exclude"]
-    # which channels of the dset to fit
-    # keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
-    
-    # get the mask
     vel_mask = generate_vel_mask(exclude, vels)
 else
-    # keylist = Int[i for i=1:nchan]
     vel_mask = trues(nchan)
 end
 
-println("Using the following velocities: ", vels[vel_mask])
+println("Using the following channels (velocities in km/s): ", vels[vel_mask])
 
 # This program is meant to be started with the -p option.
 nchild = nworkers()
@@ -148,13 +145,11 @@ println("Workers allocated ", nchild)
 for process in procs()
     @spawnat process global run_id=run_index
     @spawnat process global cfg=config
-    # @spawnat process global kl=keylist
     @spawnat process global vmask=vel_mask
 end
 
 # Convert the parameter values from the config.yaml file from Dict{String, Float64} to
 # Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector method
-# @everywhere xargs = convert(Dict{Symbol}{Float64}, cfg["parameters"])
 @everywhere xargs = Dict{Symbol, Float64}(Symbol(index)=>value for (index, value) in pairs(cfg["parameters"]))
 
 # Read the fixed and free parameters from the config.yaml file
@@ -206,16 +201,15 @@ end
 # and it must create it's own temporary directory to write the necessary files for
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
-
-    # Convert the vector to a specific type of pars, e.g. ParametersStandard, ParametersTruncated, etc, which will be used for multiple dispatch from here on out.
-    pars = convert_p(p)
-
     # Each walker needs to create it's own temporary directory
     # where all RADMC-3D files will reside and be driven from
     # It only needs to last for the duration of this function, so we use a tempdir
     keydir = mktempdir() * "/"
 
     lnp = try
+        # Convert the vector to a specific type of pars, e.g. ParametersStandard, ParametersTruncated, etc, which will be used for multiple dispatch from here on out.
+        pars = convert_p(p) # will raise an error if can't convert
+
         lnpr = lnprior(pars, grid)
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
 
@@ -253,10 +247,14 @@ end
         img = try
             imread() # we should already be in the sub-directory, no path required
         # If the synthesized image is screwed up, just say there is zero probability.
-        catch SystemError
-            throw(ImageException("Failed to read synthesized image for parameters ", p))
+        catch y
+            if isa(y, SystemError)
+                throw(ImageException("Failed to read synthesized image for parameters $pars"))
+            else
+                println("Unexpected error for $pars, exiting")
+                throw(y)
+            end
         end
-
 
         phys_size = img.pixsize_x * npix/AU
 
@@ -277,7 +275,6 @@ end
             # Interpolate the `vis_fft` to the same locations as the DataSet
             mvis = int_arr[i](dv, vis_fft)
 
-
             # Apply the phase shift here, which includes a correction for the half-pixel offset
             # inherent to any image synthesized with RADMC3D.
             phase_shift!(mvis, pars.mu_RA + half_pix, pars.mu_DEC - half_pix)
@@ -290,15 +287,26 @@ end
         # this quantity is assigned to the value of lnp at the start of the try/catch block
         sum(lnprobs) + lnpr
 
-    catch DiskJockeyException
-        # If an error occured through some of the known routines in this package ,
-        # -Inf is returned as the value of lnp
-        # Otherwise the error causese the program to exit
-        # println("Catching DiskJockeyException, returning -Inf")
-        -Inf
+    catch y
+        # If an error occured through some of the known routines in this package handle it and return -Inf
+        if isa(y, DiskJockeyException)
+            # print the error message and move on, returning -Inf
+            println(y)
+        else
+            # if the error is not coming from one of the channels we 
+            # designed, actually terminate the program after printing the 
+            # parameter values at which the error occured
+            println("Unforeseen error with parameter vector $p")
+            println("Unforeseen error with parameter type $pars")
+            throw(y)
+        end
 
+        # -Inf is returned as the value of lnp
+        -Inf
     finally
-        # Change back to the home directory and then remove the temporary directory
+        # regardless of whether we ignored the error or allowed it 
+        # to terminate the program, change back to the home directory and 
+        # then remove the temporary directory
         cd(homedir)
         run(`rm -rf $keydir`)
     end
@@ -309,26 +317,52 @@ end
 
 
 # Decide if we're going to optimize the parameters or sample the posteriors.
+if parsed_args["optim"]
+    sparams = registered_params[cfg["model"]]
 
-using NPZ
+    # fit_params are the ones in sample_params that are not in fix_params
+    fit_params = filter(x->!in(x,fix_params), sparams)
 
-if fresh
-    pos0 = npzread(config["pos0"])
+    # note the Float64 is how we prepend a type to the comprehension
+    # p0 = Float64[cfg["parameters"][parname] for parname in fit_params]
+    
+    parrangesdict = cfg["parameter_ranges"]
+    MaxFuncEvals = cfg["MaxFuncEvals"]
+
+    # get the ranges
+    sranges = [tuple(convert(Array{Float64,1}, cfg["parameter_ranges"][par])...) for par in fit_params]
+    
+    # get the number of parameters, starting pos, and bounding ranges
+    # bounding ranges can be a dictionary in YAML
+    nll = x -> -fprob(x)
+    @everywhere using BlackBoxOptim
+    opt = bbsetup(nll; Method=:xnes, SearchRange=sranges, MaxFuncEvals = MaxFuncEvals, Workers=workers()) 
+    res = bboptimize(opt)
+
+    println(res)
+
 else
-    pos0 = npzread(outdir * config["pos0"])
-end
+    # instead, sample using MCMC
+    using NPZ
 
-ndim, nwalkers = size(pos0)
+    if fresh
+        pos0 = npzread(config["pos0"])
+    else
+        pos0 = npzread(outdir * config["pos0"])
+    end
 
-# Use the EnsembleSampler to do the optimization
-using DiskJockey.EnsembleSampler
+    ndim, nwalkers = size(pos0)
 
-sampler = Sampler(nwalkers, ndim, fprob, parsed_args["test"])
+    # Use the EnsembleSampler to do the optimization
+    using DiskJockey.EnsembleSampler
 
-run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
+    sampler = Sampler(nwalkers, ndim, fprob, parsed_args["test"])
 
-write_samples(sampler, outdir)
+    run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
 
-if parsed_args["MPI"]
-    MPI.stop_main_loop(manager)
+    write_samples(sampler, outdir)
+
+    if parsed_args["MPI"]
+        MPI.stop_main_loop(manager)
+    end
 end

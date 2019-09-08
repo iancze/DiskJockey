@@ -4,12 +4,20 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.6
 
+## Package environment
+Added `using Pkg; Pkg.activate("DiskJockey")` to all of the scripts. This way, these scripts should use the versions of the packages installed along with the DiskJockey package itself, and you won't need to (re)install these same packages to your local environment.
+
 ## Optimization routines
 
-In addition to the normal MCMC sampling routines, we've included the option to use an optimizer instead, via `BlackBoxOptim.jl`. This should greatly expedite getting an estimate of the "best-fit" model, but shouldn't replace a full MCMC to get the posterior distributions.
+In addition to the normal MCMC sampling routines, we've included the option to use an optimizer instead, via `BlackBoxOptim.jl`. This should greatly expedite getting an estimate of the "best-fit" model, but won't replace the need to do a full MCMC to get the posterior distributions.
 
 ## Removed plotly
 Removed plotly support, since this was just adding bloat.
+
+## Total gas mass vs. surface density parameterization 
+The normalization of the disk surface density profile can either be parameterized as a surface density at a given radius (often Sigma_c, the surface density at r_c) or as the total disk mass. These choices are of course equivalent, but the parameterizations have consequences for how efficiently the posterior can be sampled (M_gas is usually less correlated with other parameters than r_c) and how quickly the 3D densities can be computed (r_c is quicker than M_gas).
+
+To get the best of both worlds, we've added BOTH Sigma_c and M_gas to the model types, and added an outer constructer that computes Sigma_c from M_gas. From the users perspective, they should only have to interact with M_gas. But, this way the routines in `model.jl` can also just query Sigma_c each time they need it.
 
 # Version 0.1.5
 

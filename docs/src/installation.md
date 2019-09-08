@@ -61,7 +61,7 @@ inside of your `.bashrc` file. Finally,
 Lastly, many of these scripts have dependencies on Julia packages other than DiskJockey. To install these packages to the general environment, you will need to do 
 
     julia > ]
-    (v1.1) pkg > add AbstractFFTs ArgParse ClusterManagers HDF5 LaTeXStrings NPZ PyPlot YAML Test
+    (v1.1) pkg > add AbstractFFTs ArgParse BlackBoxOptim ClusterManagers HDF5 LaTeXStrings NPZ PyPlot YAML Test
 
 As much as I understand it, this is mostly making these packages available to the current "general" environment from where we'll run the scripts, rather than completely reinstalling them. To check that you have properly added the scripts (and check that you installed the correct version), you can try in your system shell
 

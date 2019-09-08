@@ -1,4 +1,5 @@
 #!/usr/bin/env julia
+using Pkg; Pkg.activate("DiskJockey")
 
 # Run the RADMC3D tausurf command to synthesize a visualization of the tau=1 surface.
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env julia
+using Pkg; Pkg.activate("DiskJockey")
 
 # Using the analytic form of the FT of the Gaussian, and the u,v sampling and noise
 # from a real dataset, make a fake dataset.

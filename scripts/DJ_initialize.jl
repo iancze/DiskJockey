@@ -4,6 +4,8 @@
 # files into this directory, write out the proper wavelength files, and make sure we can continue
 # with the run properly.
 
+using Pkg; Pkg.activate("DiskJockey")
+
 using ArgParse
 
 s = ArgParseSettings(description="Initialize a new project directory with the appropriate files. Can also be used to update RADMC-3D input files after making changes to config.yaml")

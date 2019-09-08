@@ -1,5 +1,7 @@
 #!/usr/bin/env julia
 
+using Pkg; Pkg.activate("DiskJockey")
+
 using ArgParse
 
 s = ArgParseSettings()

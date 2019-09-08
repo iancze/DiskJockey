@@ -1,4 +1,5 @@
 #!/usr/bin/env julia
+using Pkg; Pkg.activate("DiskJockey")
 
 # Generate a set of model and residual visibilities and then write them to UVHDF5 file format
 # More about this format, including scripts to convert to UVFITS and CASA Measurement set,

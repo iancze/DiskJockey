@@ -3,6 +3,8 @@
 # Use the EnsembleSampler
 # This means that each likelihood evaluation is *serial*, while the walkers are parallelized.
 
+using Pkg; Pkg.activate("DiskJockey")
+
 using ArgParse
 
 s = ArgParseSettings()

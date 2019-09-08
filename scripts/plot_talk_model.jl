@@ -1,5 +1,6 @@
 # Given some model parameters, synthesize and plot the channel maps and
 # integrated spectrum
+using Pkg; Pkg.activate("DiskJockey")
 
 using ArgParse
 

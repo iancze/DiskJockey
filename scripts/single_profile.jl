@@ -2,6 +2,7 @@
 # for a single process only, designed for profiling purposes
 # that means the starting point is receiving the pars::Parameters object
 # and the end point is returning a lnprop
+using Pkg; Pkg.activate("DiskJockey")
 
 using ArgParse
 

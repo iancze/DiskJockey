@@ -1,4 +1,5 @@
 #!/usr/bin/env julia
+using Pkg; Pkg.activate("DiskJockey")
 
 # Given some model parameters, plot the channel maps and
 # integrated spectrum

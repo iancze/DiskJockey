@@ -1,4 +1,5 @@
 # Plot the visibilities
+using Pkg; Pkg.activate("DiskJockey")
 
 module plot_vis
 

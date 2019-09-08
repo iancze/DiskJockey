@@ -1,13 +1,14 @@
 module model
 
 export generate_vel_mask, write_grid, write_model, write_lambda, write_dust, Grid, size_au
-export AbstractParameters, ParametersStandard, ParametersTruncated, ParametersCavity, ParametersVertical, ParametersVerticalEta, ParametersNuker, convert_vector, convert_dict, registered_params
+export AbstractParameters, ParametersStandard, ParametersVertical, ParametersVerticalEta, ParametersNuker, convert_vector, convert_dict, registered_params
 export lnprior
 
 # The double dot is because we are now inside the model module, and we want to import the
 # constants module, which is part of the enclosing DiskJockey package.
 using ..constants
 using Printf
+using QuadGK
 # using Dierckx
 # using Optim
 # using ODE
@@ -252,7 +253,7 @@ mutable struct ParametersStandard <: AbstractParameters
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface density gradient exponent
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    log_M_gas::Float64 # [log10 M_sun] total disk mass
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -260,44 +261,19 @@ mutable struct ParametersStandard <: AbstractParameters
     vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
     mu_RA::Float64 # [arcsec] central offset in RA
     mu_DEC::Float64 # [arcsec] central offset in DEC
+    Sigma_c::Float64 # [g/cm^2] surface density at r_c
 end
 
-"Parameters for the truncated model."
-mutable struct ParametersTruncated <: AbstractParameters
-    M_star::Float64 # [M_sun] stellar mass
-    r_c::Float64 # [AU] Characteristic radius
-    T_10::Float64 # [K] temperature at 10 AU
-    q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface density gradient exponent
-    gamma_e::Float64 # exponent for outer exponential surface density taper
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
-    ksi::Float64 # [cm s^{-1}] microturbulence
-    dpc::Float64 # [pc] distance to system
-    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
-    PA::Float64 # [degrees] position angle (East of North)
-    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
-    mu_RA::Float64 # [arcsec] central offset in RA
-    mu_DEC::Float64 # [arcsec] central offset in DEC
+# constructor for ParametersStandard takes all but Sigma_c
+function ParametersStandard(M_star::Float64, r_c::Float64, T_10::Float64, q::Float64, gamma::Float64, log_M_gas::Float64, ksi::Float64, dpc::Float64,incl::Float64, PA::Float64, vel::Float64, mu_RA::Float64, mu_DEC::Float64)
+  
+  # calculate the normalization constant 
+  Sigma_c::Float64 = 10^pars.log_M_gas * M_sun * (2 - gamma) / (2 * pi * r_c^2)
+
+  # initialize the actual type
+  return ParametersStandard(M_star, r_c, T_10, q, gamma, log_M_gas, ksi, dpc,incl, PA, vel, mu_RA, mu_DEC, Sigma_c)
 end
 
-"Parameters for the cavity model."
-mutable struct ParametersCavity <: AbstractParameters
-    M_star::Float64 # [M_sun] stellar mass
-    r_c::Float64 # [AU] characteristic radius
-    r_cav::Float64 # [AU] inner radius of the disk, where an exponentially depleted cavity starts
-    T_10::Float64 # [K] temperature at 10 AU
-    q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface density gradient exponent
-    gamma_cav::Float64 # surface density gradient exponent for inner cavity
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
-    ksi::Float64 # [cm s^{-1}] microturbulence
-    dpc::Float64 # [pc] distance to system
-    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
-    PA::Float64 # [degrees] position angle (East of North)
-    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
-    mu_RA::Float64 # [arcsec] central offset in RA
-    mu_DEC::Float64 # [arcsec] central offset in DEC
-end
 
 "Parameters for the vertical model."
 mutable struct ParametersVertical <: AbstractParameters
@@ -313,7 +289,7 @@ mutable struct ParametersVertical <: AbstractParameters
     gamma::Float64 # surface temperature gradient exponent
     h::Float64 # Number of scale heights that z_q is at, typically fixed to 4
     delta::Float64 # Shape exponent, currently fixed to 2
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    log_M_gas::Float64 # [log10 M_sun] total disk mass
     ksi::Float64 # [cm s^{-1}] micsroturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -321,7 +297,9 @@ mutable struct ParametersVertical <: AbstractParameters
     vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
     mu_RA::Float64 # [arcsec] central offset in RA
     mu_DEC::Float64 # [arcsec] central offset in DEC
+    Sigma_c::Float64 # [g/cm^2] surface density at r_c
 end
+
 
 "Parameters for the vertical model with variable slope."
 mutable struct ParametersVerticalEta <: AbstractParameters
@@ -336,7 +314,7 @@ mutable struct ParametersVerticalEta <: AbstractParameters
     h::Float64 # Number of scale heights that z_q is at, typically fixed to 4
     eta::Float64 # Exponent for zq profile
     delta::Float64 # Shape exponent, currently fixed to 2
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    log_M_gas::Float64 # [log10 M_sun] total disk mass
     ksi::Float64 # [cm s^{-1}] micsroturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -344,49 +322,7 @@ mutable struct ParametersVerticalEta <: AbstractParameters
     vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
     mu_RA::Float64 # [arcsec] central offset in RA
     mu_DEC::Float64 # [arcsec] central offset in DEC
-end
-
-"Parameters for the model with an inner hole."
-mutable struct ParametersInner <: AbstractParameters
-    M_star::Float64 # [M_sun] stellar mass
-    r_c::Float64 # [AU] characteristic radius
-    r_1::Float64 # the outer edge of the inner disk
-    r_2::Float64 # the inner edge of the outer disk
-    incl_inner::Float64 # The inclination of the inner disk relative to the outer disk
-    Omega::Float64 # The longitude of the ascending node for the inner disk
-    T_10::Float64 # [K] temperature at 10 AU
-    q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface density gradient exponent
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
-    ksi::Float64 # [cm s^{-1}] microturbulence
-    dpc::Float64 # [pc] distance to system
-    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
-    PA::Float64 # [degrees] position angle (East of North)
-    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
-    mu_RA::Float64 # [arcsec] central offset in RA
-    mu_DEC::Float64 # [arcsec] central offset in DEC
-end
-
-
-"Parameters for the model with an inner hole."
-mutable struct ParametersOverdense <: AbstractParameters
-    M_star::Float64 # [M_sun] stellar mass
-    r_c::Float64 # [AU] characteristic radius
-    r_1::Float64 # the depletion radius
-    delta::Float64 # factor depleted inside of r_1
-    omega::Float64 # The argument of periastron for the overdensity
-    amp::Float64 # the amplitude of the sin-overdensity.
-    T_10::Float64 # [K] temperature at 10 AU
-    q::Float64 # temperature gradient exponent
-    gamma::Float64 # surface density gradient exponent
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
-    ksi::Float64 # [cm s^{-1}] microturbulence
-    dpc::Float64 # [pc] distance to system
-    incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
-    PA::Float64 # [degrees] position angle (East of North)
-    vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
-    mu_RA::Float64 # [arcsec] central offset in RA
-    mu_DEC::Float64 # [arcsec] central offset in DEC
+    Sigma_c::Float64 # [g/cm^2] surface density at r_c
 end
 
 
@@ -397,9 +333,9 @@ mutable struct ParametersNuker <: AbstractParameters
     T_10::Float64 # [K] temperature at 10 AU
     q::Float64 # temperature gradient exponent
     gamma::Float64 # surface density gradient within r_c (negative values yield holes)
-    alpha::Float64 # sharpness of transition (2 = smooth, 16 = sharp)
+    log_alpha::Float64 #  log10 sharpness of transition (2 = smooth, 16 = sharp)
     beta::Float64 # gradient power law outside r_c (~7)
-    Sigma_c::Float64 # [g/cm^2] surface density at characteristic radius
+    log_M_gas::Float64 # [log10 M_sun] total disk mass
     ksi::Float64 # [cm s^{-1}] microturbulence
     dpc::Float64 # [pc] distance to system
     incl::Float64 # [degrees] inclination 0 deg = face on, 90 = edge on.
@@ -407,27 +343,53 @@ mutable struct ParametersNuker <: AbstractParameters
     vel::Float64 # [km/s] systemic velocity (positive is redshift/receeding)
     mu_RA::Float64 # [arcsec] central offset in RA
     mu_DEC::Float64 # [arcsec] central offset in DEC
+    Sigma_c::Float64 # [g/cm^2] surface density at r_c
 end
 
 
-"A dictionary of parameter lists for conversion."
-registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("truncated", ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("cavity", ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("inner", ["M_star", "r_c", "r_1", "r_2", "incl_inner", "Omega", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("nuker", ["M_star", "r_c", "T_10", "q", "gamma", "alpha", "beta", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
-("overdense", ["M_star", "r_c", "r_1", "delta", "omega", "amp", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
+# constructor for ParametersStandard takes all but Sigma_c
+function ParametersNuker(M_star::Real, r_c::Real, T_10::Real, q::Real, gamma::Real, log_alpha::Real, beta::Real, log_M_gas::Real, ksi::Real, dpc::Real,incl::Real, PA::Real, vel::Real, mu_RA::Real, mu_DEC::Real)
 
-registered_types = Dict([("standard", ParametersStandard), ("truncated", ParametersTruncated), ("cavity", ParametersCavity), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("inner", ParametersInner), ("nuker", ParametersNuker), ("overdense", ParametersOverdense)])
+    if r_c <= 0.0
+        throw(ModelException("r_c cannot be negative, $r_c"))
+    end
+
+    M_gas = 10^log_M_gas * M_sun
+    alpha = 10^log_alpha
+
+    function integrand(r)
+        return (r/r_c)^(-gamma) * (1 + (r/r_c)^alpha)^((gamma - beta)/alpha) * r 
+    end
+
+    # calculate the normalization constant via an integral
+    # break it into two pieces bounded at r_c, since this might help accuracy
+    res, err = quadgk(integrand, 1e-3, r_c, 1e4) # [AU^2]
+    # convert area to cm^2 
+    res_cm = res * AU^2 # [cm^2]
+    Sigma_c = M_gas / (2 * pi * res_cm) # [g/cm^2]
+
+     # calculate the normalization constant
+    # we need to do an integral 
+    # M_gas = 2 * pi * Sigma_c * integrate((r/r_c)^(-gamma) * (1 + (r/r_c)^alpha)^((gamma - beta)/alpha) * r * dr)
+
+    # initialize the actual type
+    return ParametersNuker(M_star, r_c, T_10, q, gamma, log_alpha, beta, log_M_gas, ksi, dpc,incl, PA, vel, mu_RA, mu_DEC, Sigma_c)
+end
+
+"A dictionary of parameter lists for conversion."
+registered_params = Dict([("standard", ["M_star", "r_c", "T_10", "q", "gamma", "log_M_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
+("vertical", ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "log_M_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
+("verticalEta", ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "log_M_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]),
+("nuker", ["M_star", "r_c", "T_10", "q", "gamma", "log_alpha", "beta", "log_M_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"])])
+
+registered_types = Dict([("standard", ParametersStandard), ("vertical", ParametersVertical), ("verticalEta", ParametersVerticalEta), ("nuker", ParametersNuker)])
 
 "Unroll a vector of parameter values into a parameter type."
 function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::Vector; args...)
     args = Dict{Symbol}{Float64}(args)
 
     # The goal is to assemble a length-nparam vector that can be unrolled into a parameter type
-    # e.g., ParametersStandard(M_star, r_c, T_10, q, gamma, Sigma_c, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
+    # e.g., ParametersStandard(M_star, r_c, T_10, q, gamma, log_M_gas, ksi, dpc, incl, PA, vel, mu_RA, mu_DEC)
 
     # Select the registerd parameters corresponding to this model
     # These are the names listed in this file (model.jl)
@@ -453,58 +415,15 @@ function convert_vector(p::Vector{Float64}, model::AbstractString, fix_params::V
 
     # Then reading fix_params from args
     # First, create an array of fixed values analogous to p
-    # p_fixed = Float64[args[convert(Symbol, par)] for par in fix_params]
     p_fixed = Float64[args[Symbol(par)] for par in fix_params]
-    # par_indexes = findin(reg_params, fix_params)
     par_indexes = findall((in)(fix_params), reg_params)
     par_vec[par_indexes] = p_fixed
 
-    # Now that we are sampling for log10M_gas for the verticalEta model, this part gets tricky.
-
-    # Find the location of logSigma_c and make it Sigma_c
-    # Even if we are using verticalEta, this will still be in here because it is in reg_params
-    # Only though it currently corresponds to log10M_gas instead of log10Sigma_c
-    # indSigma_c = findin(reg_params, ["Sigma_c"])
-    indSigma_c = findall((in)(["Sigma_c"]), reg_params)
-    # println("indSigma_c looks like: ", indSigma_c)
-    @assert length(indSigma_c) == 1 "Could not find Sigma_c in order to convert from logSigma_c or logM_gas."
-
-    if model == "verticalEta"
-      # Convert from log10M_gas to Sigma_c
-
-      M_gas = 10.0^par_vec[indSigma_c] * M_sun # [g]
-
-      # Find gamma and r_c
-      r_c = par_vec[2] * AU # [cm]
-      gamma = par_vec[8]
-
-      Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
-      par_vec[indSigma_c] = Sigma_c
-    elseif model == "standard" || model == "inner"
-      # println("we have standard model")
-      # println(par_vec[indSigma_c])
-      # Convert from log10M_gas to Sigma_c
-      M_gas = 10.0^par_vec[indSigma_c][1] * M_sun # [g]
-
-      # Find gamma and r_c
-      r_c = par_vec[2] * AU # [cm]
-      gamma = par_vec[5]
-
-      Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
-      par_vec[indSigma_c] .= Sigma_c
-
-    elseif model == "nuker"
-      # indalpha = findin(reg_params, ["alpha"])
-      indalpha = findall((in)(["alpha"]), reg_params)
-      # println("Converting logalpha at index: ", indalpha)
-      par_vec[indalpha] = 10.0^par_vec[indalpha]
-      par_vec[indSigma_c] = 10.0^par_vec[indSigma_c]
-    else
-      par_vec[indSigma_c] = 10.0^par_vec[indSigma_c]
-    end
     # Then assembling these in the same orignial order as registered_params, into the parameter
     # type corresponding to the model.
-    return registered_types[model](par_vec...)
+    parameters = registered_types[model](par_vec...)
+
+    return parameters
 
 end
 
@@ -513,26 +432,6 @@ function convert_dict(p::Dict, model::AbstractString)
     # Select the registerd parameters corresponding to this model
     reg_params = registered_params[model]
     nparams = length(reg_params)
-
-    if model == "verticalEta" || model == "standard" || model == "inner" || model == "overdense"
-
-      M_gas = 10.0^p["logM_gas"] * M_sun # [g]
-
-      # Find gamma and r_c
-      r_c = p["r_c"] * AU # [cm]
-      gamma = p["gamma"]
-
-      Sigma_c = M_gas * (2 - gamma) / (2 * pi * r_c^2)
-      p["Sigma_c"] = Sigma_c
-
-    elseif model == "nuker"
-      # add a new field, which is the conversion of logSigma_c to Sigma_c
-      p["alpha"] = 10.0^p["logalpha"]
-      p["Sigma_c"] = 10.0^p["logSigma_c"]
-    else
-      # add a new field, which is the conversion of logSigma_c to Sigma_c
-      p["Sigma_c"] = 10.0^p["logSigma_c"]
-    end
 
     # Using this order of parameters, unpack the dictionary p into a vector
     # reg_params reads Sigma_c, not logSigma_c; alpha, not logalpha
@@ -546,7 +445,7 @@ end
 "The common sense priors that apply to all parameter values"
 function lnprior_base(pars::AbstractParameters)
     # Create a giant short-circuit or loop to test for sensical parameter values.
-    if pars.M_star <= 0.0 || pars.ksi <= 0.0 || pars.T_10 <= 0.0 || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520.
+    if pars.M_star <= 0.0 || pars.ksi <= 0.0 || pars.T_10 <= 0.0 || pars.r_c <= 0.0  || pars.T_10 > 1500. || pars.q < 0. || pars.q > 1.0 || pars.incl < 0. || pars.incl > 180. || pars.PA < -180. || pars.PA > 520. 
         # println("M_star ", pars.M_star)
         # println("r_c ", pars.r_c)
         # println("T_10 ", pars.T_10)
@@ -554,7 +453,7 @@ function lnprior_base(pars::AbstractParameters)
         # println("incl ", pars.incl)
         # println("PA ", pars.PA)
         # println("Exiting in lnprior base")
-        throw(ModelException("Parameters outside of prior range."))
+        throw(ModelException("Parameters outside of prior range $pars"))
     end
 
     # If we've passed all the hard-cut offs by this point, return the geometrical inclination prior.
@@ -571,37 +470,7 @@ function lnprior(pars::ParametersStandard, grid::Grid)
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
     # to fit on the model grid.
     if (3 * pars.r_c) > r_out
-        throw(ModelException("Model radius too large for grid size."))
-    else
-        return lnp
-    end
-
-end
-
-function lnprior(pars::ParametersTruncated, grid::Grid)
-    lnp = lnprior_base(pars,)
-
-    r_out = grid.Rs[end]/AU # [AU]
-
-    if (3 * pars.r_c) > r_out || pars.gamma_e > 2.0
-        throw(ModelException("Disk radii outside model grid radius, or outer power law too flat."))
-    else
-        return lnp
-    end
-
-end
-
-function lnprior(pars::ParametersCavity, grid::Grid)
-    lnp = lnprior_base(pars)
-
-    r_in = grid.Rs[1]/AU # [AU]
-    r_out = grid.Rs[end]/AU # [AU]
-    # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
-    # to fit on the model grid.
-
-    # Also check to make sure that r_cav is less than r_c but larger than r_in.
-    if (3 * pars.r_c) > r_out || pars.r_cav < r_in || pars.r_cav > pars.r_c || pars.gamma_cav < 0.0
-        throw(ModelException("Model radius too large, grid size or cavity too large, or gamma_cav less than zero."))
+        throw(ModelException("Model radius ($(pars.r_c)) too large for grid size ($r_out)"))
     else
         return lnp
     end
@@ -611,12 +480,12 @@ end
 function lnprior(pars::ParametersVertical, grid::Grid)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0.0 || pars.T_10a <= 0.0 || pars.T_10m <= 0.0 || pars.r_c <= 0.0  || pars.T_10a > 1500.0 || pars.q_m < 0.0 || pars.q_a < 0.0 || pars.q_m > 1.0 || pars.q_a > 1.0 || pars.incl < 0. || pars.incl > 180.0 || pars.PA < -180.0 || pars.PA > 520.0 || pars.X_freeze > 1.0 || pars.sigma_s < 0.0
-        throw(ModelException("Parameters outside of prior range."))
+        throw(ModelException("Parameters outside of prior range $pars"))
     end
 
     # Check to see that the temperatures make sense
     if pars.T_10m > pars.T_10a
-        throw(ModelException("Atmosphere is cooler than midplane."))
+        throw(ModelException("Atmosphere ($(pars.T_10a)) is cooler than midplane ($(pars.T_10m)."))
     end
 
 
@@ -628,7 +497,7 @@ function lnprior(pars::ParametersVertical, grid::Grid)
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
     # to fit on the model grid.
     if (3 * pars.r_c) > r_out
-        throw(ModelException("Model radius too large for grid size."))
+        throw(ModelException("Model radius ($(pars.r_c)) too large for grid size ($r_out)."))
     else
         return lnp
     end
@@ -638,7 +507,7 @@ end
 function lnprior(pars::ParametersVerticalEta, grid::Grid)
     # Create a giant short-circuit or loop to test for sensical parameter values.
     if pars.M_star <= 0.0 || pars.ksi <= 0.0 || pars.T_10m <= 60.0 || pars.r_c <= 0.0  || pars.q_m < 0.0 || pars.q_m > 1.0 || pars.incl < 0.0 || pars.incl > 180.0 || pars.PA < -180.0 || pars.PA > 520.0 || pars.X_freeze > 1.0 || pars.sigma_s < 0.0 || pars.eta < 0.2 || pars.eta > 6.0  || pars.h < 0.5 || pars.h > 6.0 || pars.delta < 0.5 || pars.delta > 6.0 || pars.gamma < 0.5 || pars.gamma > 3.0
-        throw(ModelException("Parameters outside of prior range."))
+        throw(ModelException("Parameters outside of prior range $pars"))
     end
 
 
@@ -650,7 +519,7 @@ function lnprior(pars::ParametersVerticalEta, grid::Grid)
     # A somewhat arbitrary cutoff regarding the gridsize to prevent the disk from being too large
     # to fit on the model grid.
     if (3 * pars.r_c) > r_out
-        throw(ModelException("Model radius too large for grid size."))
+        throw(ModelException("Model radius ($(pars.r_c)) too large for grid size ($r_out)."))
     else
         return lnp
     end
@@ -663,11 +532,11 @@ function lnprior(pars::ParametersNuker, grid::Grid)
     # println("In lnprior(Nuker)")
     lnp = lnprior_base(pars)
 
-    if (pars.alpha < 1.0 ) || (pars.alpha > 100.0) || (pars.beta < 2) || (pars.beta > 10)
+    if (pars.log_alpha < 0.0 ) || (pars.log_alpha > 2.0) || (pars.beta < 2) || (pars.beta > 10)
         # println("alpha: ", pars.alpha)
         # println("beta: ", pars.beta)
         # println("Alpha or Beta outside of prior range.")
-        throw(ModelException("Alpha or Beta outside of prior range."))
+        throw(ModelException("log_alpha ($(pars.log_alpha)) or beta ($(pars.beta)) outside of prior range."))
     end
 
     # Add on the prior on gamma (log, not log10)
@@ -679,7 +548,7 @@ function lnprior(pars::ParametersNuker, grid::Grid)
     # to fit on the model grid.
     if (3 * pars.r_c) > r_out
         # println("Model radius too large for grid size.")
-        throw(ModelException("Model radius too large for grid size."))
+        throw(ModelException("Model radius ($(pars.r_c)) too large for grid size ($r_out)."))
     else
         # println("Returning lnprior as ", lnp)
         return lnp
@@ -721,7 +590,6 @@ velocity(r::T, pars::AbstractParameters) where {T} = velocity(r, pars.M_star * M
 function velocity(r::Float64, z::Float64, M_star::Float64)
     sqrt.(G * M_star / (r^2 + z^2)^(3.0/2)) * r
 end
-velocity(r::Float64, z::Float64, pars::ParametersInner) = velocity(r, z, pars.M_star * M_sun)
 velocity(r::Float64, z::Float64, pars::ParametersVertical) = velocity(r, z, pars.M_star * M_sun)
 velocity(r::Float64, z::Float64, pars::ParametersVerticalEta) = velocity(r, z, pars.M_star * M_sun)
 
@@ -813,31 +681,13 @@ end
 
 
 "Calculate the gas surface density"
-function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, ParametersVerticalEta, ParametersInner})
+function Sigma(r::Float64, pars::Union{ParametersStandard, ParametersVertical, ParametersVerticalEta})
     r_c = pars.r_c * AU
 
     gamma = pars.gamma
     Sigma_c = pars.Sigma_c
 
     S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
-
-    return S
-end
-
-"Calculate the gas surface density"
-function Sigma(r::Float64, phi::Float64, pars::ParametersOverdense)
-    r_c = pars.r_c * AU
-
-    gamma = pars.gamma
-    Sigma_c = pars.Sigma_c
-
-    boost = 1 + (pars.amp * cos(phi - pars.omega * pi/180.0))
-
-    if r < (pars.r_1 * AU)
-        S = pars.delta * boost * Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
-    else
-        S = boost * Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma))
-    end
 
     return S
 end
@@ -853,39 +703,14 @@ function Sigma(r::Float64, pars::ParametersNuker)
     gamma = pars.gamma
     Sigma_c = pars.Sigma_c
 
-    alpha = pars.alpha
+    alpha = 10^pars.log_alpha
     beta = pars.beta
 
     S = Sigma_c * (r/r_c)^(-gamma) * (1 + (r/r_c)^alpha)^((gamma - beta)/alpha)
 
-end
-
-function Sigma(r::Float64, pars::ParametersTruncated)
-    r_c = pars.r_c * AU # [cm]
-    gamma = pars.gamma
-    gamma_e = pars.gamma_e
-    Sigma_c = pars.Sigma_c
-
-    S = Sigma_c * (r/r_c)^(-gamma) * exp(-(r/r_c)^(2 - gamma_e))
     return S
 end
 
-function Sigma(r::Float64, pars::ParametersCavity)
-    r_c = pars.r_c * AU
-    r_cav = pars.r_cav * AU
-
-    gamma = pars.gamma
-    gamma_cav = pars.gamma_cav
-    Sigma_c = pars.Sigma_c
-
-    inner_taper = exp(-(r_cav/r)^gamma_cav)
-    outer_taper = exp(-(r/r_c)^(2 - gamma))
-    power_law = (r/r_c)^(-gamma)
-
-    S = Sigma_c * inner_taper * power_law * outer_taper
-
-    return S
-end
 
 # Delivers a gas density in g/cm^3
 function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
@@ -898,17 +723,6 @@ function rho_gas(r::Float64, z::Float64, pars::AbstractParameters)
     return rho
 end
 
-
-# Delivers a gas density in g/cm^3
-function rho_gas(r::Float64, phi::Float64, z::Float64, pars::ParametersOverdense)
-    H = Hp(r, pars)
-    S = Sigma(r, phi, pars)
-
-    # Calculate the density
-    rho = S/(sqrt(2.0 * pi) * H) * exp(-0.5 * (z/H)^2)
-
-    return rho
-end
 
 # Determines the midplane density assuming vertically isothermal
 function rho_gas_mid(r::Float64, pars::AbstractParameters)
@@ -1085,17 +899,6 @@ function rho_dust(r::Float64, z::Float64, pars::AbstractParameters)
     return mDust
 end
 
-function rho_dust(r::Float64, phi::Float64, z::Float64, pars::ParametersOverdense)
-
-    # Use the rho_gas function to get the total density in [g/cm^3]
-    mGas = rho_gas(r, phi, z, pars)
-
-    # Convert from mGas to mDust using Gas/Dust ratio of 100
-    mDust = mGas * 0.01 # [g]
-
-    return mDust
-end
-
 # Ksi is microturbulent broadining width in units of km/s. Output of this function
 # is in cm/s for RADMC (RADMC manual, eqn 7.12)
 function microturbulence(ksi::Float64)
@@ -1214,93 +1017,6 @@ end
 
 
 
-# Split the disk into an inner and outer disk.
-function write_model(pars::ParametersInner, basedir::AbstractString, grid::Grid, species::AbstractString)
-
-    funcs = Dict([("12CO", n_12CO), ("13CO", n_13CO), ("C18O", n_C18O)])
-    n_CO = funcs[species]
-
-    # numberdens_co.inp
-    fdens = open(basedir * "numberdens_" * molnames[species] * ".inp", "w")
-    @printf(fdens, "%d\n", 1) #iformat
-    @printf(fdens, "%d\n", grid.ncells)
-
-    # gas_velocity.inp
-    fvel = open(basedir * "gas_velocity.inp", "w")
-    @printf(fvel, "%d\n", 1) #iformat
-    @printf(fvel, "%d\n", grid.ncells)
-
-    # gas_temperature.inp
-    ftemp = open(basedir * "gas_temperature.inp", "w")
-    @printf(ftemp, "%d\n", 1) #iformat
-    @printf(ftemp, "%d\n", grid.ncells)
-
-    # microturbulence.inp
-    fmicro = open(basedir * "microturbulence.inp", "w")
-    @printf(fmicro, "%d\n", 1) #iformat
-    @printf(fmicro, "%d\n", grid.ncells)
-
-    # Now, we will need to write the three other files as a function of grid position.
-    # Therefore we will do *one* loop over these indices, calculate the required value,
-    # and write it to the appropriate file.
-
-    #Looping over the cell centers
-    for phi in grid.phis
-        for theta in grid.thetas
-            for r in grid.rs
-
-                # If r < r_1, treat as the inner disk
-                if r < pars.r_1 * AU
-                  # figure out what the coordinates are in the primed frame
-                  cart, cart_prime, sphere_prime = convert_position(pars, r, theta, phi)
-
-                  # query the density as if we were in the primed frame
-                  r_prime, theta_prime, phi_prime = sphere_prime
-                  r_cyl_prime = r_prime * sin(theta_prime)
-                  z_cyl_prime = r_prime * cos(theta_prime)
-
-                  # println("Inner disk ", r_cyl_prime / AU, " ", z_cyl_prime/AU)
-                  @printf(fdens, "%.9e\n", n_CO(r_cyl_prime, z_cyl_prime, pars))
-                  @printf(ftemp, "%.9e\n", temperature(r_cyl_prime, pars))
-
-                  v = velocity_inner(pars, r, theta, phi)
-                  @printf(fvel, "%.9e %.9e %.9e\n", v[1], v[2], v[3])
-                  @printf(fmicro, "%.9e\n", microturbulence(pars))
-
-                # If r_1 < r < r_2, no gas
-                elseif r < pars.r_2 * AU
-                  z = r * cos(theta)
-                  r_cyl = r * sin(theta)
-                  # println("Gap ", r_cyl/ AU, " ", z/AU)
-                  @printf(fdens, "%.9e\n", 0.0)
-                  @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars))
-                  @printf(ftemp, "%.9e\n", temperature(r_cyl, pars))
-                  @printf(fmicro, "%.9e\n", microturbulence(pars))
-
-                # If r > r_2, treat as the outer disk
-                else
-                  #Convert from spherical to cylindrical coordinates
-                  z = r * cos(theta)
-                  r_cyl = r * sin(theta)
-                  # println("Outer ", r_cyl/ AU, " ", z/AU)
-                  @printf(fdens, "%.9e\n", n_CO(r_cyl, z, pars))
-                  @printf(fvel, "0 0 %.9e\n", velocity(r_cyl, pars))
-                  @printf(ftemp, "%.9e\n", temperature(r_cyl, pars))
-                  @printf(fmicro, "%.9e\n", microturbulence(pars))
-                end
-
-            end
-        end
-    end
-
-    close(fdens)
-    close(fvel)
-    close(ftemp)
-    close(fmicro)
-
-end
-
-
 function write_model(pars::Union{ParametersVertical, ParametersVerticalEta}, basedir::AbstractString, grid::Grid, species::AbstractString)
 
     function n_CO(r_cyl, z)
@@ -1377,26 +1093,5 @@ function write_dust(pars::AbstractParameters, basedir::AbstractString, grid::Gri
     close(fdens)
 end
 
-
-function write_dust(pars::ParametersOverdense, basedir::AbstractString, grid::Grid)
-    fdens = open(basedir * "dust_density.inp", "w")
-    @printf(fdens, "%d\n", 1) #iformat
-    @printf(fdens, "%d\n", grid.ncells)
-    @printf(fdens, "%d\n", 1) # number of dust species
-
-    for phi in grid.phis
-        for theta in grid.thetas
-            for r in grid.rs
-                #Convert from spherical to cylindrical coordinates
-                z = r * cos(theta)
-                r_cyl = r * sin(theta)
-
-                @printf(fdens, "%.9e\n", rho_dust(r_cyl, phi, z, pars))
-            end
-        end
-    end
-
-    close(fdens)
-end
 
 end

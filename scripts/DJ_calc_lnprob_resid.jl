@@ -4,6 +4,8 @@
 # More about this format, including scripts to convert to UVFITS and CASA Measurement set,
 # can be found at https://github.com/Astrochem/UVHDF5
 
+using Pkg; Pkg.activate("DiskJockey")
+
 using ArgParse
 
 s = ArgParseSettings()

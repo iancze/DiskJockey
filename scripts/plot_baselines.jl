@@ -1,4 +1,5 @@
 #!/usr/bin/env julia
+using Pkg; Pkg.activate("DiskJockey")
 
 # Read the data file and plot the location of all of the baselines, in k\lambda
 using ArgParse
