@@ -20,14 +20,8 @@ println(pars_type.Sigma_c)
 # xargs = convert(Dict{Symbol}{Float64}, pars)
 xargs = Dict{Symbol, Float64}(Symbol(index)=>value for (index, value) in pairs(pars))
 
-# According to model.jl, these are the total parameters. Let's fix some
-# "standard", ["M_star", "r_c", "T_10", "q", "gamma", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
-
-# Separate out the fixed values
+# Let's fix some parameters values 
 fixed = ["gamma"]
-
-# Separate out the free values
-free = ["M_star", "r_c", "T_10", "q", "Sigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]
 
 p = [1.0, 50.0, 40.0, 0.6, -1.0, 0.4, 145.0, 130.0, 130.0, 0.0, 0.0, 0.0]
 

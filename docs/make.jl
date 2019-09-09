@@ -22,7 +22,7 @@ makedocs(
 
 deploydocs(
     repo = "github.com/iancze/DiskJockey.git",
-    julia = "1.1",
+    julia = "1.2",
     branch = "gh-pages",
     latest = "master",
     osname = "linux",

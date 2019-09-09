@@ -42,7 +42,7 @@ for i=1:nwalkers
     pos0[:,i] = randn(ndim)
 end
 
-
+# Test to run a plotting callback after each sample
 function f(sampler::Sampler, outdir::AbstractString)
     println("calling function")
     try
@@ -52,7 +52,7 @@ function f(sampler::Sampler, outdir::AbstractString)
     end
 end
 
-run_schedule(sampler, pos0, 10, 1, "", f)
+run_schedule(sampler, pos0, 10, 1, "")
 
 
 # Now, let's try sampling a function with more parameters than walkers (just for testing purposes)
@@ -81,4 +81,4 @@ for i=1:nwalkers
     pos0[:,i] = randn(ndim)
 end
 
-run_schedule(sampler, pos0, 1, 1, "", f)
+run_schedule(sampler, pos0, 1, 1, "")

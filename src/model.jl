@@ -268,7 +268,7 @@ end
 function ParametersStandard(M_star::Float64, r_c::Float64, T_10::Float64, q::Float64, gamma::Float64, log_M_gas::Float64, ksi::Float64, dpc::Float64,incl::Float64, PA::Float64, vel::Float64, mu_RA::Float64, mu_DEC::Float64)
   
   # calculate the normalization constant 
-  Sigma_c::Float64 = 10^pars.log_M_gas * M_sun * (2 - gamma) / (2 * pi * r_c^2)
+  Sigma_c::Float64 = 10^log_M_gas * M_sun * (2 - gamma) / (2 * pi * r_c^2)
 
   # initialize the actual type
   return ParametersStandard(M_star, r_c, T_10, q, gamma, log_M_gas, ksi, dpc,incl, PA, vel, mu_RA, mu_DEC, Sigma_c)

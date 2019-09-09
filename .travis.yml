@@ -1,8 +1,10 @@
 language: julia
 julia:
-  # - release
-  # - nightly
   - 1.1
+  - 1.2
+  matrix: 
+    allow_failures:
+      - julia: release
 
 # Need to install a Fortran compiler for Dierckx and RADMC-3D depedency
 before_install:
@@ -18,32 +20,19 @@ before_install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Install dependencies here
+  # Install python dependencies here
   - conda create -q -n test-environment matplotlib pyyaml h5py astropy numpy scipy
   - source activate test-environment
   # - python setup.py install
 
-#script:
-#  - git fetch --unshallow
-#  - echo "We are in $(pwd) directory."
-#  - julia --color=yes -e 'Pkg.clone(pwd())'
-#  - julia --color=yes -e 'Pkg.build("DiskJockey")'
-#  # check to see what's up with the pycall problem
-#  - conda info --envs
-#  - conda list
-#  # - julia --color=yes -e 'Pkg.build("PyCall")' # Doesn't like to install properly the first time
-#  # Necessary to install Matplotlib via it's own Conda install
-#  # - julia --color=yes -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot'
-#  - LD_PRELOAD=${HOME}/.julia/v0.6/Conda/deps/usr/lib/libz.so julia --check-bounds=yes -e 'Pkg.test("DiskJockey", coverage=true)'
 
-# This the default script that is run
-# julia -e 'Pkg.clone(pwd())'
-# julia -e 'Pkg.build("$name")'
-# if [ -f test/runtests.jl ]; then
-#   julia --check-bounds=yes -e 'Pkg.test("$name", coverage=true)'
-# fi
+jobs:
+  include:
+    - stage: "Documentation"
+    julia: 1.2
+    os: linux
+    script:
+      - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+      - julia --project=docs/ docs/make.jl
 
-after_success:
-  - julia -e 'using Pkg'
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("DiskJockey")); include(joinpath("docs", "make.jl"))'
+after_success: skip

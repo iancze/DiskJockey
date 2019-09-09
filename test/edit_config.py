@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-parser = argparse.ArgumentParser(prog="parallel.py", description="Run Starfish fitting model in parallel.")
+parser = argparse.ArgumentParser(prog="edit_config.py", description="Edit the config.yaml file for disk fitting.")
 parser.add_argument("--fix-distance", help="Flip fixing the distance.", action="store_true")
 parser.add_argument("--model", choices=["standard", "truncated", "cavity", "vertical"], help="Set the model to this type.")
 args = parser.parse_args()
@@ -12,7 +12,7 @@ args = parser.parse_args()
 import yaml
 
 f = open("config.yaml")
-config = yaml.load(f)
+config = yaml.load(f, Loader=yaml.FullLoader)
 f.close()
 
 import numpy as np
@@ -27,7 +27,7 @@ else:
 if args.model == "standard":
     config["model"] = "standard"
     # Also set parameters to a reasonable dictionary
-    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "vel": -1.6}
+    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "log_M_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "vel": -1.6}
 
     if args.fix_distance:
         p0 = np.array([np.random.uniform(1.03, 1.05, nwalkers), # mass [M_sun]
@@ -61,7 +61,7 @@ elif args.model == "truncated":
 
 elif args.model == "cavity":
     config["model"] = "cavity"
-    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "gamma_cav":2.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "r_cav":30, "vel": 0.0}
+    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10": 91.85, "dpc": 145.0, "gamma": 1.0, "gamma_cav":2.0, "incl": 45.0, "ksi": 0.2, "log_M_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q": 0.5, "r_c": 500.0, "r_cav":30, "vel": 0.0}
 
     if args.fix_distance:
         p0 = np.array([np.random.uniform(1.03, 1.05, nwalkers), # mass [M_sun]
@@ -96,7 +96,7 @@ elif args.model == "cavity":
 if args.model == "vertical":
     config["model"] = "vertical"
     # Also set parameters to a reasonable dictionary
-    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10a": 91.85, "T_10m": 20.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "logM_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q_m": 0.5, "q_a": 0.5, "r_c": 500.0, "vel": -1.6, "T_freeze": 19., "X_freeze": 0.01, "sigma_s": 0.706, "h": 4.0, "delta":2.0 }
+    config["parameters"] = {"M_star": 1.03, "PA": 152.0, "T_10a": 91.85, "T_10m": 20.85, "dpc": 145.0, "gamma": 1.0, "incl": 45.0, "ksi": 0.2, "log_M_gas": -2.0, "mu_DEC": 0.0, "mu_RA": 0.0, "q_m": 0.5, "q_a": 0.5, "r_c": 500.0, "vel": -1.6, "T_freeze": 19., "X_freeze": 0.01, "sigma_s": 0.706, "h": 4.0, "delta":2.0 }
 
     if args.fix_distance:
         p0 = np.array([np.random.uniform(1.03, 1.05, nwalkers), # mass [M_sun]

@@ -28,7 +28,7 @@ parameters:
   gamma: 1.0
   incl: 45.0
   ksi: 0.2
-  logM_gas: -2.0
+  log_M_gas: -2.0
   mu_DEC: 0.0
   mu_RA: 0.0
   q: 0.5
