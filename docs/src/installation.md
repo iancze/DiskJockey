@@ -24,12 +24,15 @@ Some of the packages that DiskJockey requires (e.g. [Dierckx.jl](https://en.wiki
 
 ## DiskJockey
 
-Next, we will install the `DiskJockey` package itself. Because this is not an official Julia package (for now) installation involves simply cloning the repository. Full details on Julia's (new) package manager are available [online](https://docs.julialang.org/en/v1/stdlib/Pkg/index.html). Here we summarize the basics. First, open up a Julia prompt in the REPL, then type `]` to enter the package manager
+Next, we will install the `DiskJockey` package itself. Because this is not an official Julia package (for now) installation involves simply cloning the repository. Full details on Julia's (new) package manager are available [online](https://julialang.github.io/Pkg.jl/v1/). Here we summarize the basics. First, open up a Julia prompt in the REPL, then type `]` to enter the package manager, then use the `add` command to clone the DiskJockey repository.
 
     julia> ] 
-    (v1.1) pkg> dev https://github.com/iancze/DiskJockey.git
+    (@v1.4) pkg> add https://github.com/iancze/DiskJockey.git
     
-This process may take a few minutes as the relevant packages (including RADMC-3D) are downloaded from the web and installed. So far, I have only been able to extensively test this installation process on Linux machines. If you run into errors in this build process, please file an [issue](https://github.com/iancze/DiskJockey/issues) on the github repository so that we may try to fix this. If you already have RADMC-3D installed on your system, this process won't interfere with that installation, `DiskJockey` will use the version of RADMC-3D it downloaded. Note that we are using the `dev` command to clone the package, since you may eventually want to edit the source code.
+This process may take a few minutes as the relevant packages (including RADMC-3D) are downloaded from the web and installed. So far, I have only been able to test this installation process on Linux and Mac OS. If you run into errors in this build process, please file an [issue](https://github.com/iancze/DiskJockey/issues) on the github repository so that we may try to fix this. If you already have RADMC-3D installed on your system, this process won't interfere with that installation, `DiskJockey` will use the version of RADMC-3D it downloaded. If you would like to edit the source code, rather than installing the package with the `add` command, you can install using the `develop` command
+
+    julia> ] 
+    (@v1.4) pkg> develop https://github.com/iancze/DiskJockey.git
 
 If your internet interrupts or something else goes wrong during this process, you may need to restart the build using 
 
