@@ -166,7 +166,7 @@ To save you some computational time otherwise spent on burn-in, I found that the
 
 Then finish evaluating the rest of the cells so that you save the file `pos0.npy` into your current working directory.
 
-How many walkers should I use? Due the the way the Ensemble Sampler advances, you can only evaluate half of the walkers simultaneously. That means that if you are running with more cores than `nwalkers/2`, you will have several cores idle throughout the sampling. Of course, you could now increase the number of walkers to be `2 * ncores`.
+How many walkers should you use? Due the the way the Ensemble Sampler advances, you can only evaluate half of the walkers simultaneously. That means that if you are running with more cores than `nwalkers/2`, you will have several cores idle throughout the sampling. Of course, you could now increase the number of walkers to be `2 * ncores`.
 
 ## Launching the run
 

@@ -1,6 +1,6 @@
 # Models
 
-DiskJockey supports many different disk models, and is designed in such a way so as to be easily extensible to any new model you might like (pull requests welcome)!
+DiskJockey supports many different disk models, and is designed in such a way so as to be easily extensible to new ones.
 
 The current models include
 
@@ -9,12 +9,6 @@ The current models include
 Keyword: `standard`
 
 This is a standard model that is used in Czekala et al. 2015 and 2016, and Rosenfeld et al. 2012.
-
-## Cavity
-
-Keyword: `cavity`
-
-This model includes an adjustable exponential taper for the inner surface density profile. This is meant to mimic the appearance of large inner gas gaps in disks. Relevant notebook sketches of this idea can be found in `notebooks/Cavity Surface Density.ipynb`. The main difference from the standard model is the introduction of two new parameters: a cavity radius and decay profile exponent.
 
 ## Vertical
 
@@ -35,13 +29,6 @@ This sounds like a lot of steps just to evaluate a single `rho(r,z)` point. Beca
 
 Characterized with `ParametersVerticalEta`. In addition to the parameters described in the `Vertical` model, this extension has an additional parameter `eta`, designed to vary the height of the atmosphere with radius.
 
+## Nuker 
 
-# Conventions
-
-## Inclination
-
-Disk inclination ranges from 0 to 180 degrees. 0 degrees means face on, angular momentum vector pointing at observer; 90 means edge on; and 180 means face on, angular momentum vector pointing away from observer. These are the same as the RADMC-3D conventions.
-
-
-## Position Angle
-We also adopt the RADMC-3D convention for position angle, which defines position angle by the angular momentum vector. A positive PA angle means the disk angular momentum vector will be rotated counter clockwise (from North towards East).
+The Nuker profile as used in [Tripathi et al. 2017.](https://ui.adsabs.harvard.edu/abs/2017ApJ...845...44T/abstract).

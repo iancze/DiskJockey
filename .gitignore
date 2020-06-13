@@ -170,7 +170,12 @@ Session.vim
 
 # Documentation
 docs/build/
-docs/site/
+docs/Manifest.toml
+
+# Test stuff 
+tests/*.png
+tests/*.npy
+tests/Manifest.toml
 
 # Julia stuff 
 Manifest.toml
