@@ -1,9 +1,7 @@
 DiskJockey
 ===============
 
-[![Build Status](https://travis-ci.org/iancze/DiskJockey.svg?branch=master)](https://travis-ci.org/iancze/DiskJockey)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://iancze.github.io/DiskJockey/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://iancze.github.io/DiskJockey/latest)
+![Build Status](https://github.com/iancze/DiskJockey/workflows/CI/badge.svg)
 
 ![Logo](logo.png)
 
