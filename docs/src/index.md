@@ -6,6 +6,8 @@
 
 **If you use this code or a derivative of it in your research, we would really appreciate it if you cited the first paper in our series, [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C).**
 
+The source code for the project is on [GitHub](https://github.com/iancze/DiskJockey).
+
 # Papers using DiskJockey
 
 * *A Disk-based Dynamical Constraint on the Mass of the Young Binary AK Sco* : [Czekala et al. 2015 ApJ, 806 154C](http://adsabs.harvard.edu/abs/2015ApJ...806..154C)
