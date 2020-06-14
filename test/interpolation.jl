@@ -1,5 +1,5 @@
 # This file is designed to test the visibility interpolation algorithm.
-
+using Test
 import PyPlot
 import PyPlot.plt
 using LaTeXStrings
@@ -94,27 +94,28 @@ end
 
 # Basic plot of the shifted image
 
-# Because the sky convention is different than the way the SkyImage is stored,
-# we need to flip the array for plotting
-fig, ax = plt.subplots(nrows = 2, figsize = (5, 8))
+@testset "plot image array" begin
+    # Because the sky convention is different than the way the SkyImage is stored,
+    # we need to flip the array for plotting
+    fig, ax = plt.subplots(nrows = 2, figsize = (5, 8))
 
-ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
-ax[1].imshow(reverse(skim.data[:,:,1], dims = 2), interpolation = "none", origin = "lower", cmap = plt.get_cmap("Greys"), extent = ext)
-ax[1].contour(reverse(skim.data[:,:,1], dims = 2), origin = "lower", extent = ext)
-ax[1].set_title("Sky Projection")
-ax[1].set_xlabel(L"$\alpha$ [arcsec]")
-ax[1].set_ylabel(L"$\delta$ [arcsec]")
+    ext = (skim.ra[end], skim.ra[1], skim.dec[1], skim.dec[end])
+    ax[1].imshow(reverse(skim.data[:,:,1], dims = 2), interpolation = "none", origin = "lower", cmap = plt.get_cmap("Greys"), extent = ext)
+    ax[1].contour(reverse(skim.data[:,:,1], dims = 2), origin = "lower", extent = ext)
+    ax[1].set_title("Sky Projection")
+    ax[1].set_xlabel(L"$\alpha$ [arcsec]")
+    ax[1].set_ylabel(L"$\delta$ [arcsec]")
 
-ext = (ll[1], ll[end], mm[1], mm[end])
-ax[2].imshow(skim.data[:,:,1], interpolation = "none", origin = "lower", cmap = plt.get_cmap("Greys"), extent = ext)
-ax[2].contour(skim.data[:,:,1], origin = "lower", extent = ext)
-ax[2].set_title("Raw Array")
-ax[2].set_xlabel(L"$ll$")
-ax[2].set_ylabel(L"$mm$")
+    ext = (ll[1], ll[end], mm[1], mm[end])
+    ax[2].imshow(skim.data[:,:,1], interpolation = "none", origin = "lower", cmap = plt.get_cmap("Greys"), extent = ext)
+    ax[2].contour(skim.data[:,:,1], origin = "lower", extent = ext)
+    ax[2].set_title("Raw Array")
+    ax[2].set_xlabel(L"$ll$")
+    ax[2].set_ylabel(L"$mm$")
 
-fig.subplots_adjust(left = 0.15, right = 0.85, hspace = 0.25)
-plt.savefig(joinpath(outputdir, "gaussian_img_array.png"))
-
+    fig.subplots_adjust(left = 0.15, right = 0.85, hspace = 0.25)
+    plt.savefig(joinpath(outputdir, "gaussian_img_array.png"))
+end
 
 # Basic plot of the *centered* Gaussian image.
 fig, ax = plt.subplots(nrows = 1, figsize = (5, 5))
