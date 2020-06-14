@@ -4,6 +4,14 @@ The following are the changes that have been implemented since the previous vers
 
 # Version 0.1.6
 
+## Splitting package testing 
+DiskJockey is a computation and data intensive program. This makes it difficult to functionally test every aspect of the program quickly. To help create a testing funnel from quick, unit tests all the way through to larger integration tests, I've split the tests into two places. Within the main DiskJockey package are those tests that can be done quickly and are limited to testing the code within `src/` (i.e., *not* testing `scripts/`).
+
+The larger integration tests are split out into a different Julia package, [DiskJockeyTests.jl](https://github.com/iancze/DiskJockeyTests.jl) that is currently under construction. The idea is that this package will be run in a cluster environment and is designed to run through the loading and analysis of an actual dataset. It is designed to catch the kind of bug that you only discover after queuing for cores for several hours.
+
+## Github actions
+Continuous Integration testing and documentation builds are now done with Github-actions.
+
 ## Package environment
 Added `using Pkg; Pkg.activate("DiskJockey")` to all of the scripts. This way, these scripts should use the versions of the packages installed along with the DiskJockey package itself, and you won't need to (re)install these same packages to your local environment.
 
