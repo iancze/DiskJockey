@@ -17,8 +17,18 @@ jobs:
           - windows-latest
         arch:
           - x64
+        python-version: 
+          - 3.8
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install matplotlib
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
