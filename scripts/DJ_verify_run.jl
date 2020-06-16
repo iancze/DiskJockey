@@ -1,5 +1,4 @@
 #!/usr/bin/env julia
-using Pkg; Pkg.activate("DiskJockey")
 
 # Because we've been having so many errors with launching, run a check script.
 # Load config, print the parameters that we will be sampling and the mean starting position of the walkers.
@@ -26,7 +25,7 @@ using NPZ
 
 species = config["species"]
 transition = config["transition"]
-lam0 = lam0s[species*transition]
+lam0 = lam0s[species * transition]
 model = config["model"]
 params = config["parameters"]
 fix_params = config["fix_params"]
@@ -42,12 +41,12 @@ end
 
 println()
 
-fit_params = filter(x->∉(x,fix_params), reg_params)
+fit_params = filter(x->∉(x, fix_params), reg_params)
 n_fit = length(fit_params)
 
 pos0 = npzread(config["pos0"])
 ndim, nwalkers = size(pos0)
-means = mean(pos0, dims=2) # Find the mean walker position for each parameter
+means = mean(pos0, dims = 2) # Find the mean walker position for each parameter
 
 @assert ndim == n_fit "Number of specified parameters ($n_fit) does not match the number of dimensions in the walker file ($ndim)."
 
@@ -71,7 +70,7 @@ if haskey(config, "exclude")
     lam0 = lam0s[config["species"] * config["transition"]]
     # calculate the velocities corresponding to dvarr
     lams = Float64[dv.lam for dv in dvarr]
-    vels = c_kms * (lams .- lam0)/lam0
+    vels = c_kms * (lams .- lam0) / lam0
     # get the mask
     vel_mask = generate_vel_mask(exclude, vels)
 else

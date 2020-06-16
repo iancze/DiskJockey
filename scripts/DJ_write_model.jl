@@ -1,5 +1,4 @@
 #!/usr/bin/env julia
-using Pkg; Pkg.activate("DiskJockey")
 
 # Generate a set of model and residual visibilities and then write them to UVHDF5 file format
 # More about this format, including scripts to convert to UVFITS and CASA Measurement set,
@@ -52,7 +51,7 @@ skim = imToSky(im, pars.dpc)
 corrfun!(skim) # alpha = 1.0
 
 # Determine dRA and dDEC from the image and distance
-dRA = abs(skim.ra[2] - skim.ra[1])/2. # [arcsec] the half-size of a pixel
+dRA = abs(skim.ra[2] - skim.ra[1]) / 2. # [arcsec] the half-size of a pixel
 println("dRA is ", dRA, " arcsec")
 
 # For *this purpose only*, read in the flagged data in addition to the unflagged data
@@ -68,7 +67,7 @@ mvarr = Array{DataVis}(undef, nchan)
 chi2s = Array{Float64}(undef, nchan)
 lnprobs = Array{Float64}(undef, nchan)
 
-for i=1:nchan
+for i = 1:nchan
     dv = dvarr[i]
 
     # FFT the appropriate image channel
@@ -92,7 +91,7 @@ end
 rvarr = ResidVis(dvarr, mvarr)
 
 # Now swap the model and residual visibilities back to ALMA/SMA convetion
-for i=1:nchan
+for i = 1:nchan
     visibilities.conj!(mvarr[i])
     visibilities.conj!(rvarr[i])
 end
@@ -120,7 +119,7 @@ if haskey(config, "exclude")
     lam0 = lam0s[config["species"] * config["transition"]]
     # calculate the velocities corresponding to dvarr
     lams = Float64[dv.lam for dv in dvarr]
-    vels = c_kms * (lams .- lam0)/lam0
+    vels = c_kms * (lams .- lam0) / lam0
     # get the mask
     vel_mask = generate_vel_mask(exclude, vels)
 else
@@ -131,7 +130,7 @@ end
 println("Note: may include flagged visibilities! Use DJ_calc_lnprob_resid.jl to calculate lnprob with correct flags.")
 chi2s = chi2s[vel_mask]
 # println("Chi^2 :", sum(chi2s))
-println("Reduced Chi^2 ", sum(chi2s)/N)
+println("Reduced Chi^2 ", sum(chi2s) / N)
 
 # Calculate the lnprob between these two
 lnprobs = lnprobs[vel_mask]

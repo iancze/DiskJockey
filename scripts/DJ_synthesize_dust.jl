@@ -1,5 +1,4 @@
 #!/usr/bin/env julia
-using Pkg; Pkg.activate("DiskJockey")
 
 # Given some model parameters, synthesize the images. Need to run DJInitialize.jl first.
 

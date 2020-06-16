@@ -1,5 +1,4 @@
 #!/usr/bin/env julia
-using Pkg; Pkg.activate("DiskJockey")
 
 # Read the data file and plot the location of all of the baselines, in k\lambda
 using ArgParse
@@ -27,7 +26,7 @@ using LaTeXStrings
 
 species = config["species"]
 transition = config["transition"]
-lam0 = lam0s[species*transition]
+lam0 = lam0s[species * transition]
 model = config["model"]
 
 pars = convert_dict(config["parameters"], config["model"])
@@ -36,7 +35,7 @@ pars = convert_dict(config["parameters"], config["model"])
 dvarr = DataVis(config["data_file"])
 dv = dvarr[1]
 
-fig,ax = plt[:subplots](figsize=(6,6))
+fig, ax = plt[:subplots](figsize = (6, 6))
 ax[:plot](dv.uu, dv.vv, ".")
 ax[:set_xlabel](L"UU [k$\lambda$]")
 ax[:set_ylabel](L"VV [k$\lambda$]")

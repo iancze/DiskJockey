@@ -4,11 +4,9 @@
 # files into this directory, write out the proper wavelength files, and make sure we can continue
 # with the run properly.
 
-using Pkg; Pkg.activate("DiskJockey")
-
 using ArgParse
 
-s = ArgParseSettings(description="Initialize a new project directory with the appropriate files. Can also be used to update RADMC-3D input files after making changes to config.yaml")
+s = ArgParseSettings(description = "Initialize a new project directory with the appropriate files. Can also be used to update RADMC-3D input files after making changes to config.yaml")
 @add_arg_table s begin
     "--version"
     help = "Print a the version number and exit."
@@ -109,10 +107,10 @@ if fit_every != 0
     nchan = length(dvarr)
     println("Dataset contains a total of $nchan channels.")
 
-    to_fit = Int[i for i=1:fit_every:nchan]
+    to_fit = Int[i for i = 1:fit_every:nchan]
 
     # which channels of the dset to exclude
-    exclude = filter(x->(!in(x, to_fit)), Int[i for i=1:nchan])
+    exclude = filter(x->(!in(x, to_fit)), Int[i for i = 1:nchan])
 
     println("To fit only every $(fit_every)-nd/rd/th channel, place the following line in your `config.yaml file.`")
     println("exclude : $exclude")
@@ -185,20 +183,20 @@ if config["gas"]
         # and create an evenly spaced array of velocities
         vels = linspace(vstart, vend, nvel) # [km/s]
 
-        lam0 = lam0s[species*transition]
+        lam0 = lam0s[species * transition]
 
         # convert velocities to wavelengths
-        shift_lams = lam0 * (vels/c_kms + 1)
+        shift_lams = lam0 * (vels / c_kms + 1)
     else
         # read the wavelengths for all data channels
         fid = h5open(config["data_file"], "r")
         freqs = read(fid["freqs"]) # [Hz]
         # Convert from Hz to wavelengths in μm
-        lams = cc ./freqs * 1e4 # [μm]
+        lams = cc ./ freqs * 1e4 # [μm]
         close(fid)
 
         # Doppler shift the dataset wavelength according to the velocity in the parameter file
-        beta = vel/c_kms # relativistic Doppler formula
+        beta = vel / c_kms # relativistic Doppler formula
         shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
     end
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env julia
-using Pkg; Pkg.activate("DiskJockey")
 
 # Run the RADMC3D tausurf command to synthesize a visualization of the tau=1 surface.
 
@@ -25,7 +24,7 @@ using DiskJockey.model
 
 species = config["species"]
 transition = config["transition"]
-lam0 = lam0s[species*transition]
+lam0 = lam0s[species * transition]
 model = config["model"]
 
 pars = convert_dict(config["parameters"], config["model"])

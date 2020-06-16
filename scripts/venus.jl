@@ -3,8 +3,6 @@
 # Uses the EnsembleSampler to explore the posterior.
 # In contrast to codes like mach_three.jl, this architecture means that within each likelihood call, the global lnprob for all channels is evaluated in *serial*, while the walkers themselves are parallelized.
 
-using Pkg; Pkg.activate("DiskJockey")
-
 using ArgParse
 using Distributed
 @everywhere using Printf
@@ -24,7 +22,7 @@ s = ArgParseSettings()
     default = "config.yaml"
     "--cpus"
     help = "Which CPUS to add"
-    arg_type = Array{Int, 1}
+    arg_type = Array{Int,1}
     eval_arg = true
     "--optim"
     help = "Optimize instead of sample?"
@@ -44,7 +42,7 @@ cpus = parsed_args["cpus"]
 if cpus != nothing
     using ClusterManagers
     np = length(cpus)
-    addprocs(LocalAffinityManager(;np=np, affinities=cpus))
+    addprocs(LocalAffinityManager(;np = np, affinities = cpus))
 end
 
 # Since we've made this a #!/usr/bin/env julia script, we can no longer specify the extra
@@ -125,7 +123,7 @@ nchan = length(dvarr)
 lam0 = lam0s[config["species"] * config["transition"]]
 # calculate the velocities corresponding to dvarr
 lams = Float64[dv.lam for dv in dvarr]
-vels = c_kms * (lams .- lam0)/lam0
+vels = c_kms * (lams .- lam0) / lam0
 
 # create a mask that excludes channels we don't want
 if haskey(config, "exclude")
@@ -143,14 +141,14 @@ println("Workers allocated ", nchild)
 
 # make the values of run_index and config available on all processes
 for process in procs()
-    @spawnat process global run_id=run_index
-    @spawnat process global cfg=config
-    @spawnat process global vmask=vel_mask
+    @spawnat process global run_id = run_index
+    @spawnat process global cfg = config
+    @spawnat process global vmask = vel_mask
 end
 
 # Convert the parameter values from the config.yaml file from Dict{String, Float64} to
 # Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector method
-@everywhere xargs = Dict{Symbol, Float64}(Symbol(index)=>value for (index, value) in pairs(cfg["parameters"]))
+@everywhere xargs = Dict{Symbol,Float64}(Symbol(index) => value for (index, value) in pairs(cfg["parameters"]))
 
 # Read the fixed and free parameters from the config.yaml file
 @everywhere fix_params = cfg["fix_params"]
@@ -232,9 +230,9 @@ end
         write_model(pars, keydir, grid, species)
 
         # Doppler shift the dataset wavelengths to rest-frame wavelength
-        beta = pars.vel/c_kms # relativistic Doppler formula
+        beta = pars.vel / c_kms # relativistic Doppler formula
         lams = Array{Float64}(undef, nchan)
-        for i=1:nchan
+        for i = 1:nchan
             lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
         end
 
@@ -256,7 +254,7 @@ end
             end
         end
 
-        phys_size = img.pixsize_x * npix/AU
+        phys_size = img.pixsize_x * npix / AU
 
         # Convert raw images to the appropriate distance
         skim = imToSky(img, pars.dpc)
@@ -267,7 +265,7 @@ end
 
         lnprobs = Array{Float64}(undef, nchan)
         # Do the Fourier domain stuff per channel
-        for i=1:nchan
+        for i = 1:nchan
             dv = dvarr[i]
             # FFT the appropriate image channel
             vis_fft = transform(skim, i)
@@ -321,7 +319,7 @@ if parsed_args["optim"]
     sparams = registered_params[cfg["model"]]
 
     # fit_params are the ones in sample_params that are not in fix_params
-    fit_params = filter(x->!in(x,fix_params), sparams)
+    fit_params = filter(x->!in(x, fix_params), sparams)
 
     # note the Float64 is how we prepend a type to the comprehension
     # p0 = Float64[cfg["parameters"][parname] for parname in fit_params]
@@ -334,9 +332,9 @@ if parsed_args["optim"]
     
     # get the number of parameters, starting pos, and bounding ranges
     # bounding ranges can be a dictionary in YAML
-    nll = x -> -fprob(x)
+    nll = x->-fprob(x)
     @everywhere using BlackBoxOptim
-    opt = bbsetup(nll; Method=:xnes, SearchRange=sranges, MaxFuncEvals = MaxFuncEvals, Workers=workers()) 
+    opt = bbsetup(nll; Method = :xnes, SearchRange = sranges, MaxFuncEvals = MaxFuncEvals, Workers = workers()) 
     res = bboptimize(opt)
 
     println(res)
