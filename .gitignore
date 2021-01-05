@@ -67,7 +67,7 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Building logs
 *.log
 
 # Sphinx documentation
@@ -167,3 +167,22 @@ com_crashlytics_export_strings.xml
 Session.vim
 .netrwhist
 *~
+
+# Documentation
+docs/build/
+docs/Manifest.toml
+
+# Test stuff 
+tests/*.png
+tests/*.npy
+tests/Manifest.toml
+
+# Julia stuff 
+Manifest.toml
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+
+
+.DS_Store
+.directory

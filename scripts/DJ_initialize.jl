@@ -6,7 +6,7 @@
 
 using ArgParse
 
-s = ArgParseSettings(description="Initialize a new project directory with the appropriate files. Can also be used to update RADMC-3D input files after making changes to config.yaml")
+s = ArgParseSettings(description = "Initialize a new project directory with the appropriate files. Can also be used to update RADMC-3D input files after making changes to config.yaml")
 @add_arg_table s begin
     "--version"
     help = "Print a the version number and exit."
@@ -15,7 +15,7 @@ s = ArgParseSettings(description="Initialize a new project directory with the ap
     help = "Print out the list of files this program generates."
     action = :store_true
     "--new-project"
-    help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity'"
+    help = "Copy a stock configuration file to this directory. Can be 'standard', 'truncated', 'cavity', 'nuker'"
     default = "no"
     "--fit-every"
     help = "Print out an exclude array that should be manually copied to config.yaml so that only every n-th channel is fit in venus.jl"
@@ -40,26 +40,29 @@ end
 
 parsed_args = parse_args(ARGS, s)
 
-assets_dir = Pkg.dir("DiskJockey") * "/assets/"
+# rather kludgey substitute for previous Pkg.dir() call
+using DiskJockey
+srcdir = dirname(pathof(DiskJockey))
+assets_dir = joinpath(srcdir, "../assets/")
 
 # The user is going to start modeling a new disk, so copy in the new configuration file.
 if parsed_args["new-project"] != "no"
     model = parsed_args["new-project"]
 
     cp(assets_dir * "config.$(model).yaml", pwd() * "/config.yaml")
-    cp(assets_dir * "InitializeWalkers.$(model).ipynb", pwd() * "/InitializeWalkers.ipynb")
+    cp(assets_dir * "initialize_walkers.$(model).py", pwd() * "/initialize_walkers.py")
     cp(assets_dir * "Makefile", pwd() * "/Makefile")
 
-    println("Copied default config.yaml, InitializeWalkers.ipynb, and Makefile for the $model model to current working directory.")
+    println("Copied default config.yaml, initialize_walkers.py, and Makefile for the $model model to current working directory.")
     println("Exiting")
-    quit()
+    exit()
 end
 
 if parsed_args["prior"]
     cp(assets_dir * "prior.jl", pwd() * "/prior.jl")
     println("prior.jl copied to current directory. If you didn't mean to do this, delete this file now. Otherwise, edit this file with your favorite text editor to enforce the prior you would like to see for this specific disk. Please see the docs for more information.")
     println("Exiting")
-    quit()
+    exit()
 end
 
 using DiskJockey.constants
@@ -69,7 +72,7 @@ if parsed_args["version"]
     println("Your DiskJockey scripts are successfully linked.")
     println("You are running DiskJockey $DISKJOCKEY_VERSION")
     println("Exiting")
-    quit()
+    exit()
 end
 
 import YAML
@@ -91,7 +94,7 @@ if parsed_args["M"]
     end
 
     println(str)
-    quit()
+    exit()
 end
 
 using DiskJockey.model
@@ -104,15 +107,15 @@ if fit_every != 0
     nchan = length(dvarr)
     println("Dataset contains a total of $nchan channels.")
 
-    to_fit = Int[i for i=1:fit_every:nchan]
+    to_fit = Int[i for i = 1:fit_every:nchan]
 
     # which channels of the dset to exclude
-    exclude = filter(x->(!in(x, to_fit)), Int[i for i=1:nchan])
+    exclude = filter(x->(!in(x, to_fit)), Int[i for i = 1:nchan])
 
     println("To fit only every $(fit_every)-nd/rd/th channel, place the following line in your `config.yaml file.`")
     println("exclude : $exclude")
     println("Exiting")
-    quit()
+    exit()
 end
 
 # Create an output directory that will be useful for the results.
@@ -168,7 +171,6 @@ if config["gas"]
 
     println("Copied over RADMC-3D gas input files.")
 
-
     vel = pars.vel # [km/s]
     npix = config["npix"] # number of pixels
 
@@ -181,20 +183,20 @@ if config["gas"]
         # and create an evenly spaced array of velocities
         vels = linspace(vstart, vend, nvel) # [km/s]
 
-        lam0 = lam0s[species*transition]
+        lam0 = lam0s[species * transition]
 
         # convert velocities to wavelengths
-        shift_lams = lam0 * (vels/c_kms + 1)
+        shift_lams = lam0 * (vels / c_kms + 1)
     else
         # read the wavelengths for all data channels
         fid = h5open(config["data_file"], "r")
         freqs = read(fid["freqs"]) # [Hz]
         # Convert from Hz to wavelengths in μm
-        lams = cc ./freqs * 1e4 # [μm]
+        lams = cc ./ freqs * 1e4 # [μm]
         close(fid)
 
         # Doppler shift the dataset wavelength according to the velocity in the parameter file
-        beta = vel/c_kms # relativistic Doppler formula
+        beta = vel / c_kms # relativistic Doppler formula
         shift_lams =  lams .* sqrt((1. - beta) / (1. + beta)) # [microns]
     end
 

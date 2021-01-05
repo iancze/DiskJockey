@@ -4,6 +4,9 @@
 # In contrast to codes like mach_three.jl, this architecture means that within each likelihood call, the global lnprob for all channels is evaluated in *serial*, while the walkers themselves are parallelized.
 
 using ArgParse
+using Distributed
+@everywhere using Printf
+@everywhere using Test
 
 s = ArgParseSettings()
 @add_arg_table s begin
@@ -14,16 +17,16 @@ s = ArgParseSettings()
     "--run_index", "-r"
     help = "Output run index"
     arg_type = Int
-    "--plotly"
-    help = "Send the chain samples to plot.ly?"
-    action = :store_true
     "--config"
     help = "a YAML configuration file"
     default = "config.yaml"
     "--cpus"
     help = "Which CPUS to add"
-    arg_type = Array{Int, 1}
+    arg_type = Array{Int,1}
     eval_arg = true
+    "--optim"
+    help = "Optimize instead of sample?"
+    action = :store_true
     "--test"
     help = "Is this a test run of venus.jl? Allow using many fewer walkers for eval purposes."
     action = :store_true
@@ -38,7 +41,8 @@ cpus = parsed_args["cpus"]
 
 if cpus != nothing
     using ClusterManagers
-    addprocs(LocalAffinityManager(;affinities=cpus))
+    np = length(cpus)
+    addprocs(LocalAffinityManager(;np = np, affinities = cpus))
 end
 
 # Since we've made this a #!/usr/bin/env julia script, we can no longer specify the extra
@@ -65,18 +69,18 @@ outfmt(run_index::Int) = config["out_base"] * @sprintf("run%02d/", run_index)
 # This code is necessary for multiple simultaneous runs on a high performance cluster
 # so that different runs do not write into the same output directory
 if parsed_args["run_index"] == nothing
-    run_index = 0
-    outdir = outfmt(run_index)
+    global run_index = 0
+    global outdir = outfmt(run_index)
     while ispath(outdir)
         println(outdir, " exists")
-        run_index += 1
-        outdir = outfmt(run_index)
+        global run_index += 1
+        global outdir = outfmt(run_index)
     end
     # are we starting in a fresh directory?
     fresh = true
 else
-    run_index = parsed_args["run_index"]
-    outdir = outfmt(run_index)
+    global run_index = parsed_args["run_index"]
+    global outdir = outfmt(run_index)
     if ispath(outdir)
         # we are not starting in a fresh directory, so try loading pos0.npy from this directory.
         fresh = false
@@ -95,13 +99,13 @@ else
     println("$outdir exists, using current.")
 end
 
-
+@everywhere using AbstractFFTs
 @everywhere using DiskJockey.constants
 @everywhere using DiskJockey.visibilities
 @everywhere using DiskJockey.image
 @everywhere using DiskJockey.gridding
 @everywhere using DiskJockey.model
-@everywhere using Base.Test
+
 
 # Determine if we will be including the User-defined prior
 if isfile("prior.jl")
@@ -111,19 +115,25 @@ if isfile("prior.jl")
     cp("prior.jl", outdir * "prior.jl")
 end
 
-println(methods(lnprior))
-
 # load data and figure out how many channels
 dvarr = DataVis(config["data_file"])
 nchan = length(dvarr)
 
+
+lam0 = lam0s[config["species"] * config["transition"]]
+# calculate the velocities corresponding to dvarr
+lams = Float64[dv.lam for dv in dvarr]
+vels = c_kms * (lams .- lam0) / lam0
+
+# create a mask that excludes channels we don't want
 if haskey(config, "exclude")
     exclude = config["exclude"]
-    # which channels of the dset to fit
-    keylist = filter(x->(!in(x, exclude)), Int[i for i=1:nchan])
+    vel_mask = generate_vel_mask(exclude, vels)
 else
-    keylist = Int[i for i=1:nchan]
+    vel_mask = trues(nchan)
 end
+
+println("Using the following channels (velocities in km/s): ", vels[vel_mask])
 
 # This program is meant to be started with the -p option.
 nchild = nworkers()
@@ -131,16 +141,14 @@ println("Workers allocated ", nchild)
 
 # make the values of run_index and config available on all processes
 for process in procs()
-    @spawnat process global run_id=run_index
-    @spawnat process global cfg=config
-    @spawnat process global kl=keylist
+    @spawnat process global run_id = run_index
+    @spawnat process global cfg = config
+    @spawnat process global vmask = vel_mask
 end
-println("Mapped variables to all processes")
 
-# Convert the parameter values from the config.yaml file from Dict{ASCIIString, Float64} to
-# Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector
-# method
-@everywhere xargs = convert(Dict{Symbol}{Float64}, cfg["parameters"])
+# Convert the parameter values from the config.yaml file from Dict{String, Float64} to
+# Dict{Symbol, Float64} so that they may be splatted as extra args into the convert_vector method
+@everywhere xargs = Dict{Symbol,Float64}(Symbol(index) => value for (index, value) in pairs(cfg["parameters"]))
 
 # Read the fixed and free parameters from the config.yaml file
 @everywhere fix_params = cfg["fix_params"]
@@ -151,7 +159,8 @@ println("Mapped variables to all processes")
 end
 
 # Now, redo this to only load the dvarr for the keys that we need, and conjugate
-@everywhere dvarr = DataVis(cfg["data_file"], kl)
+# @everywhere dvarr = DataVis(cfg["data_file"], kl)
+@everywhere dvarr = DataVis(cfg["data_file"], vmask)
 @everywhere visibilities.conj!(dvarr)
 @everywhere nchan = length(dvarr)
 
@@ -166,9 +175,6 @@ end
 @everywhere grd = cfg["grid"]
 @everywhere grid = Grid(grd)
 
-@everywhere dpc_mu = cfg["dpc_prior"]["mu"]
-@everywhere dpc_sig = cfg["dpc_prior"]["sig"]
-
 # calculate the interpolation closures, since we are keeping the angular size of the image
 # fixed thoughout the entire simulation.
 # calculate dl and dm (assuming they are equal).
@@ -182,7 +188,7 @@ end
 @everywhere vv = fftshift(fftfreq(npix, dl)) * 1e-3 # [kλ]
 
 # For each channel, calculate the interpolation closures
-@everywhere int_arr = Array(Function, nchan)
+@everywhere int_arr = Array{Function}(undef, nchan)
 @everywhere for (i, dset) in enumerate(dvarr)
     int_arr[i] = plan_interpolate(dset, uu, vv)
 end
@@ -193,19 +199,16 @@ end
 # and it must create it's own temporary directory to write the necessary files for
 # RADMC to run.
 @everywhere function fprob(p::Vector{Float64})
-
-    # Convert the vector to a specific type of pars, e.g. ParametersStandard, ParametersTruncated, etc, which will be used for multiple dispatch from here on out.
-    pars = convert_p(p)
-
     # Each walker needs to create it's own temporary directory
     # where all RADMC-3D files will reside and be driven from
     # It only needs to last for the duration of this function, so we use a tempdir
     keydir = mktempdir() * "/"
 
     lnp = try
+        # Convert the vector to a specific type of pars, e.g. ParametersStandard, ParametersTruncated, etc, which will be used for multiple dispatch from here on out.
+        pars = convert_p(p) # will raise an error if can't convert
 
-        lnpr = lnprior(pars, dpc_mu, dpc_sig, grid)
-
+        lnpr = lnprior(pars, grid)
         (sizeau_desired, sizeau_command) = size_au(cfg["size_arcsec"], pars.dpc, grid) # [AU]
 
         # Copy all relevant configuration scripts to the keydir so that RADMC-3D can run.
@@ -227,37 +230,42 @@ end
         write_model(pars, keydir, grid, species)
 
         # Doppler shift the dataset wavelengths to rest-frame wavelength
-        beta = pars.vel/c_kms # relativistic Doppler formula
-        lams = Array(Float64, nchan)
-        for i=1:nchan
+        beta = pars.vel / c_kms # relativistic Doppler formula
+        lams = Array{Float64}(undef, nchan)
+        for i = 1:nchan
             lams[i] =  dvarr[i].lam * sqrt((1. - beta) / (1. + beta)) # [microns]
         end
 
         write_lambda(lams, keydir) # write into current directory
 
         # Run RADMC-3D, redirect output to /dev/null
-        run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`, DevNull))
+        run(pipeline(`radmc3d image incl $(pars.incl) posang $(pars.PA) npix $npix loadlambda sizeau $sizeau_command`, devnull))
 
         # Read the RADMC-3D images from disk
-        im = try
+        img = try
             imread() # we should already be in the sub-directory, no path required
         # If the synthesized image is screwed up, just say there is zero probability.
-        catch SystemError
-            throw(ImageException("Failed to read synthesized image for parameters ", p))
+        catch y
+            if isa(y, SystemError)
+                throw(ImageException("Failed to read synthesized image for parameters $pars"))
+            else
+                println("Unexpected error for $pars, exiting")
+                throw(y)
+            end
         end
 
-        phys_size = im.pixsize_x * npix/AU
+        phys_size = img.pixsize_x * npix / AU
 
         # Convert raw images to the appropriate distance
-        skim = imToSky(im, pars.dpc)
+        skim = imToSky(img, pars.dpc)
 
         # Apply the gridding correction function before doing the FFT
         # No shift needed, since we will shift the resampled visibilities
         corrfun!(skim)
 
-        lnprobs = Array(Float64, nchan)
+        lnprobs = Array{Float64}(undef, nchan)
         # Do the Fourier domain stuff per channel
-        for i=1:nchan
+        for i = 1:nchan
             dv = dvarr[i]
             # FFT the appropriate image channel
             vis_fft = transform(skim, i)
@@ -277,14 +285,26 @@ end
         # this quantity is assigned to the value of lnp at the start of the try/catch block
         sum(lnprobs) + lnpr
 
-    catch DiskJockeyException
-        # If an error occured through some of the known routines in this package ,
-        # -Inf is returned as the value of lnp
-        # Otherwise the error causese the program to exit
-        -Inf
+    catch y
+        # If an error occured through some of the known routines in this package handle it and return -Inf
+        if isa(y, DiskJockeyException)
+            # print the error message and move on, returning -Inf
+            println(y)
+        else
+            # if the error is not coming from one of the channels we 
+            # designed, actually terminate the program after printing the 
+            # parameter values at which the error occured
+            println("Unforeseen error with parameter vector $p")
+            println("Unforeseen error with parameter type $pars")
+            throw(y)
+        end
 
+        # -Inf is returned as the value of lnp
+        -Inf
     finally
-        # Change back to the home directory and then remove the temporary directory
+        # regardless of whether we ignored the error or allowed it 
+        # to terminate the program, change back to the home directory and 
+        # then remove the temporary directory
         cd(homedir)
         run(`rm -rf $keydir`)
     end
@@ -293,41 +313,54 @@ end
 
 end
 
-using NPZ
 
-if fresh
-    pos0 = npzread(config["pos0"])
+# Decide if we're going to optimize the parameters or sample the posteriors.
+if parsed_args["optim"]
+    sparams = registered_params[cfg["model"]]
+
+    # fit_params are the ones in sample_params that are not in fix_params
+    fit_params = filter(x->!in(x, fix_params), sparams)
+
+    # note the Float64 is how we prepend a type to the comprehension
+    # p0 = Float64[cfg["parameters"][parname] for parname in fit_params]
+    
+    parrangesdict = cfg["parameter_ranges"]
+    MaxFuncEvals = cfg["MaxFuncEvals"]
+
+    # get the ranges
+    sranges = [tuple(convert(Array{Float64,1}, cfg["parameter_ranges"][par])...) for par in fit_params]
+    
+    # get the number of parameters, starting pos, and bounding ranges
+    # bounding ranges can be a dictionary in YAML
+    nll = x->-fprob(x)
+    @everywhere using BlackBoxOptim
+    opt = bbsetup(nll; Method = :xnes, SearchRange = sranges, MaxFuncEvals = MaxFuncEvals, Workers = workers()) 
+    res = bboptimize(opt)
+
+    println(res)
+
 else
-    pos0 = npzread(outdir * config["pos0"])
-end
+    # instead, sample using MCMC
+    using NPZ
 
-ndim, nwalkers = size(pos0)
-
-# Use the EnsembleSampler to do the optimization
-using DiskJockey.EnsembleSampler
-
-sampler = Sampler(nwalkers, ndim, fprob, parsed_args["test"])
-
-if parsed_args["plotly"]
-    function f(sampler::Sampler, outdir::AbstractString)
-        # Run the chain to plotly
-        println("Called plotly.")
-        chain_file = "$(outdir)chain.npy"
-        config_file = "config.yaml"
-        name = config["name"]
-        try
-            spawn(`plotly_walkers.py --name $name --chain $chain_file --config $config_file`)
-        catch
-            println("Couldn't reach plotly server.")
-        end
+    if fresh
+        pos0 = npzread(config["pos0"])
+    else
+        pos0 = npzread(outdir * config["pos0"])
     end
-    run_schedule(sampler, pos0, config["samples"], config["loops"], outdir, f)
-else
+
+    ndim, nwalkers = size(pos0)
+
+    # Use the EnsembleSampler to do the optimization
+    using DiskJockey.EnsembleSampler
+
+    sampler = Sampler(nwalkers, ndim, fprob, parsed_args["test"])
+
     run_schedule(sampler, pos0, config["samples"], config["loops"], outdir)
-end
 
-write_samples(sampler, outdir)
+    write_samples(sampler, outdir)
 
-if parsed_args["MPI"]
-    MPI.stop_main_loop(manager)
+    if parsed_args["MPI"]
+        MPI.stop_main_loop(manager)
+    end
 end

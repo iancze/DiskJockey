@@ -1,0 +1,3 @@
+[deps]
+DiskJockey = "c449e886-c753-11e8-1751-fb35bbf40d92"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

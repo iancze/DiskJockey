@@ -1,15 +1,15 @@
 module EnsembleSampler
 
+using Distributed
 using NPZ
+using Logging 
 
 # This is a direct Julia port of [emcee](http://dan.iel.fm/emcee/current/), the ensemble sampler by Dan Foreman-Mackey et al.
-#
-# Right now, this is only designed to work in parallel with cores on the same node in the most straightforward example. Eventually it would be nice to incorporate Julia tasks.
 
 export Sampler, run_mcmc, run_schedule, reset_mcmc, write_samples, emcee_chain
 
 # There is a type, called the sampler.
-type Sampler
+mutable struct Sampler
     nwalkers::Int
     ndim::Int
     lnprobfn::Function
@@ -22,15 +22,15 @@ type Sampler
     iterations::Int # How many iterations has the ensemble taken
 end
 
-function Sampler(nwalkers::Int, ndim::Int, lnprobfn::Function, test::Bool=false)
+function Sampler(nwalkers::Int, ndim::Int, lnprobfn::Function, test::Bool = false)
     a = 2.0
 
     if !test
         @assert ndim < nwalkers "I don't believe you have more parameters than walkers! Try flipping them."
     end
 
-    chain = Array(Float64, (ndim, 0, nwalkers))
-    lnprob = Array(Float64, (nwalkers, 0))
+    chain = Array{Float64}(undef, (ndim, 0, nwalkers))
+    lnprob = Array{Float64}(undef, (nwalkers, 0))
     iterations = 0
 
     sampler = Sampler(nwalkers, ndim, lnprobfn, a, chain, lnprob, iterations)
@@ -43,25 +43,15 @@ function emcee_chain(sampler::Sampler)
     return permutedims(sampler.chain, [3, 2, 1])
 end
 
-# Convert the nwalkers chain into a flatchain
-# function flatchain(sampler::Sampler)
-#     # chain is stored as (ndim, iterations, nwalkers) in Julia parlance.
-#
-#     # flatchain should be stored as (ndim, iterations)
-#     fchain = reshape(sampler.chain, (sampler.ndim, sampler.iterations * sampler.nwalkers))
-#
-#     return fchain
-# end
-
 # Clear the samples after burn in
 function reset_mcmc(sampler::Sampler)
     # self.naccepted = np.zeros(self.k)
-    sampler.chain = Array(Float64, (sampler.ndim, 0, sampler.nwalkers))
-    sampler.lnprob = Array(Float64, (sampler.nwalkers, 0))
+    sampler.chain = Array{Float64}(sampler.ndim, 0, sampler.nwalkers)
+    sampler.lnprob = Array{Float64}(sampler.nwalkers, 0)
     sampler.iterations = 0
 end
 
-function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
+function sample(sampler::Sampler, p0, lnprob0 = nothing, iterations = 1)
 
     p = p0
 
@@ -78,7 +68,7 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
 
     # Check to make sure that the probability function didn't return
     # ``np.nan``.
-    if any(isnan(lnprob))
+    if any(isnan.(lnprob))
         println("The initial lnprob was NaN.")
         throw(DomainError())
     end
@@ -88,14 +78,14 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
     # resize the chain by adding new rows to the array.
 
     # (ndim, iterations, nwalkers)
-    sampler.chain = cat(2, sampler.chain, Array(Float64, (sampler.ndim, iterations, sampler.nwalkers)))
+    sampler.chain = cat(sampler.chain, Array{Float64}(undef, sampler.ndim, iterations, sampler.nwalkers), dims = 2)
 
-    #(niterations, nwalkers)
-    sampler.lnprob = cat(2, sampler.lnprob, Array(Float64, sampler.nwalkers, iterations))
+    # (niterations, nwalkers)
+    sampler.lnprob = cat(sampler.lnprob, Array{Float64}(undef, sampler.nwalkers, iterations), dims = 2)
 
-    for i=1:iterations
+    for i = 1:iterations
         sampler.iterations += 1
-        println("Iteration ", sampler.iterations)
+        @info "Iteration " sampler.iterations
         # Loop over the two ensembles, calculating the proposed positions.
 
         # Slices for the first and second halves
@@ -116,9 +106,9 @@ function sample(sampler::Sampler, p0, lnprob0=nothing, iterations=1)
 
             end
 
-        ind = i0 + i
-        sampler.chain[:, ind, :] = p
-        sampler.lnprob[:, ind] = lnprob
+            ind = i0 + i
+            sampler.chain[:, ind, :] = p
+            sampler.lnprob[:, ind] = lnprob
 
         end
 
@@ -158,7 +148,7 @@ function propose_stretch(sampler::Sampler, p0, p1, lnprob0)
     # proposal.
 
     # self._random.rand(Ns) provides a 1D array of values in the range [0,1.) of size Ns
-    zz = ((sampler.a - 1.0) .* rand(Ns) .+ 1.0) .^ 2. ./ sampler.a
+    zz = ((sampler.a - 1.0) .* rand(Ns) .+ 1.0).^2.0 ./ sampler.a
 
     # An array of random integers the size of the subset, designed to slice into the complimentary sample.
     rint = rand(1:Nc, Ns)
@@ -171,8 +161,8 @@ function propose_stretch(sampler::Sampler, p0, p1, lnprob0)
     newlnprob = get_lnprob(sampler, q)
 
     # Decide whether or not the proposals should be accepted.
-    lnpdiff = (sampler.ndim - 1.) .* log(zz) .+ newlnprob .- lnprob0
-    accept = (lnpdiff .> log(rand(Ns)))
+    lnpdiff = (sampler.ndim - 1.0) .* log.(zz) .+ newlnprob .- lnprob0
+    accept = (lnpdiff .> log.(rand(Ns)))
 
     return q, newlnprob, accept
 
@@ -193,25 +183,25 @@ function get_lnprob(sampler::Sampler, pos)
     p = pos
 
     # Check that the parameters are in physical ranges.
-    if any(isinf(p))
+    if any(isinf.(p))
         println("At least one parameter value was infinite.")
         throw(DomainError())
     end
-    if any(isnan(p))
+    if any(isnan.(p))
         println("At least one parameter value was NaN.")
         throw(DomainError())
     end
 
     # What is the shape of p here in this subset?
     nwalkers_sub = size(pos)[2]
-    lst = [p[:,i] for i=1:nwalkers_sub]
+    lst = [p[:,i] for i = 1:nwalkers_sub]
 
     # In Python, it seems like each row corresponds to a different walker.
     # For Julia, we really want each column to the parameters corresponding to a different walker.
-    result = pmap(sampler.lnprobfn, lst, err_stop=true)
+    result = pmap(sampler.lnprobfn, lst)
 
     # The array may contain one or two RemoteExceptions, so let's check to see what caused them.
-    for (res,par) in zip(result, lst)
+    for (res, par) in zip(result, lst)
         if typeof(res) == RemoteException
             println("RemoteException found for parameters ", par)
             println(res)
@@ -220,15 +210,15 @@ function get_lnprob(sampler::Sampler, pos)
     end
 
     # If we've made it to here, everything's ok.
-    lnprob = convert(Array{Float64, 1}, result)
+    lnprob = convert(Array{Float64,1}, result)
 
     # Check for lnprob returning NaN.
-    if any(isnan(lnprob))
+    if any(isnan.(lnprob))
         # Print some debugging stuff.
         println("NaN value of lnprob for parameters: ")
-            for pars in p[isnan(lnprob)]
-                println(pars)
-            end
+        for pars in p[isnan.(lnprob)]
+            println(pars)
+        end
         # Finally raise exception.
         throw(DomainError())
     end
@@ -244,25 +234,25 @@ function run_mcmc(sampler::Sampler, pos0, N::Int)
 end
 
 # Write out the samples
-function write_samples(sampler::Sampler, outdir="")
+function write_samples(sampler::Sampler, outdir = "")
 
     # fchain = flatchain(sampler)
 
-    npzwrite(outdir * "chain.npy", emcee_chain(sampler))
+    npzwrite(joinpath(outdir, "chain.npy"), emcee_chain(sampler))
     # npzwrite(outdir * "flatchain.npy", fchain)
-    npzwrite(outdir * "lnprob.npy", sampler.lnprob)
+    npzwrite(joinpath(outdir, "lnprob.npy"), sampler.lnprob)
 
     # Needs to be reshaped to remove singleton dimension
-    npzwrite(outdir * "pos0.npy", reshape(sampler.chain[:, end, :], (sampler.ndim, sampler.nwalkers)))
+    npzwrite(joinpath(outdir, "pos0.npy"), reshape(sampler.chain[:, end, :], (sampler.ndim, sampler.nwalkers)))
 
 end
 
 # Run the sampler on a periodic save schedule, to prevent losses on long-running calculations
 # run N iterations for each loop
-function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int, outdir, func=nothing)
-    for i=1:loops
+function run_schedule(sampler::Sampler, pos0, N::Int, loops::Int, outdir, func = nothing)
+    for i = 1:loops
         pos0 = sample(sampler, pos0, nothing, N)
-        println("Finished loop ", i, " of ", loops)
+        @info "Finished loop $i of $loops"
         write_samples(sampler, outdir)
         if func != nothing
             func(sampler, outdir)

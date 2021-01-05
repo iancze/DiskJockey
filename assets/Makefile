@@ -20,8 +20,11 @@ $(OBJS) : config.yaml
 image.out : $(OBJS)
 	DJ_synthesize_model.jl
 
+image_tausurf.out : $(OBJS)
+	DJ_synthesize_tausurf.jl
+
 .PHONY : chmaps
-chmaps : chmaps_linear.png chmaps_log.png
+chmaps : chmaps_linear.png 
 
 chmaps_linear.png : image.out
 	DJ_plot_chmaps.jl --linear
@@ -32,6 +35,13 @@ chmaps_log.png : image.out
 spectrum.png : image.out
 	DJ_plot_chmaps.jl --spectrum
 
+.PHONY : tausurf
+tausurf : tausurf.png
+
+tausurf.png : image_tausurf.out
+	DJ_plot_tausurf.jl
+
+
 # Make the visibilities for both the model and residuals.
 .NOTPARALLEL : vis
 .PHONY : vis
@@ -40,7 +50,7 @@ vis : model.hdf5 resid.hdf5
 model.hdf5 resid.hdf5 : image.out
 	DJ_write_model.jl
 
-all: structure chmaps spectrum.png vis 
+all: structure chmaps spectrum.png vis
 
 .PHONY: clean
 clean:

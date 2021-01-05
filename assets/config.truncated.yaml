@@ -16,11 +16,6 @@ grid:
 # Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
 # exclude: [35, 36, 37, 38]
 
-# Distance prior setup
-dpc_prior:
-  mu : 140.
-  sig : 20.
-
 # What type of model will we be fitting? This also affects which parameters to include.
 model : truncated # choices of {standard, truncated, vertical, cavity, etc..}
 
@@ -32,7 +27,7 @@ parameters:
   q: 0.5 # temperature gradient exponent
   gamma: 1.0 # surface density gradient
   gamma_e: 1.0 # outer exponential surface density taper
-  logSigma_c: -0.65 # [M_Sun] disk mass of gas
+  logM_gas: -0.65 # [M_Sun] disk mass of gas
   ksi: 0.2 # [km/s] microturbulence
   dpc: 145. # [pc] distance
   incl: 45.0 # [degrees] inclination

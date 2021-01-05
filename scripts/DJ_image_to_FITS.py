@@ -7,9 +7,9 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Convert image.out into a FITS file. Optionally provide information that will be added to the header of the FITS file.")
+parser = argparse.ArgumentParser(description="Convert RADMC-3D image.out into a FITS file. Optionally provide information that will be added to the header of the FITS file.")
 parser.add_argument("--image", default="image.out", help="The name of the file created by RADMC-3D.")
-parser.add_argument("--FITS", default="image.FITS", help="The name of the FITS file to which you want to export the image.")
+parser.add_argument("--fits", default="image.fits", help="The name of the FITS file to which you want to export the image.")
 parser.add_argument("--dpc", default=140., type=float, help="At what distance [pc] is this source? Assumes Taurus distance by default.")
 parser.add_argument("--RA", default=0, type=float, help="Assign this as the RA to the object.")
 parser.add_argument("--DEC", default=0, type=float, help="Assign this as the DEC to the object.")
@@ -55,21 +55,61 @@ freqs =  cc / (lams * 1e-4) # [Hz]
 
 CRVAL3 = freqs[0]
 
+single_chan = False
+
 if len(lams) > 1:
     dnu = freqs[1] - freqs[0]
+    assert np.all((np.diff(freqs) - dnu)/dnu < 0.01), "This conversion script does not support unequal channel widths for multi-channel imagecubes."
 else:
+    "Single channel image, assuming bandwidth (CDELT3) is 2GHz"
     dnu = 2e9 #[GHz]
+    single_chan = True
 CDELT3 = dnu
 
 pixsize = pixsize_x*pixsize_y/(dpc*pc)**2 #pixel size in steradians
 
-#RADMC gives intensities in erg cm^(-2) s^(-1) Hz^(-1) ster^(-1); need to convert to Jy/pixel
+#RADMC gives intensities in erg cm^(-2) s^(-1) Hz^(-1) ster^(-1); convert to Jy/pixel
 intensities = np.reshape(imvals[nlam:],[nlam, im_ny, im_nx])* pixsize*10**23
+
+if single_chan:
+    total_flux = np.sum(intensities)
+    freq = freqs[0]
+    print("Total (spatially-integrated) flux density at {:.3e} Hz flux in image: {:.3e} Jy".format(freq, total_flux))
+else:
+    channel_flux = np.sum(intensities, axis=(1,2))
+    # Make a spectrum plot
+    # Hz on one side
+    # km/s on the other
+    # Use central channel as 0 velocity.
+    nu0 = np.average(freqs)
+    vels = cc * (freqs - nu0)/nu0 * 1e-5
+
+    integrated_flux = np.trapz(channel_flux, -vels)
+
+    print("Total (spatially and velocity) integrated flux is {:.3e} Jy - km/s, integrated over {:.1f} km/s".format(integrated_flux, vels[0] - vels[-1]))
+    print("See spectrum.png for visual representaion.")
+
+    import matplotlib.pyplot as plt
+    # plt.plot(freqs, channel_flux)
+    plt.plot(vels, channel_flux)
+    plt.xlabel(r"$\nu$ [Hz]")
+    plt.xlabel("v [km/s]")
+    plt.ylabel(r"$f_\nu$ [Jy]")
+    plt.savefig("spectrum.png")
+
+
+# Estimate the total flux in the image. Sum all the pixels in each channel to get the flux density (e.g., Jy, measured at each channel.)
+
+# If there is only one channel, print out a message saying that this is the flux density measured at the frequency of the image.
+
+# Might also want to make a plot of the spectrum itself, in units of Jy (flux density).
+
+# Then, if there is more than one channel, integrate along the frequency dimension to get a measure of the integrated line Jy-km/s, and say what it is and over what velocity range it was integrated.
+
+# Estimate the total flux in each channel, to make a spectrum.
 
 # Convert to float32 to store in FITS?
 intensities = intensities.astype('float32')
-
-
 
 
 # Now, export the image to a FITS file
@@ -121,4 +161,4 @@ header['BZERO'] = 0.
 header['BUNIT'] = 'JY/PIXEL'
 header['BTYPE']='Intensity'
 
-hdu.writeto(args.FITS, clobber = True)
+hdu.writeto(args.fits, overwrite = True)

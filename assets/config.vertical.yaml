@@ -16,11 +16,6 @@ grid:
 # Are there any channels of the dataset to exclude? If so, provide them here, indexed from 1.
 # exclude: [35, 36, 37, 38]
 
-# Distance prior setup
-dpc_prior:
-  mu : 145.
-  sig : 20.
-
 # What type of model will we be fitting? This also affects which parameters to include.
 model : vertical # choices of {standard, truncated, vertical, cavity, etc..}
 
@@ -38,7 +33,7 @@ parameters:
   gamma: 1.0 # surface temperature gradient exponent
   h: 4.0 # Number of scale heights that z_q is at, typically fixed to 4
   delta: 2.0 # Shape exponent, currently fixed to 2
-  logSigma_c: -1.0 # [M_Sun] disk mass of gas
+  logM_gas: -1.0 # [M_Sun] disk mass of gas
   ksi: 0.2 # [cm s^{-1}] micsroturbulence
   dpc: 145.0 # [pc] distance to system
   incl: 45.0 # [degrees] inclination 0 deg = face on, 90 = edge on.
