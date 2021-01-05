@@ -15,5 +15,5 @@ end
 run(`unzip $binary_file`)
 
 # make the binary
-cd("radmc-3d/version_0.41/src")
+cd("radmc3d-0.41-master/src")
 run(`make`)
