@@ -1,11 +1,11 @@
 # Download and install RADMC-3D
-binary_file = "radmc-3d_v0.41_07.07.17.zip"
+binary_file = "master.zip"
 
 # Change to the src directory
 cd("src")
 
 # Download and extract the RADMC-3D executable
-download("http://www.ita.uni-heidelberg.de/~dullemond/software/radmc-3d/$binary_file", binary_file)
+download("https://github.com/dullemond/radmc3d-0.41/archive/$binary_file", binary_file)
 
 # Remove the directory, if a stale version exists from a previous build
 if ispath("radmc-3d")
