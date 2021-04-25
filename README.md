@@ -1,8 +1,8 @@
 DiskJockey
 ===============
 
-![Build Status](https://github.com/iancze/DiskJockey/workflows/CI/badge.svg)
-[![Documentation](https://img.shields.io/badge/Documentation-exists-<COLOR>.svg)](http://iancze.github.io/DiskJockey/dev/)
+[![Build Status](https://github.com/iancze/DiskJockey/actions/workflows/tests.yml/badge.svg)](https://github.com/iancze/DiskJockey/actions/workflows/tests.yml)
+[![Documentation](https://github.com/iancze/DiskJockey/actions/workflows/docs.yml/badge.svg)](https://github.com/iancze/DiskJockey/actions/workflows/docs.yml)
 
 ![Logo](logo.png)
 
