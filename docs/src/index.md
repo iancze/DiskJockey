@@ -16,3 +16,5 @@ The source code for the project is on [GitHub](https://github.com/iancze/DiskJoc
 * *ALMA Observations of the Young Substellar Binary System 2M1207* : [Ricci et al. 2017 AJ, 154, 24R](http://adsabs.harvard.edu/abs/2017AJ....154...24R)
 * *The Architecture of the GW Ori Young Triple Star System and Its Disk: Dynamical Masses, Mutual Inclinations, and Recurrent Eclipses* : [Czekala et al. 2017, ApJ, 851, 132](https://ui.adsabs.harvard.edu/abs/2017ApJ...851..132C/abstract)
 * *The Degree of Alignment between Circumbinary Disks and Their Binary Hosts*: [Czekala et al. 2019, ApJ 883, 1, 22](https://ui.adsabs.harvard.edu/abs/2019ApJ...883...22C/abstract)
+* *Dynamical Masses and Stellar Evolutionary Model Predictions of M Stars*: [Pegues et al. 2021, ApJ 908, 1, 42](https://ui.adsabs.harvard.edu/abs/2021ApJ...908...42P/abstract)
+* *A coplanar circumbinary protoplanetary disk in the TWA 3 triple M dwarf system*: [Czekala et al. 2021, ApJ accepted](https://ui.adsabs.harvard.edu/abs/2021arXiv210211875C/abstract)
