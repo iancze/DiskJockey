@@ -10,8 +10,8 @@ jobs:
       matrix:
         version:
           - '1.6'
-          - '1.0.5' # Current LTS
-          - 'nightly'
+          # - '1.0.5' # Current LTS
+          # - 'nightly'
         os:
           - ubuntu-latest
         arch:
