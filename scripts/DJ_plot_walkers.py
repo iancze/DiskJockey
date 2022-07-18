@@ -71,14 +71,14 @@ np.save("flatchain.npy", flatchain)
 
 
 # A dictionary of parameter lists for conversion.
-registered_params = {"standard": ["M_star", "r_c", "T_10", "q", "gamma", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"],
+registered_params = {"standard": ["M_star", "r_c", "T_10", "q", "gamma", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"],
 "truncated": ["M_star", "r_c", "T_10", "q", "gamma", "gamma_e", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"],
 "cavity": ["M_star", "r_c", "r_cav", "T_10", "q", "gamma", "gamma_cav", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"],
 "vertical": ["M_star", "r_c", "T_10m", "q_m", "T_10a", "q_a", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "delta", "logSigma_c", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"],
 "verticalEta": ["M_star", "r_c", "T_10m", "q_m", "T_freeze", "X_freeze", "sigma_s", "gamma", "h", "eta", "delta", "logM_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"],
 "nuker": ["M_star", "r_c", "T_10", "q", "gamma", "log_alpha", "beta", "log_M_gas", "ksi", "dpc", "incl", "PA", "vel", "mu_RA", "mu_DEC"]}
 
-registered_labels = {"standard": [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\gamma$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"],
+registered_labels = {"standard": [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\gamma$", r"$\log M_\mathrm{gas} \quad \log [M_\odot]$", r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"],
 "truncated": [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\gamma$", r"$\gamma_e$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"],
 "cavity": [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$r_\mathrm{cav}$ [AU]", r"$T_{10}$ [K]", r"$q$", r"$\gamma$", r"$\gamma_\mathrm{cav}$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"],
 "vertical": [r"$M_\ast\quad [M_\odot]$", r"$r_c$ [AU]", r"$T_{10m}$ [K]", r"$q_m$", r"$T_{10a}$ [K]", r"$q_a$", r"T_\mathrm{freeze}", r"$X_\mathrm{freeze}$", r"$\sigma_s$", r"$\gamma$", r"$h$", r"$\delta$", r"$\log \Sigma_c \quad \log [\mathrm{g/cm}^2]$",  r"$\xi$ [km/s]", r"$d$ [pc]", r"$i_d \quad [{}^\circ]$", r"PA $[{}^\circ]$", r"$v_r$ [km/s]", r"$\mu_\alpha$ ['']", r"$\mu_\delta$ ['']"],
